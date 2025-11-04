@@ -1,162 +1,150 @@
-1. Setup (First Time Only)
-✅ 1.1 Install the tools
+🚀 1. Get the project on your computer
+🔹 Step 1: Install these tools
 
-Make sure everyone has:
+Everyone needs to install these once:
 
 Git
+winget install --id Git.Git -e --source winget
 
 Node.js (LTS version)
+winget install OpenJS.NodeJS.LTS
 
-A GitHub account → https://github.com
+A GitHub account
 
-✅ 1.2 Clone the repository
+🔹 Step 2: Clone (download) the repository
 
-Once you’ve been added as a collaborator (the owner will invite you):
+Open your terminal (PowerShell on Windows) and type:
 
 git clone https://github.com/will-doney/WeightLossWebApp.git
-cd WeightLossWebApp
 
 
 This downloads the project to your computer.
 
-✅ 1.3 Install dependencies
+Then go into the folder:
 
-Since node_modules aren’t stored on GitHub:
+cd WeightLossWebApp
+
+🔹 Step 3: Install project files
+
+The node_modules folder is not stored on GitHub.
+Run this to install everything the project needs:
 
 npm install
 
-
-This will install all the project’s libraries.
-
-🧩 2. Running the Project Locally
-
-To start the development server:
-
+🔹 Step 4: Run the app locally
 npm run dev
 
 
-Then open the link shown in your terminal (usually http://localhost:5173/).
+You’ll see a local link like:
 
-This runs the app locally so you can build and test features.
+http://localhost:5173/
 
-🔄 3. Basic Git Commands (for everyday use)
-Action	Command	Description
-See what’s changed	git status	Shows modified files
-Stage changes	git add .	Prepares all files to commit
-Commit changes	git commit -m "Your message"	Saves your changes locally
-Pull latest updates	git pull	Updates your copy with team changes
-Push your work	git push	Uploads commits to GitHub
-🌿 4. Working on Features (Branching Workflow)
 
-To avoid overwriting each other’s work, we’ll use branches.
+Click it to open the project in your browser. 🎉
 
-🪴 Create a new branch
-git checkout -b feature/your-feature-name
+💻 2. Basic Git Commands (with explanations)
+
+These are the main commands you and the team will use every day.
+
+Action	Command	What it does
+Check what’s changed	git status	Shows what files have been modified
+Add files to commit	git add .	Tells Git to include all your changes
+Save (commit) changes locally	git commit -m "Describe what you did"	Records your changes in Git
+Get latest code from GitHub	git pull	Updates your folder with new team changes
+Send your commits to GitHub	git push	Uploads your work to the repo
+🌿 3. How to make changes safely (branches)
+
+When working on new features or fixes, don’t edit directly on main.
+Instead, create a branch — a separate workspace for your changes.
+
+Create a new branch:
+git checkout -b feature/new-feature-name
 
 
 Example:
 
 git checkout -b feature/login-page
 
-🛠️ Make your changes, then:
+After editing your code:
 git add .
-git commit -m "Add login page UI"
+git commit -m "Add login page"
 git push -u origin feature/login-page
 
-🔁 Create a Pull Request (PR)
 
-Go to the repo on GitHub.
-
-You’ll see a message like “Compare & pull request”.
-
+Then go to GitHub — you’ll see a button to “Compare & Pull Request”.
 Click it → describe your change → click Create pull request.
 
-Another team member reviews and merges it into main.
+This lets your teammates review before merging into main.
 
-🧹 5. Keeping Your Local Copy Updated
+🔁 4. Keeping your code up to date
 
-Before starting new work:
+Before you start working each day, always pull the latest code:
 
 git checkout main
 git pull
 
 
-This ensures you’re always working from the latest version.
+Then create your branch from that updated main branch.
 
-🧠 6. Common Problems
-🟥 “error: failed to push some refs to origin main”
+🧠 5. Common Git Issues (and fixes)
+Problem	What to do
+error: failed to push some refs	Run: git pull origin main --allow-unrelated-histories, then git push
+nothing to commit, working tree clean	You haven’t changed anything yet — no problem
+Merge conflict	Git will show the file with conflicts — open it, fix it manually, then run:
+git add .
+git commit
+git push
+🧩 6. Project Setup Summary
+# Download the project
+git clone https://github.com/will-doney/WeightLossWebApp.git
 
-Your local copy is behind GitHub.
-Run:
+# Move into the project folder
+cd WeightLossWebApp
 
-git pull origin main --allow-unrelated-histories
+# Install dependencies
+npm install
+
+# Run locally
+npm run dev
+
+# Make changes and commit
+git add .
+git commit -m "Your message"
 git push
 
-🟨 “nothing to commit, working tree clean”
-
-Means you haven’t changed any tracked files — you’re good.
-
-🚀 7. Deployment
-
-This project can be deployed in two ways:
-
-Option 1: GitHub Pages
-
-We use the gh-pages
- package.
-To deploy manually:
-
-npm run build
-npm run deploy
-
-
-Your live site will be at:
-👉 https://will-doney.github.io/WeightLossWebApp/
-
-Option 2: Netlify
-
-Go to https://netlify.com
-
-Log in → “Add New Site” → “Import existing project”
-
-Select this repo
-
-Build command: npm run build
-
-Publish directory: dist
-
-Click Deploy
-
-🧩 8. Project Structure Overview
-WeightLossWebApp/
-│
-├── src/                # React components & logic
-├── public/             # Static assets
-├── dist/               # Build output (ignored in Git)
-├── package.json        # Dependencies & scripts
-├── vite.config.js      # Vite configuration
-└── .gitignore          # Files ignored by Git
-
-🧑‍💻 9. Team Workflow Summary
+🧑‍💻 7. Team Workflow Summary
 
 Pull the latest changes
 
-Create a branch for your work
+git pull
 
-Make changes
 
-Commit and push
+Create a new branch
 
-Open a Pull Request
+git checkout -b feature/your-feature
 
-Get it reviewed and merged into main
 
-❤️ 10. Quick Tips
+Work, then commit your changes
 
-Commit often with clear messages.
+git add .
+git commit -m "Describe changes"
 
-Never work directly on the main branch.
 
-Always run git pull before starting new work.
+Push your branch to GitHub
 
-Communicate in PRs and use GitHub issues to track tasks.
+git push -u origin feature/your-feature
+
+
+Open a Pull Request on GitHub for review
+
+💡 8. Extra Tips
+
+Commit often — small commits are easier to review.
+
+Write clear messages like "Fix login form validation".
+
+Always pull before pushing to avoid merge conflicts.
+
+If something breaks, you can always check previous commits with:
+
+git log
