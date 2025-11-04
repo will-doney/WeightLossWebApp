@@ -1,5 +1,5 @@
-🚀 1. Get the project on your computer
-🔹 Step 1: Install these tools
+#🚀 1. Get the project on your computer
+#🔹 Step 1: Install these tools
 
 Everyone needs to install these once:
 
@@ -11,7 +11,7 @@ winget install OpenJS.NodeJS.LTS
 
 A GitHub account
 
-🔹 Step 2: Clone (download) the repository
+#🔹 Step 2: Clone (download) the repository
 
 Open your terminal (PowerShell on Windows) and type:
 
@@ -24,14 +24,14 @@ Then go into the folder:
 
 cd WeightLossWebApp
 
-🔹 Step 3: Install project files
+#🔹 Step 3: Install project files
 
 The node_modules folder is not stored on GitHub.
 Run this to install everything the project needs:
 
 npm install
 
-🔹 Step 4: Run the app locally
+#🔹 Step 4: Run the app locally
 npm run dev
 
 
@@ -42,9 +42,9 @@ http://localhost:5173/
 
 Click it to open the project in your browser. 🎉
 
-💻 2. Basic Git Commands (with explanations)
+# 💻 2. Basic Git Commands (with explanations)
 
-These are the main commands you and the team will use every day.
+# These are the main commands you and the team will use every day.
 
 Action	Command	What it does
 Check what’s changed	git status	Shows what files have been modified
@@ -57,7 +57,7 @@ Send your commits to GitHub	git push	Uploads your work to the repo
 When working on new features or fixes, don’t edit directly on main.
 Instead, create a branch — a separate workspace for your changes.
 
-Create a new branch:
+#Create a new branch:
 git checkout -b feature/new-feature-name
 
 
@@ -65,7 +65,7 @@ Example:
 
 git checkout -b feature/login-page
 
-After editing your code:
+#After editing your code:
 git add .
 git commit -m "Add login page"
 git push -u origin feature/login-page
@@ -76,9 +76,9 @@ Click it → describe your change → click Create pull request.
 
 This lets your teammates review before merging into main.
 
-🔁 4. Keeping your code up to date
+# 🔁 4. Keeping your code up to date
 
-Before you start working each day, always pull the latest code:
+# Before you start working each day, always pull the latest code:
 
 git checkout main
 git pull
@@ -86,7 +86,7 @@ git pull
 
 Then create your branch from that updated main branch.
 
-🧠 5. Common Git Issues (and fixes)
+# 🧠 5. Common Git Issues (and fixes)
 Problem	What to do
 error: failed to push some refs	Run: git pull origin main --allow-unrelated-histories, then git push
 nothing to commit, working tree clean	You haven’t changed anything yet — no problem
@@ -94,7 +94,7 @@ Merge conflict	Git will show the file with conflicts — open it, fix it manuall
 git add .
 git commit
 git push
-🧩 6. Project Setup Summary
+# 🧩 6. Project Setup Summary
 # Download the project
 git clone https://github.com/will-doney/WeightLossWebApp.git
 
@@ -112,32 +112,32 @@ git add .
 git commit -m "Your message"
 git push
 
-🧑‍💻 7. Team Workflow Summary
+#🧑‍💻 7. Team Workflow Summary
 
-Pull the latest changes
+# Pull the latest changes
 
 git pull
 
 
-Create a new branch
+# Create a new branch
 
 git checkout -b feature/your-feature
 
 
-Work, then commit your changes
+# Work, then commit your changes
 
 git add .
 git commit -m "Describe changes"
 
 
-Push your branch to GitHub
+# Push your branch to GitHub
 
 git push -u origin feature/your-feature
 
 
 Open a Pull Request on GitHub for review
 
-💡 8. Extra Tips
+#💡 8. Extra Tips
 
 Commit often — small commits are easier to review.
 
@@ -145,6 +145,6 @@ Write clear messages like "Fix login form validation".
 
 Always pull before pushing to avoid merge conflicts.
 
-If something breaks, you can always check previous commits with:
+#If something breaks, you can always check previous commits with:
 
 git log
