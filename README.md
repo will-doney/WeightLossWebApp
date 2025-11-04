@@ -1,5 +1,5 @@
-#🚀 1. Get the project on your computer
-#🔹 Step 1: Install these tools
+# 🚀 1. Get the project on your computer
+# 🔹 Step 1: Install these tools
 
 Everyone needs to install these once:
 
@@ -11,7 +11,7 @@ winget install OpenJS.NodeJS.LTS
 
 A GitHub account
 
-#🔹 Step 2: Clone (download) the repository
+# 🔹 Step 2: Clone (download) the repository
 
 Open your terminal (PowerShell on Windows) and type:
 
@@ -24,14 +24,14 @@ Then go into the folder:
 
 cd WeightLossWebApp
 
-#🔹 Step 3: Install project files
+# 🔹 Step 3: Install project files
 
 The node_modules folder is not stored on GitHub.
 Run this to install everything the project needs:
 
 npm install
 
-#🔹 Step 4: Run the app locally
+# 🔹 Step 4: Run the app locally
 npm run dev
 
 
@@ -112,7 +112,7 @@ git add .
 git commit -m "Your message"
 git push
 
-#🧑‍💻 7. Team Workflow Summary
+# 🧑‍💻 7. Team Workflow Summary
 
 # Pull the latest changes
 
@@ -137,7 +137,7 @@ git push -u origin feature/your-feature
 
 Open a Pull Request on GitHub for review
 
-#💡 8. Extra Tips
+# 💡 8. Extra Tips
 
 Commit often — small commits are easier to review.
 
@@ -145,6 +145,6 @@ Write clear messages like "Fix login form validation".
 
 Always pull before pushing to avoid merge conflicts.
 
-#If something breaks, you can always check previous commits with:
+If something breaks, you can always check previous commits with:
 
 git log
