@@ -9,12 +9,6 @@ export default function Home() {
         This project helps users stay consistent with healthy habits through gamified daily
         challenges, progress tracking, and motivation features.
       </p>
-      <Link
-        to="/features"
-        className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-      >
-        Explore Features
-      </Link>
     </div>
   );
 }
