@@ -1,3 +1,22 @@
+"""
+WeightGame Flask Application
+---------------------------
+Main entry point for the WeightGame web application. This Flask app serves a gamified
+weight loss tracking system with features for daily tasks, progress visualization,
+and avatar customization.
+
+Routes:
+- / : Home page with app introduction
+- /dashboard : User progress and statistics
+- /tasks : Daily challenges and habits
+- /settings : User preferences and app configuration
+- /myavatar : Character customization
+- 404 handler : Custom not found page
+
+Author: will-doney
+Date: November 2025
+"""
+
 from flask import Flask, render_template, send_from_directory, request
 import os
 

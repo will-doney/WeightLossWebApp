@@ -1,3 +1,20 @@
+{# 
+WeightGame Base Template
+----------------------
+Base HTML template that all other pages extend. Provides the common layout structure
+including navigation, header, and footer. Uses Jinja2 templating for dynamic content
+and active state handling.
+
+Blocks:
+- content: Main content area that child templates override
+
+Variables:
+- request.path: Current URL path for navigation highlighting
+- year: Optional year for copyright notice
+
+Author: will-doney
+Date: November 2025
+#}
 <!doctype html>
 <html lang="en">
   <head>

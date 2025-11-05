@@ -1,4 +1,21 @@
-/* Combined CSS ported from src/index.css and src/App.css with small adjustments */
+/*
+WeightGame Stylesheet
+--------------------
+Main stylesheet for the WeightGame web application. Contains all styles for layout,
+components, and responsive design. Supports both light and dark color schemes.
+
+Sections:
+- Base styles (root, body)
+- Layout (container, grid)
+- Components (navbar, cards, buttons)
+- Typography (titles, text styles)
+- Utilities (spacing, alignment)
+- Dark mode overrides
+
+Author: will-doney
+Date: November 2025
+*/
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
