@@ -57,7 +57,7 @@ Send your commits to GitHub	git push	Uploads your work to the repo
 When working on new features or fixes, don’t edit directly on main.
 Instead, create a branch — a separate workspace for your changes.
 
-#Create a new branch:
+# Create a new branch:
 git checkout -b feature/new-feature-name
 
 
@@ -65,7 +65,7 @@ Example:
 
 git checkout -b feature/login-page
 
-#After editing your code:
+# After editing your code:
 git add .
 git commit -m "Add login page"
 git push -u origin feature/login-page
