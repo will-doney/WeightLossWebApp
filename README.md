@@ -15,6 +15,7 @@ A GitHub account
 
 Open your terminal (PowerShell on Windows) and type:
 
+<<<<<<< HEAD
 git clone https://github.com/will-doney/WeightLossWebApp.git
 
 
@@ -148,3 +149,23 @@ Always pull before pushing to avoid merge conflicts.
 If something breaks, you can always check previous commits with:
 
 git log
+=======
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+## Python + HTML version (new)
+
+This repository now includes a minimal Flask application that serves static HTML templates and CSS, intended to replace the Vite+React frontend while keeping the website content and pages.
+
+To run the Python version locally (Windows PowerShell):
+
+```powershell
+python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt; python app.py
+```
+
+Then open http://127.0.0.1:5000 in your browser.
+
+Notes:
+- The original React source lives in `src/` and can be kept for reference or removed later.
+- The Flask app files are: `app.py`, `templates/` and `static/`.
+>>>>>>> 392f46f (change from vite and react to html flask and python)

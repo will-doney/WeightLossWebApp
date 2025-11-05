@@ -1,0 +1,72 @@
+/* Combined CSS ported from src/index.css and src/App.css with small adjustments */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #213547;
+  font-family: inherit;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand a {
+  text-decoration: none;
+  color: #2563eb;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+nav a {
+  margin-left: 1rem;
+  text-decoration: none;
+  color: #4b5563;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+nav a.active, nav a:hover {
+  color: #2563eb;
+  background: rgba(37,99,235,0.06);
+}
+
+.main-content { padding-top: 1rem; }
+.page-title { font-size: 2rem; margin-bottom: 0.5rem; }
+.lead { color: #475569; max-width: 48rem; margin: 0 auto 1.5rem; }
+.section-title { font-size: 1.5rem; margin-bottom: 0.75rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.card { background: #fff; border: 1px solid #e6e6e6; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 2px rgba(16,24,40,0.03); }
+.muted { color: #6b7280; }
+.settings-list { list-style: disc; padding-left: 1.25rem; color: #374151; }
+.site-footer { text-align: center; padding: 1rem; color: #6b7280; border-top: 1px solid #eee; margin-top: 2rem; }
+.cta { display:inline-block; padding:0.5rem 0.75rem; background:#2563eb; color:#fff; border-radius:6px; text-decoration:none; }
+
+/* small helpers */
+.text-center { text-align: center; }
+
+/* from App.css */
+#root { max-width: 1280px; margin: 0 auto; padding: 2rem; text-align: center; }
+.logo { height: 6em; padding: 1.5em; }
+.card { padding: 1.25rem; }
+
+@media (prefers-color-scheme: dark) {
+  body { background-color: #121212; color: #e6eef8; }
+  .site-footer { color: #9ca3af; }
+}

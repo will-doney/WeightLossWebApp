@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WeightGame</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container navbar">
+        <h1 class="brand"><a href="/">WeightGame</a></h1>
+        <nav>
+          <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+          <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
+          <a href="/tasks" class="nav-link {% if request.path == '/tasks' %}active{% endif %}">Tasks</a>
+          <a href="/myavatar" class="nav-link {% if request.path == '/myavatar' %}active{% endif %}">Avatar</a>
+          <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">Settings</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      © {{year if year is defined else "" }} WeightGame — Team Project Base
+    </footer>
+  </body>
+</html>
