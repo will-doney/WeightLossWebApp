@@ -11,14 +11,174 @@ Blocks:
 Author: will-doney
 Date: November 2025
 #}
-{% extends 'base.html' %}
+{# settings.html #}
+{% extends "base.html" %}
+
 {% block content %}
-  <h2 class="section-title">App Settings</h2>
-  <ul class="settings-list">
-    <li>Notification Preferences</li>
-    <li>Privacy Settings</li>
-    <li>Account Management</li>
-    <li>Theme Selection</li>
-    <li>Data Export Options</li>
-  </ul>
-{% endblock %}
+<h1 class="page-title">Settings</h1>
+
+<style>
+  .panel{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:10px;padding:18px 18px;margin:14px 0}
+  .panel h2{margin:0 0 10px 0;font-size:18px;opacity:.9}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed #ffffff1a}
+  .row:last-child{border-bottom:none}
+  .label{opacity:.9}
+  .hint{opacity:.6;font-size:12px;margin-top:6px}
+  .field{min-width:220px}
+  .btns{display:flex;gap:10px;margin-top:14px}
+  .btn{padding:8px 14px;border-radius:8px;border:1px solid #ffffff22;background:#ffffff14;cursor:pointer}
+  .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
+  .inline{display:flex;align-items:center;gap:10px}
+  input[type="text"],input[type="password"],select{
+    background:#0f172a;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:8px 10px;width:100%;
+  }
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:720px){.two{grid-template-columns:1fr}}
+</style>
+
+<div class="panel">
+  <h2>General</h2>
+
+  <div class="row">
+    <div class="label">Enable notifications</div>
+    <div class="field inline">
+      <input type="checkbox" id="notifyToggle">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">Theme</div>
+    <div class="field">
+      <select id="themeSelect">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+      <div class="hint">Choose the app appearance.</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">Auto theme</div>
+    <div class="field inline">
+      <input type="checkbox" id="autoTheme">
+      <span class="hint">Switch theme automatically based on time.</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">Do not disturb</div>
+    <div class="field inline">
+      <input type="checkbox" id="dndToggle">
+      <span class="hint">Mute notifications temporarily.</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Account</h2>
+
+  <div class="row">
+    <div class="label">Display name</div>
+    <div class="field">
+      <input id="displayName" type="text" placeholder="Your name">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">Change password</div>
+    <div class="field two">
+      <input id="pwdCurrent" type="password" placeholder="Current password">
+      <input id="pwdNew" type="password" placeholder="New password">
+      <input id="pwdConfirm" type="password" placeholder="Confirm new password">
+    </div>
+  </div>
+  <div class="hint">Password change is demo only (no server update yet).</div>
+</div>
+
+<div class="panel">
+  <h2>Preferences</h2>
+
+  <div class="row">
+    <div class="label">Units</div>
+    <div class="field">
+      <select id="unitsSelect">
+        <option value="metric">Metric (kg)</option>
+        <option value="imperial">Imperial (lbs)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">Privacy mode</div>
+    <div class="field inline">
+      <input type="checkbox" id="privacyMode">
+      <span class="hint">Hide sensitive info on shared screens.</span>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="btn primary" onclick="saveSettings()">Save changes</button>
+    <button class="btn" onclick="resetSettings()">Reset</button>
+  </div>
+</div>
+
+<p class="hint">More settings will be added in future updates.</p>
+
+<script>
+  function loadSettings(){
+    const get = k => localStorage.getItem(k);
+    document.getElementById('notifyToggle').checked = get('notify') === '1';
+    document.getElementById('themeSelect').value   = get('theme') || 'light';
+    document.getElementById('autoTheme').checked   = get('autoTheme') === '1';
+    document.getElementById('dndToggle').checked   = get('dnd') === '1';
+    document.getElementById('displayName').value   = get('displayName') || '';
+    document.getElementById('unitsSelect').value   = get('units') || 'metric';
+    document.getElementById('privacyMode').checked = get('privacy') === '1';
+  }
+
+  function saveSettings(){
+    const set = (k,v)=>localStorage.setItem(k,v);
+    set('notify',     document.getElementById('notifyToggle').checked ? '1':'0');
+    set('theme',      document.getElementById('themeSelect').value);
+    set('autoTheme',  document.getElementById('autoTheme').checked ? '1':'0');
+    set('dnd',        document.getElementById('dndToggle').checked ? '1':'0');
+    set('displayName',document.getElementById('displayName').value.trim());
+    set('units',      document.getElementById('unitsSelect').value);
+    set('privacy',    document.getElementById('privacyMode').checked ? '1':'0');
+
+    alert('Settings saved.');
+  }
+
+  function resetSettings(){
+    ['notify','theme','autoTheme','dnd','displayName','units','privacy'].forEach(k=>localStorage.removeItem(k));
+    loadSettings();
+    alert('Settings reset to defaults.');
+  }
+
+  function applyTheme(theme) {
+    const body = document.body;
+    if (theme === 'dark') {
+      body.style.backgroundColor = '#0f172a';
+      body.style.color = '#e5e7eb';
+    } else {
+      body.style.backgroundColor = '#f8fafc';
+      body.style.color = '#111827';
+    }
+  }
+
+  document.getElementById('themeSelect').addEventListener('change', (e) => {
+    const theme = e.target.value;
+    localStorage.setItem('theme', theme);
+    applyTheme(theme);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+  });
+</script>
+{% endblock %}
+
+
+
