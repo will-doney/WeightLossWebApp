@@ -87,3 +87,74 @@ nav a.active, nav a:hover {
   body { background-color: #121212; color: #e6eef8; }
   .site-footer { color: #9ca3af; }
 }
+
+/* === Avatar Page Styles === */
+.avatar-wrapper {
+      display: inline-block;
+      position: relative;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .avatar-image {
+      border-radius: 8px;
+      display: block;
+    }
+
+    /* Level badge (top-right) */
+    .level-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(180deg,#ffdf6b,#ffb74d);
+      color: #222;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      font-size: 14px;
+      min-width: 44px;
+    }
+
+    /* Progress container below avatar */
+    .progress-wrap {
+      width: 150px;
+      margin: 8px auto 0;
+    }
+
+    .progress-bg {
+      background: #eee;
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg,#6ee7b7,#34d399);
+      height: 100%;
+      width: 0%;
+      transition: width 300ms ease;
+    }
+
+    .points-text {
+      font-size: 13px;
+      color: #e4e4e4;
+      margin-top: 6px;
+    }
+
+    .mood-buttons, .points-actions {
+      margin-top: 12px;
+    }
+
+    .btn {
+      margin-right: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #00040c;
+      border: 1px solid #000000;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+
