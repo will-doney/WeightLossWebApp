@@ -13,10 +13,248 @@ Date: November 2025
 #}
 {% extends 'base.html' %}
 {% block content %}
-  <h2 class="section-title">Progress Dashboard</h2>
-  <p>This is a placeholder dashboard for showing user progress.</p>
-  <div class="grid">
-    <div class="card">Graph placeholder</div>
-    <div class="card">Badges placeholder</div>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">🎯 Progress Dashboard</h1>
+    <p class="dashboard-subtitle">
+      {% if user_name %}
+        Welcome back, {{ user_name }}! Track your fitness journey and celebrate your achievements!
+      {% else %}
+        Welcome to your fitness dashboard! Track your journey and celebrate achievements!
+      {% endif %}
+    </p>
   </div>
+
+  <div class="stats-grid">
+    <!-- Current Weight Card -->
+    <div class="stat-card primary">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <h3>Current Weight</h3>
+        <div class="stat-value">
+          {% if current_weight %}
+            {{ current_weight }} lbs
+            {% if weight_change is defined and weight_change != None %}
+              <span class="change-indicator {% if weight_change > 0 %}positive{% else %}negative{% endif %}">
+                {% if weight_change > 0 %}+{% endif %}{{ "%.1f"|format(weight_change) }} lbs
+              </span>
+            {% endif %}
+          {% else %}
+            No data
+          {% endif %}
+        </div>
+        <div class="stat-change">
+          {% if last_updated %}
+            Last updated: {{ last_updated }}
+          {% else %}
+            <a href="{{ url_for('log_weight') }}">Add your weight data</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Calories Burned Card -->
+    <div class="stat-card success">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-content">
+        <h3>Calories Burned</h3>
+        <div class="stat-value">
+          {{ calories_burned|default(0)|int }}
+        </div>
+        <div class="stat-change">
+          {% if daily_calorie_goal and daily_calorie_goal > 0 %}
+            {{ ((calories_burned|default(0) / daily_calorie_goal) * 100)|round|int }}% of daily goal
+          {% else %}
+            Total calories burned
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Streak Card -->
+    <div class="stat-card warning">
+      <div class="stat-icon">💪</div>
+      <div class="stat-content">
+        <h3>Workout Streak</h3>
+        <div class="stat-value">
+          {{ workout_streak|default(0) }} days
+        </div>
+        <div class="stat-change">
+          {% if workout_streak and workout_streak > 0 %}
+            {% if workout_streak >= 7 %}🔥 On fire!{% else %}Keep going!{% endif %}
+          {% else %}
+            Start your streak today!
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Goal Progress Card -->
+    <div class="stat-card info">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-content">
+        <h3>Goal Progress</h3>
+        <div class="stat-value">
+          {{ goal_progress|default(0) }}%
+        </div>
+        <div class="progress-bar">
+          {% if goal_progress %}
+            <div class="progress-fill progress-{{ goal_progress }}"></div>
+          {% else %}
+            <div class="progress-fill progress-0"></div>
+          {% endif %}
+        </div>
+        <div class="stat-change">
+          {% if goal_progress and goal_progress >= 100 %}
+            Goal achieved! 🎉
+          {% else %}
+            {% if goal_remaining %}
+              {{ goal_remaining }} lbs to go
+            {% else %}
+              Set a goal to get started!
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Content Grid -->
+  <div class="content-grid">
+    <!-- Weight Progress Chart -->
+    <div class="chart-card">
+      <div class="card-header">
+        <h3>Weight Progress</h3>
+        <div class="time-filter">
+          <form method="GET" action="{{ url_for('dashboard') }}" class="timeframe-form">
+            <select name="timeframe" onchange="this.form.submit()">
+              <option value="7d" {% if selected_timeframe == '7d' %}selected{% endif %}>Last 7 Days</option>
+              <option value="30d" {% if selected_timeframe == '30d' or not selected_timeframe %}selected{% endif %}>Last 30 Days</option>
+              <option value="90d" {% if selected_timeframe == '90d' %}selected{% endif %}>Last 3 Months</option>
+              <option value="1y" {% if selected_timeframe == '1y' %}selected{% endif %}>Last Year</option>
+            </select>
+          </form>
+        </div>
+      </div>
+
+      <div class="chart-visual">
+        {% if weight_data and weight_data|length > 0 %}
+          <div class="chart-bars">
+            {% for entry in weight_data %}
+              {% if max_weight and max_weight > 0 %}
+                {% set bar_height_class = "bar-height-" ~ ((entry.weight / max_weight * 100)|round|int) %}
+              {% else %}
+                {% set bar_height_class = "bar-height-50" %}
+              {% endif %}
+              <div class="bar {{ bar_height_class }} {% if loop.last %}current{% endif %}" 
+                   data-weight="{{ entry.weight }} lbs">
+                <div class="bar-date">
+                  {% if entry.date %}
+                    {{ entry.date }}
+                  {% else %}
+                    Day {{ loop.index }}
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="no-data-message">
+            <p>No weight data available yet.</p>
+            <a href="{{ url_for('log_weight') }}" class="btn-primary">Add Your First Weight Entry</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Achievements Section -->
+    <div class="achievements-card">
+      <div class="card-header">
+        <h3>Achievements</h3>
+        <div class="badge-count">
+          {{ unlocked_badges|default(0) }}/{{ total_badges|default(0) }}
+        </div>
+      </div>
+      <div class="badges-grid">
+        {% if badges and badges|length > 0 %}
+          {% for badge in badges %}
+            <div class="badge {% if badge.unlocked %}unlocked{% else %}locked{% endif %}">
+              <div class="badge-icon">{{ badge.icon|default('🏆') }}</div>
+              <span>{{ badge.name|default('Achievement') }}</span>
+              {% if badge.unlocked %}
+                <small class="badge-date">
+                  Unlocked {{ badge.date|default('recently') }}
+                </small>
+              {% else %}
+                <small class="badge-progress">
+                  {{ badge.progress|default('Locked') }}
+                </small>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-badges">
+            <p>Complete activities to earn badges!</p>
+            <a href="{{ url_for('log_workout') }}" class="btn-secondary">Start Working Out</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-card">
+      <div class="card-header">
+        <h3>Recent Activity</h3>
+      </div>
+      <div class="activity-list">
+        {% if recent_activities and recent_activities|length > 0 %}
+          {% for activity in recent_activities %}
+            <div class="activity-item">
+              <div class="activity-icon">{{ activity.icon|default('📝') }}</div>
+              <div class="activity-content">
+                <strong>{{ activity.title|default('Activity') }}</strong>
+                <span>{{ activity.description|default('No description') }}</span>
+                <small class="activity-time">
+                  {{ activity.time|default('Recently') }}
+                </small>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-activity">
+            <p>No recent activity</p>
+            <a href="{{ url_for('log_workout') }}" class="btn-secondary">Log Your First Workout</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions / I might remove this at some point-->
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <a href="{{ url_for('log_weight') }}" class="action-btn">
+        <span class="action-icon">⚖️</span>
+        Log Weight
+      </a>
+      <a href="{{ url_for('log_workout') }}" class="action-btn">
+        <span class="action-icon">🏃‍♂️</span>
+        Log Workout
+      </a>
+      <a href="{{ url_for('set_goal') }}" class="action-btn">
+        <span class="action-icon">🎯</span>
+        Set Goal
+      </a>
+      <a href="{{ url_for('view_progress') }}" class="action-btn">
+        <span class="action-icon">📈</span>
+        View Progress
+      </a>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
+
+
