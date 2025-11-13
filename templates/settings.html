@@ -40,13 +40,6 @@ Date: November 2025
   <h2>General</h2>
 
   <div class="row">
-    <div class="label">Enable notifications</div>
-    <div class="field inline">
-      <input type="checkbox" id="notifyToggle">
-    </div>
-  </div>
-
-  <div class="row">
     <div class="label">Theme</div>
     <div class="field">
       <select id="themeSelect">
@@ -56,24 +49,6 @@ Date: November 2025
       <div class="hint">Choose the app appearance.</div>
     </div>
   </div>
-
-  <div class="row">
-    <div class="label">Auto theme</div>
-    <div class="field inline">
-      <input type="checkbox" id="autoTheme">
-      <span class="hint">Switch theme automatically based on time.</span>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="label">Do not disturb</div>
-    <div class="field inline">
-
-      <input type="checkbox" id="dndToggle">
-      <span class="hint">Mute notifications temporarily.</span>
-    </div>
-  </div>
-</div>
 
 <div class="panel">
   <h2>Account</h2>
@@ -95,27 +70,6 @@ Date: November 2025
   </div>
   <div class="hint">Password change is demo only (no server update yet).</div>
 </div>
-
-<div class="panel">
-  <h2>Preferences</h2>
-
-  <div class="row">
-    <div class="label">Units</div>
-    <div class="field">
-      <select id="unitsSelect">
-        <option value="metric">Metric (kg)</option>
-        <option value="imperial">Imperial (lbs)</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="label">Privacy mode</div>
-    <div class="field inline">
-      <input type="checkbox" id="privacyMode">
-      <span class="hint">Hide sensitive info on shared screens.</span>
-    </div>
-  </div>
 
   <div class="btns">
     <button class="btn primary" onclick="saveSettings()">Save changes</button>
