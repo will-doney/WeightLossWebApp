@@ -16,4 +16,26 @@ Date: November 2025
     <h1 class="page-title">Welcome to WeightGame</h1>
     <p class="lead">This project helps users stay consistent with healthy habits through gamified daily challenges, progress tracking, and motivation features.</p>
   </div>
+
+  <div class="home-container">
+        <div class="home-header">
+            <h1>🎯 WeightGame</h1>
+            <p>Track your fitness journey and achieve your goals!</p>
+        </div>
+        
+        <div class="home-buttons">
+            <a href="{{ url_for('login') }}" class="btn-primary">Login</a>
+            <a href="{{ url_for('signup') }}" class="btn-secondary">Sign Up</a>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
 {% endblock %}

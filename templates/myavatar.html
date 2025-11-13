@@ -1,18 +1,92 @@
-{# 
-WeightGame Avatar Page
---------------------
-User's personalized avatar and progress visualization page. Will show
-character customization options and progress-based visual changes
-in future iterations.
 
-Blocks:
-- content: Avatar display and customization area
-
-Author: will-doney
-Date: November 2025
-#}
 {% extends 'base.html' %}
+
 {% block content %}
-  <h2 class="section-title">Avatar page</h2>
-  <p class="muted">Avatar information and progress bar visible on this page.</p>
-{% endblock %}
+  <h2 class="section-title">Avatar Page</h2>
+  <p class="muted">Choose your avatar mood below.</p>
+
+
+
+  <div class="avatar-container">
+    <div class="avatar-wrapper">
+      <img 
+        id="avatar-image"
+        src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
+        alt="Avatar" 
+        class="avatar-image"
+        width="150" height="150"
+      />
+      <div id="level-badge" class="level-badge">Lv 1</div>
+    </div>
+
+    <div class="progress-wrap" aria-hidden="false">
+      <div class="progress-bg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div id="points-text" class="points-text">0 / 100 points</div>
+    </div>
+  </div>
+
+  <div class="mood-buttons">
+    <button onclick="changeAvatar('happy')" class="btn">😊 Happy</button>
+    <button onclick="changeAvatar('sad')" class="btn">😢 Sad</button>
+  </div>
+
+  <div class="points-actions">
+    <!-- Demo controls — remove or wire to server actions as needed -->
+    <button onclick="addPoints(10)" class="btn">+10 pts</button>
+    <button onclick="addPoints(50)" class="btn">+50 pts</button>
+    <button onclick="resetPoints()" class="btn">Reset</button>
+  </div>
+
+  <script>
+    // ...existing code...
+    function changeAvatar(mood) {
+      const avatarImage = document.getElementById('avatar-image');
+      avatarImage.src = `/static/avatars/avatar_${mood}.png`;
+    }
+    
+    // Points/Level logic
+    (function () {
+      const STORAGE_KEY = 'avatar_points_v1';
+      const pointsPerLevel = 100;
+
+      let points = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+
+      const progressFill = document.getElementById('progress-fill');
+      const pointsText = document.getElementById('points-text');
+      const levelBadge = document.getElementById('level-badge');
+      const progressBg = document.querySelector('.progress-bg');
+
+      function computeLevel(p) {
+        return Math.floor(p / pointsPerLevel) + 1;
+      }
+
+      function updateUI() {
+        const level = computeLevel(points);
+        const progressInLevel = points % pointsPerLevel;
+        const percent = Math.round((progressInLevel / pointsPerLevel) * 100);
+
+        levelBadge.textContent = `Lv ${level}`;
+        progressFill.style.width = percent + '%';
+        progressBg.setAttribute('aria-valuenow', String(percent));
+        pointsText.textContent = `${progressInLevel} / ${pointsPerLevel} points (Total: ${points})`;
+      }
+
+      window.addPoints = function (n) {
+        points = Math.max(0, points + Number(n || 0));
+        localStorage.setItem(STORAGE_KEY, String(points));
+        updateUI();
+      };
+
+      window.resetPoints = function () {
+        points = 0;
+        localStorage.setItem(STORAGE_KEY, '0');
+        updateUI();
+      };
+
+      // initialize
+      updateUI();
+    })();
+  </script>
+ {% endblock %}
