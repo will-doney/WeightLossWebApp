@@ -144,8 +144,3 @@ WeightLossWebApp/
 - Use environment variables for secrets
 - Check .gitignore before pushing sensitive files
 
----
-
-## 📞 Need Help?
-
-For git questions, ask the team or check: https://git-scm.com/doc

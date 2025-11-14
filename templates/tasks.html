@@ -15,18 +15,21 @@ Updated : November 2025 by GPT-5-Codex
 {% extends 'base.html' %}
 {% block content %}
   <h2 class="section-title">Daily Tasks</h2>
+  {% set task_list = tasks if tasks is defined else [
+      {"task": "10-minute walk", "details": "Completion tracking and points can be added here."},
+      {"task": "Drink 2 liters of water", "details": "Track hydration and rewards."},
+      {"task": "Stretch for 5 minutes", "details": "Short mobility tasks build consistency."}
+    ]
+  %}
+
   <div class="grid">
-    <div class="card">
-      <h3>10-minute walk</h3>
-      <p class="muted">Completion tracking and points can be added here.</p>
-    </div>
-    <div class="card">
-      <h3>Drink 2 liters of water</h3>
-      <p class="muted">Track hydration and rewards.</p>
-    </div>
-    <div class="card">
-      <h3>Stretch for 5 minutes</h3>
-      <p class="muted">Short mobility tasks build consistency.</p>
-    </div>
+    {% for task in task_list %}
+      <div class="card">
+        <h3>{{ task.task if task.task is defined else task["task"] }}</h3>
+        <p class="muted">
+          {{ task.details if task.details is defined else task.get('description', 'Build consistent healthy habits.') }}
+        </p>
+      </div>
+    {% endfor %}
   </div>
 {% endblock %}

@@ -27,7 +27,7 @@ Author: will-doney
 Date: November 2025
 """
 
-from flask import Flask, render_template, send_from_directory, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
@@ -40,14 +40,13 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # TODO: Use environment variable for production
 
 # Initialize Firebase Admin SDK
+db = None
 try:
     cred = credentials.Certificate("firebase-key.json")
     firebase_admin.initialize_app(cred)
-except Exception as e:
-    print(f"ERROR: Firebase initialization failed. Check firebase-key.json exists: {e}")
-
-# Get Firestore database reference
-db = firestore.client()
+    db = firestore.client()
+except Exception as firebase_error:
+    print(f"ERROR: Firebase initialization failed. Check firebase-key.json exists: {firebase_error}")
 
 # Utility function: Format timestamp as relative time (e.g., "2 hours ago")
 def format_timesince(dt):
@@ -307,15 +306,15 @@ def log_workout():
             if duration <= 0 or calories < 0:
                 flash('Please enter valid duration and calories.', 'error')
                 return render_template('log_workout.html')
-            
+
             workout_entry = {
                 'user_id': session['user_id'],
                 'workout_type': workout_type,
                 'duration': duration,
-            'calories_burned': calories,
-            'date': datetime.utcnow()
+                'calories_burned': calories,
+                'date': datetime.utcnow()
             }
-            
+
             db.collection('workouts').add(workout_entry)
             flash('Workout logged successfully!', 'success')
             return redirect(url_for('dashboard'))
@@ -359,13 +358,45 @@ def set_goal():
     return render_template('set_goal.html')
 
 
+# Sample tasks payload used by both HTML view and API response.
+TASKS_SAMPLE = [
+    {
+        "id": 1,
+        "task": "10-minute walk",
+        "difficulty": "easy",
+        "details": "Short outdoor or indoor walk to boost circulation."
+    },
+    {
+        "id": 2,
+        "task": "Drink 2 liters of water",
+        "difficulty": "easy",
+        "details": "Stay hydrated throughout the day with measured intake."
+    },
+    {
+        "id": 3,
+        "task": "Stretch for 5 minutes",
+        "difficulty": "easy",
+        "details": "Loosen muscles with a quick flexibility routine."
+    },
+]
+
+
 # ============================================================
-# ROUTE: Daily Tasks
+# ROUTE: Daily Tasks (HTML)
 # ============================================================
 @app.route('/tasks')
 def tasks():
     """Display daily tasks and challenges."""
-    return render_template('tasks.html')
+    return render_template('tasks.html', tasks=TASKS_SAMPLE)
+
+
+# ============================================================
+# ROUTE: Daily Tasks (JSON API)
+# ============================================================
+@app.route('/api/tasks')
+def tasks_api():
+    """Return daily tasks as JSON for frontend or integrations."""
+    return jsonify(TASKS_SAMPLE)
 
 
 # ============================================================
