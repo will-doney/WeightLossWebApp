@@ -1,171 +1,151 @@
-# 🚀 1. Get the project on your computer
-# 🔹 Step 1: Install these tools
+# 🏃 Weight Loss Web App
 
-Everyone needs to install these once:
+A gamified weight loss tracking application built with Python Flask and HTML/CSS, featuring daily tasks, progress visualization, and avatar customization.
 
-Git
-winget install --id Git.Git -e --source winget
+---
 
-Node.js (LTS version)
-winget install OpenJS.NodeJS.LTS
+## 🚀 Getting Started
 
-A GitHub account
+### Prerequisites
+Install these tools once:
+- **Git**: `winget install --id Git.Git -e --source winget`
+- **Python 3.13+**: [Download here](https://www.python.org/downloads/)
+- **GitHub Account**: [Create one here](https://github.com)
 
-# 🔹 Step 2: Clone (download) the repository
+### Initial Setup
 
-Open your terminal (PowerShell on Windows) and type:
+1. **Clone the repository**
+   ```powershell
+   git clone https://github.com/will-doney/WeightLossWebApp.git
+   cd WeightLossWebApp
+   ```
 
-<<<<<<< HEAD
-git clone https://github.com/will-doney/WeightLossWebApp.git
+2. **Create and activate virtual environment**
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
 
+3. **Install dependencies**
+   ```powershell
+   pip install -r requirements.txt
+   ```
 
-This downloads the project to your computer.
+4. **Run the application**
+   ```powershell
+   python app.py
+   ```
+   Open http://localhost:5000 in your browser
 
-Then go into the folder:
+---
 
-cd WeightLossWebApp
+## 📤 GitHub Workflow (For Team Collaboration)
 
-# 🔹 Step 3: Install project files
-
-The node_modules folder is not stored on GitHub.
-Run this to install everything the project needs:
-
-npm install
-
-# 🔹 Step 4: Run the app locally
-npm run dev
-
-
-You’ll see a local link like:
-
-http://localhost:5173/
-
-
-Click it to open the project in your browser. 🎉
-
-# 💻 2. Basic Git Commands (with explanations)
-
-# These are the main commands you and the team will use every day.
-
-Action	Command	What it does
-Check what’s changed	git status	Shows what files have been modified
-Add files to commit	git add .	Tells Git to include all your changes
-Save (commit) changes locally	git commit -m "Describe what you did"	Records your changes in Git
-Get latest code from GitHub	git pull	Updates your folder with new team changes
-Send your commits to GitHub	git push	Uploads your work to the repo
-🌿 3. How to make changes safely (branches)
-
-When working on new features or fixes, don’t edit directly on main.
-Instead, create a branch — a separate workspace for your changes.
-
-# Create a new branch:
-git checkout -b feature/new-feature-name
-
-
-Example:
-
-git checkout -b feature/login-page
-
-# After editing your code:
-git add .
-git commit -m "Add login page"
-git push -u origin feature/login-page
-
-
-Then go to GitHub — you’ll see a button to “Compare & Pull Request”.
-Click it → describe your change → click Create pull request.
-
-This lets your teammates review before merging into main.
-
-# 🔁 4. Keeping your code up to date
-
-# Before you start working each day, always pull the latest code:
-
-git checkout main
-git pull
-
-
-Then create your branch from that updated main branch.
-
-# 🧠 5. Common Git Issues (and fixes)
-Problem	What to do
-error: failed to push some refs	Run: git pull origin main --allow-unrelated-histories, then git push
-nothing to commit, working tree clean	You haven’t changed anything yet — no problem
-Merge conflict	Git will show the file with conflicts — open it, fix it manually, then run:
-git add .
-git commit
-git push
-# 🧩 6. Project Setup Summary
-# Download the project
-git clone https://github.com/will-doney/WeightLossWebApp.git
-
-# Move into the project folder
-cd WeightLossWebApp
-
-# Install dependencies
-npm install
-
-# Run locally
-npm run dev
-
-# Make changes and commit
-git add .
-git commit -m "Your message"
-git push
-
-# 🧑‍💻 7. Team Workflow Summary
-
-# Pull the latest changes
-
-git pull
-
-
-# Create a new branch
-
-git checkout -b feature/your-feature
-
-
-# Work, then commit your changes
-
-git add .
-git commit -m "Describe changes"
-
-
-# Push your branch to GitHub
-
-git push -u origin feature/your-feature
-
-
-Open a Pull Request on GitHub for review
-
-# 💡 8. Extra Tips
-
-Commit often — small commits are easier to review.
-
-Write clear messages like "Fix login form validation".
-
-Always pull before pushing to avoid merge conflicts.
-
-If something breaks, you can always check previous commits with:
-
-git log
-=======
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-
-## Python + HTML version (new)
-
-This repository now includes a minimal Flask application that serves static HTML templates and CSS, intended to replace the Vite+React frontend while keeping the website content and pages.
-
-To run the Python version locally (Windows PowerShell):
-
+### Before Starting Work
 ```powershell
-python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -r requirements.txt; python app.py
+# Always pull the latest changes first
+git checkout main
+git pull origin main
 ```
 
-Then open http://127.0.0.1:5000 in your browser.
+### Making Changes
+```powershell
+# Create a feature branch (never work directly on main)
+git checkout -b feature/your-feature-name
 
-Notes:
-- The original React source lives in `src/` and can be kept for reference or removed later.
-- The Flask app files are: `app.py`, `templates/` and `static/`.
->>>>>>> 392f46f (change from vite and react to html flask and python)
+# Example:
+git checkout -b feature/login-validation
+```
+
+### Committing Your Work
+```powershell
+# Check what files changed
+git status
+
+# Stage your changes
+git add .
+
+# Commit with clear message
+git commit -m "Add login form validation"
+
+# Push to GitHub
+git push -u origin feature/your-feature-name
+```
+
+### Creating a Pull Request
+1. Go to GitHub → your branch
+2. Click "Compare & Pull Request"
+3. Add description of your changes
+4. Request team review
+5. After approval, merge to main
+
+---
+
+## 💡 Coding Best Practices
+
+### Commits
+- ✅ Make small, focused commits (one feature per commit)
+- ✅ Write clear commit messages: "Fix password validation" not "stuff"
+- ✅ Commit frequently (at least once per task)
+- ❌ Don't commit large changes all at once
+
+### Branches
+- ✅ Create a new branch for every feature/fix
+- ✅ Use descriptive names: `feature/login`, `bugfix/typo`, `docs/readme`
+- ✅ Delete old branches after merging
+- ❌ Never push directly to main
+
+### Code Quality
+- ✅ Add comments for complex logic
+- ✅ Keep functions small and focused
+- ✅ Use meaningful variable names
+- ✅ Test your changes before pushing
+- ❌ Don't leave debugging print statements
+- ❌ Don't commit sensitive data (API keys, passwords)
+
+### Pull Requests
+- ✅ Keep PRs focused on one feature
+- ✅ Add description of what changed and why
+- ✅ Wait for team review before merging
+- ✅ Respond to feedback promptly
+
+---
+
+## 🔧 Common Git Issues
+
+| Problem | Solution |
+|---------|----------|
+| "error: failed to push some refs" | Run `git pull origin main`, resolve conflicts, then `git push` |
+| "nothing to commit" | You haven't made changes yet |
+| Merge conflict | Open conflicted file, resolve manually, then `git add .` and `git commit` |
+| Wrong branch | `git checkout branch-name` |
+| Need to undo commits | `git revert HEAD~1` (creates new commit) or `git reset HEAD~1` (keeps changes) |
+
+---
+
+## 📁 Project Structure
+
+```
+WeightLossWebApp/
+├── app.py              # Main Flask application
+├── requirements.txt    # Python dependencies
+├── firebase-key.json   # Firebase credentials (don't share!)
+├── templates/          # HTML templates
+├── static/             # CSS and static assets
+└── backend/            # Additional backend code
+```
+
+---
+
+## 🔐 Security Notes
+
+- **Never commit** firebase-key.json or .env files
+- **Never hardcode** passwords or API keys
+- Use environment variables for secrets
+- Check .gitignore before pushing sensitive files
+
+---
+
+## 📞 Need Help?
+
+For git questions, ask the team or check: https://git-scm.com/doc

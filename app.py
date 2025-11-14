@@ -1,23 +1,33 @@
 """
-WeightGame Flask Application
----------------------------
-Main entry point for the WeightGame web application. This Flask app serves a gamified
-weight loss tracking system with features for daily tasks, progress visualization,
-and avatar customization.
+Weight Loss Web App - Flask Backend
+====================================
+Main application entry point for the Weight Loss Web App. Handles user authentication,
+weight tracking, workout logging, and goal management with Firebase Firestore integration.
 
-Routes:
-- / : Home page with app introduction
-- /dashboard : User progress and statistics
-- /tasks : Daily challenges and habits
-- /settings : User preferences and app configuration
-- /myavatar : Character customization
-- 404 handler : Custom not found page
+Key Features:
+- User registration and login with session management
+- Weight entry logging and progress tracking
+- Workout logging with calorie calculations
+- Goal setting and deadline management
+- Real-time activity feed with timestamps
+- Responsive dashboard with statistics
+
+Dependencies:
+- Flask: Web framework
+- firebase-admin: Firestore database connection
+- Jinja2: HTML templating (included with Flask)
+
+Environment Setup:
+- python -m venv .venv
+- .venv/Scripts/Activate.ps1 (Windows)
+- pip install -r requirements.txt
+- python app.py
 
 Author: will-doney
 Date: November 2025
 """
 
-from flask import Flask, render_template, send_from_directory, request,redirect, url_for, session, flash
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, session, flash
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
@@ -25,21 +35,21 @@ import uuid
 import os
 
 
+# Initialize Flask application
 app = Flask(__name__, static_folder='static', template_folder='templates')
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # TODO: Use environment variable for production
 
+# Initialize Firebase Admin SDK
+try:
+    cred = credentials.Certificate("firebase-key.json")
+    firebase_admin.initialize_app(cred)
+except Exception as e:
+    print(f"ERROR: Firebase initialization failed. Check firebase-key.json exists: {e}")
 
-# Initialize Flask
-app = Flask(__name__, static_folder='static', template_folder='templates')
-app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this!
-
-# Initialize Firebase
-cred = credentials.Certificate("firebase-key.json")  # Make sure this file is in your project
-firebase_admin.initialize_app(cred)
-
-# Firebase Firestore database
+# Get Firestore database reference
 db = firestore.client()
 
-# Helper function to format time
+# Utility function: Format timestamp as relative time (e.g., "2 hours ago")
 def format_timesince(dt):
     now = datetime.utcnow()
     diff = now - dt
@@ -52,18 +62,30 @@ def format_timesince(dt):
     else:
         return "Just now"
 
-# Routes
+# ============================================================
+# ROUTE: Home Page
+# ============================================================
 @app.route('/')
 def home():
+    """Display the home/landing page."""
     return render_template('home.html')
 
+
+# ============================================================
+# ROUTE: User Login
+# ============================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Handle user login with username/password authentication.
+    
+    TODO: Implement password hashing (use werkzeug.security.check_password_hash)
+    TODO: Add login attempt rate limiting to prevent brute force
+    """
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
         
-        # Find user in Firebase
+        # Query Firebase for user with matching credentials
         users_ref = db.collection('users')
         user_query = users_ref.where('username', '==', username).where('password', '==', password).get()
         
@@ -78,14 +100,25 @@ def login():
     
     return render_template('login.html')
 
+
+# ============================================================
+# ROUTE: User Registration
+# ============================================================
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """Create a new user account.
+    
+    SECURITY WARNING: Passwords are stored in plaintext!
+    TODO: Hash passwords before storing (use werkzeug.security.generate_password_hash)
+    TODO: Add email validation
+    TODO: Implement password strength requirements
+    """
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
+        username = request.form['username'].strip()
+        email = request.form['email'].strip()
         password = request.form['password']
         
-        # Check if user exists
+        # Check if username already exists
         users_ref = db.collection('users')
         existing_user = users_ref.where('username', '==', username).get()
         
@@ -93,37 +126,56 @@ def signup():
             flash('Username already exists!', 'error')
             return redirect(url_for('signup'))
         
-        # Create new user
+        # Create new user document
         user_id = str(uuid.uuid4())
         user_data = {
             'username': username,
             'email': email,
-            'password': password,  # In production, you should hash this!
-            'created_at': datetime.utcnow()
+            'password': password,  # SECURITY: Should be hashed in production
+            'created_at': datetime.utcnow(),
+            'avatar': 'default.png',
+            'is_active': True
         }
         
         users_ref.document(user_id).set(user_data)
-        
         flash('Account created successfully! Please login.', 'success')
         return redirect(url_for('login'))
     
     return render_template('signup.html')
 
+
+# ============================================================
+# ROUTE: User Logout
+# ============================================================
 @app.route('/logout')
 def logout():
+    """Clear user session and redirect to home page."""
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
+
+# ============================================================
+# ROUTE: User Dashboard
+# ============================================================
 @app.route('/dashboard')
 def dashboard():
+    """Display user's dashboard with weight tracking and stats.
+    
+    Requires authentication. Displays:
+    - Current weight and weight change
+    - Calories burned from workouts
+    - Recent activities (weights, workouts)
+    - Goal progress
+    """
+    # Check if user is logged in
     if 'user_id' not in session:
-         flash('Please login to access the dashboard', 'error')
-         return redirect(url_for('login'))
+        flash('Please login to access the dashboard', 'error')
+        return redirect(url_for('login'))
     
     user_id = session['user_id']
     
-    # Get user's weight data
+    # Fetch user's weight entries
     weight_entries = db.collection('weight_entries')\
         .where('user_id', '==', user_id)\
         .order_by('date')\
@@ -137,17 +189,16 @@ def dashboard():
             'date': data['date'].strftime('%b %d')
         })
     
-    # Get user's workouts for calories
+    # Calculate total calories burned from all workouts
     workouts = db.collection('workouts')\
         .where('user_id', '==', user_id)\
         .stream()
-    
     total_calories = sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
     
-    # Get recent activities
+    # Build recent activities feed
     recent_activities = []
     
-    # Recent weights (last 3)
+    # Get last 3 weight entries
     recent_weights = db.collection('weight_entries')\
         .where('user_id', '==', user_id)\
         .order_by('date', direction=firestore.Query.DESCENDING)\
@@ -163,7 +214,7 @@ def dashboard():
             'time': format_timesince(data['date'])
         })
     
-    # Recent workouts (last 2)
+    # Get last 2 workouts
     recent_workouts = db.collection('workouts')\
         .where('user_id', '==', user_id)\
         .order_by('date', direction=firestore.Query.DESCENDING)\
@@ -179,7 +230,7 @@ def dashboard():
             'time': format_timesince(data['date'])
         })
     
-    # Sort by time
+    # Sort activities by recency (newest first)
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
     return render_template('dashboard.html',
@@ -201,96 +252,156 @@ def dashboard():
         recent_activities=recent_activities[:5]
     )
 
+
+# ============================================================
+# ROUTE: Log Weight Entry
+# ============================================================
 @app.route('/log_weight', methods=['GET', 'POST'])
 def log_weight():
+    """Record a new weight entry for the user.
+    
+    Stores weight value, optional notes, and timestamp in Firestore.
+    """
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        weight = float(request.form['weight'])
-        notes = request.form.get('notes', '')
-        
-        weight_data = {
-            'user_id': session['user_id'],
-            'weight': weight,
-            'notes': notes,
-            'date': datetime.utcnow()
-        }
-        
-        db.collection('weight_entries').add(weight_data)
-        flash('Weight logged successfully!', 'success')
-        return redirect(url_for('dashboard'))
+        try:
+            weight = float(request.form['weight'])
+            notes = request.form.get('notes', '').strip()
+            
+            weight_entry = {
+                'user_id': session['user_id'],
+                'weight': weight,
+                'notes': notes,
+                'date': datetime.utcnow()
+            }
+            
+            db.collection('weight_entries').add(weight_entry)
+            flash('Weight logged successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        except ValueError:
+            flash('Please enter a valid weight number.', 'error')
     
     return render_template('log_weight.html')
 
+
+# ============================================================
+# ROUTE: Log Workout
+# ============================================================
 @app.route('/log_workout', methods=['GET', 'POST'])
 def log_workout():
+    """Record a new workout session.
+    
+    Stores workout type, duration, calories burned, and timestamp.
+    """
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        workout_type = request.form['workout_type']
-        duration = int(request.form['duration'])
-        calories = int(request.form['calories'])
-        
-        workout_data = {
-            'user_id': session['user_id'],
-            'workout_type': workout_type,
-            'duration': duration,
+        try:
+            workout_type = request.form['workout_type'].strip()
+            duration = int(request.form['duration'])
+            calories = int(request.form['calories'])
+            
+            if duration <= 0 or calories < 0:
+                flash('Please enter valid duration and calories.', 'error')
+                return render_template('log_workout.html')
+            
+            workout_entry = {
+                'user_id': session['user_id'],
+                'workout_type': workout_type,
+                'duration': duration,
             'calories_burned': calories,
             'date': datetime.utcnow()
-        }
-        
-        db.collection('workouts').add(workout_data)
-        flash('Workout logged successfully!', 'success')
-        return redirect(url_for('dashboard'))
+            }
+            
+            db.collection('workouts').add(workout_entry)
+            flash('Workout logged successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        except ValueError:
+            flash('Please enter valid numbers for duration and calories.', 'error')
     
     return render_template('log_workout.html')
 
+
+# ============================================================
+# ROUTE: Set Weight Goal
+# ============================================================
 @app.route('/set_goal', methods=['GET', 'POST'])
 def set_goal():
+    """Create or update a weight loss goal.
+    
+    Stores target weight, deadline, and creation timestamp.
+    """
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        target_weight = float(request.form['target_weight'])
-        deadline = datetime.strptime(request.form['deadline'], '%Y-%m-%d').date()
-        
-        goal_data = {
-            'user_id': session['user_id'],
-            'target_weight': target_weight,
-            'deadline': deadline,
-            'created_at': datetime.utcnow(),
-            'is_active': True
-        }
-        
-        db.collection('goals').add(goal_data)
-        flash('Goal set successfully!', 'success')
-        return redirect(url_for('dashboard'))
+        try:
+            target_weight = float(request.form['target_weight'])
+            deadline = datetime.strptime(request.form['deadline'], '%Y-%m-%d').date()
+            
+            goal_entry = {
+                'user_id': session['user_id'],
+                'target_weight': target_weight,
+                'deadline': deadline,
+                'created_at': datetime.utcnow(),
+                'is_active': True
+            }
+            
+            db.collection('goals').add(goal_entry)
+            flash('Goal set successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        except ValueError:
+            flash('Please enter a valid weight and deadline.', 'error')
     
     return render_template('set_goal.html')
 
+
+# ============================================================
+# ROUTE: Daily Tasks
+# ============================================================
 @app.route('/tasks')
 def tasks():
+    """Display daily tasks and challenges."""
     return render_template('tasks.html')
 
 
+# ============================================================
+# ROUTE: User Settings
+# ============================================================
 @app.route('/settings')
 def settings():
+    """Display user preferences and settings."""
     return render_template('settings.html')
 
 
+# ============================================================
+# ROUTE: Avatar Customization
+# ============================================================
 @app.route('/myavatar')
 def myavatar():
+    """Display avatar customization page."""
     return render_template('myavatar.html')
 
 
+# ============================================================
+# ERROR HANDLERS
+# ============================================================
 @app.errorhandler(404)
 def page_not_found(e):
+    """Handle 404 Not Found errors with custom page."""
     return render_template('404.html'), 404
 
 
+# ============================================================
+# APPLICATION ENTRY POINT
+# ============================================================
 if __name__ == '__main__':
-    # Use port 5000 by default. For production, use a WSGI server.
+    # Get port from environment or use default 5000
     port = int(os.environ.get('PORT', 5000))
+    
+    # Run Flask development server
+    # NOTE: For production, use a WSGI server like Gunicorn or uWSGI
     app.run(host='0.0.0.0', port=port, debug=True)

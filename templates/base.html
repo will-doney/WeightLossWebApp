@@ -1,19 +1,20 @@
-{# 
-WeightGame Base Template
-----------------------
-Base HTML template that all other pages extend. Provides the common layout structure
-including navigation, header, and footer. Uses Jinja2 templating for dynamic content
-and active state handling.
+{#
+============================================================
+Template: base.html
+Purpose : Shared site layout for every page in WeightGame. Defines navigation,
+          flash messaging, and footer structure. All other templates extend this.
 
-Blocks:
-- content: Main content area that child templates override
+Blocks  :
+  - content → main page body injected by child templates.
 
-Variables:
-- request.path: Current URL path for navigation highlighting
-- year: Optional year for copyright notice
+Context :
+  - request.path → used to highlight the active navigation link.
+  - session      → determines which auth links to render.
+  - year (opt.)  → footer year override when provided.
 
-Author: will-doney
-Date: November 2025
+Author  : will-doney
+Updated : November 2025 by GPT-5-Codex
+============================================================
 #}
 <!doctype html>
 <html lang="en">
@@ -24,7 +25,11 @@ Date: November 2025
     <link rel="stylesheet" href="/static/css/styles.css" />
   </head>
   <body>
-    <header class="site-header">
+        <!-- ============================================================
+          PRIMARY NAVIGATION BAR
+          Provides global navigation and authentication links.
+        ============================================================ -->
+        <header class="site-header">
       <div class="container navbar">
         <h1 class="brand"><a href="/">WeightGame</a></h1>
         <nav>
@@ -46,6 +51,10 @@ Date: November 2025
       </div>
     </header>
 
+    <!-- ============================================================
+         MAIN CONTENT AREA
+         Renders flash messages (if any) and child template content.
+    ============================================================ -->
     <main class="container main-content">
       <!-- Flash Messages -->
       {% with messages = get_flashed_messages() %}
@@ -61,6 +70,9 @@ Date: November 2025
       {% block content %}{% endblock %}
     </main>
 
+    <!-- ============================================================
+         GLOBAL FOOTER
+    ============================================================ -->
     <footer class="site-footer">
       © {{ year if year is defined else "" }} WeightGame — Team Project Base
     </footer>

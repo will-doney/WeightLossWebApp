@@ -1,17 +1,22 @@
-{# 
-WeightGame Settings Page
-----------------------
-User preferences and application configuration page. Lists available
-settings categories that will be implemented in future iterations,
-including notifications, privacy, themes, and data management.
+{#
+============================================================
+Template: settings.html
+Purpose : Client-side prototype for user settings (theme, notifications,
+          account details). Persists preferences to localStorage until
+          backend wiring is implemented.
 
-Blocks:
-- content: List of configurable settings
+Content :
+  - General panel (theme selector).
+  - Account panel (display name + password placeholders).
+  - Save/Reset controls using localStorage.
 
-Author: will-doney
-Date: November 2025
+TODO    : Replace localStorage with authenticated API calls, add missing
+          inputs referenced by script (notifyToggle, autoTheme, etc.).
+
+Author  : will-doney
+Updated : November 2025 by GPT-5-Codex
+============================================================
 #}
-{# settings.html #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -42,7 +47,7 @@ Date: November 2025
   <div class="row">
     <div class="label">Theme</div>
     <div class="field">
-      <select id="themeSelect">
+      <select id="themeSelect" aria-label="Select theme">
         <option value="light">Light</option>
         <option value="dark">Dark</option>
       </select>
@@ -80,26 +85,77 @@ Date: November 2025
 <p class="hint">More settings will be added in future updates.</p>
 
 <script>
+  function getEl(id) {
+    return document.getElementById(id);
+  }
+
   function loadSettings(){
     const get = k => localStorage.getItem(k);
-    document.getElementById('notifyToggle').checked = get('notify') === '1';
-    document.getElementById('themeSelect').value   = get('theme') || 'light';
-    document.getElementById('autoTheme').checked   = get('autoTheme') === '1';
-    document.getElementById('dndToggle').checked   = get('dnd') === '1';
-    document.getElementById('displayName').value   = get('displayName') || '';
-    document.getElementById('unitsSelect').value   = get('units') || 'metric';
-    document.getElementById('privacyMode').checked = get('privacy') === '1';
+    const themeSelect = getEl('themeSelect');
+    const displayName = getEl('displayName');
+    const optional = {
+      notifyToggle: getEl('notifyToggle'),
+      autoTheme: getEl('autoTheme'),
+      dndToggle: getEl('dndToggle'),
+      unitsSelect: getEl('unitsSelect'),
+      privacyMode: getEl('privacyMode')
+    };
+
+    if (optional.notifyToggle) {
+      optional.notifyToggle.checked = get('notify') === '1';
+    }
+    if (themeSelect) {
+      themeSelect.value = get('theme') || 'light';
+    }
+    if (optional.autoTheme) {
+      optional.autoTheme.checked = get('autoTheme') === '1';
+    }
+    if (optional.dndToggle) {
+      optional.dndToggle.checked = get('dnd') === '1';
+    }
+    if (displayName) {
+      displayName.value = get('displayName') || '';
+    }
+    if (optional.unitsSelect) {
+      optional.unitsSelect.value = get('units') || 'metric';
+    }
+    if (optional.privacyMode) {
+      optional.privacyMode.checked = get('privacy') === '1';
+    }
   }
 
   function saveSettings(){
-    const set = (k,v)=>localStorage.setItem(k,v);
-    set('notify',     document.getElementById('notifyToggle').checked ? '1':'0');
-    set('theme',      document.getElementById('themeSelect').value);
-    set('autoTheme',  document.getElementById('autoTheme').checked ? '1':'0');
-    set('dnd',        document.getElementById('dndToggle').checked ? '1':'0');
-    set('displayName',document.getElementById('displayName').value.trim());
-    set('units',      document.getElementById('unitsSelect').value);
-    set('privacy',    document.getElementById('privacyMode').checked ? '1':'0');
+    const themeSelect = getEl('themeSelect');
+    const displayName = getEl('displayName');
+    const optional = {
+      notifyToggle: getEl('notifyToggle'),
+      autoTheme: getEl('autoTheme'),
+      dndToggle: getEl('dndToggle'),
+      unitsSelect: getEl('unitsSelect'),
+      privacyMode: getEl('privacyMode')
+    };
+
+    if (optional.notifyToggle) {
+      localStorage.setItem('notify', optional.notifyToggle.checked ? '1' : '0');
+    }
+    if (themeSelect) {
+      localStorage.setItem('theme', themeSelect.value);
+    }
+    if (optional.autoTheme) {
+      localStorage.setItem('autoTheme', optional.autoTheme.checked ? '1' : '0');
+    }
+    if (optional.dndToggle) {
+      localStorage.setItem('dnd', optional.dndToggle.checked ? '1' : '0');
+    }
+    if (displayName) {
+      localStorage.setItem('displayName', displayName.value.trim());
+    }
+    if (optional.unitsSelect) {
+      localStorage.setItem('units', optional.unitsSelect.value);
+    }
+    if (optional.privacyMode) {
+      localStorage.setItem('privacy', optional.privacyMode.checked ? '1' : '0');
+    }
 
     alert('Settings saved.');
   }
@@ -121,11 +177,14 @@ Date: November 2025
     }
   }
 
-  document.getElementById('themeSelect').addEventListener('change', (e) => {
-    const theme = e.target.value;
-    localStorage.setItem('theme', theme);
-    applyTheme(theme);
-  });
+  const themeSelect = getEl('themeSelect');
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      const theme = e.target.value;
+      localStorage.setItem('theme', theme);
+      applyTheme(theme);
+    });
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
@@ -133,7 +192,7 @@ Date: November 2025
     applyTheme(savedTheme);
   });
 </script>
-{% endblock %}
+{% endblock %}
 
 
 

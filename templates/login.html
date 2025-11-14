@@ -1,3 +1,18 @@
+{#
+============================================================
+Template: login.html
+Purpose : Authentication form for existing users. Extends base.html and posts
+                    credentials for validation in Flask route `/login`.
+
+Content :
+    - Intro text welcoming returning users.
+    - Username/password fields with basic HTML validation.
+    - Link directing to signup page for new accounts.
+
+Author  : will-doney
+Updated : November 2025 by GPT-5-Codex
+============================================================
+#}
 {% extends 'base.html' %}
 {% block content %}
 <div class="auth-container">

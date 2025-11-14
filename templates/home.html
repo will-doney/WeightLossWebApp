@@ -1,22 +1,33 @@
-{# 
-WeightGame Home Page
-------------------
-Landing page template that introduces users to WeightGame. Extends the base template
-and provides a welcoming message explaining the app's core features.
+{#
+============================================================
+Template: home.html
+Purpose : Public landing page introducing WeightGame and guiding users to login
+                    or create an account. Extends base.html for global layout.
 
-Blocks:
-- content: Welcome message and app description
+Content :
+    - Hero message with brief product description.
+    - Primary calls-to-action for authentication flows.
+    - Flash message block for status notifications.
 
-Author: will-doney
-Date: November 2025
+Author  : will-doney
+Updated : November 2025 by GPT-5-Codex
+============================================================
 #}
 {% extends 'base.html' %}
 {% block content %}
-  <div class="text-center">
+    <!-- ============================================================
+             HERO SECTION
+             Presents app value proposition and welcoming message.
+    ============================================================ -->
+    <div class="text-center">
     <h1 class="page-title">Welcome to WeightGame</h1>
     <p class="lead">This project helps users stay consistent with healthy habits through gamified daily challenges, progress tracking, and motivation features.</p>
   </div>
 
+    <!-- ============================================================
+             CALL TO ACTION + FLASH MESSAGES
+             Encourages users to log in / sign up and surfaces alerts.
+    ============================================================ -->
   <div class="home-container">
         <div class="home-header">
             <h1>🎯 WeightGame</h1>

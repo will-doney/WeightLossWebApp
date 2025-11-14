@@ -1,4 +1,21 @@
+{#
+============================================================
+Template: myavatar.html
+Purpose : Simple avatar customization demo allowing mood switching and points
+          tracking on the client. Extends base.html.
 
+Content :
+  - Avatar preview with level badge and progress bar.
+  - Buttons to adjust avatar mood and increment points.
+  - LocalStorage-backed point system demonstrating progression.
+
+TODO    : Persist avatar state server-side, expand mood options, integrate with
+          real achievements.
+
+Author  : will-doney
+Updated : November 2025 by GPT-5-Codex
+============================================================
+#}
 {% extends 'base.html' %}
 
 {% block content %}
@@ -20,7 +37,7 @@
     </div>
 
     <div class="progress-wrap" aria-hidden="false">
-      <div class="progress-bg" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="progress-bg" role="progressbar" aria-label="Avatar level progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="progress-fill" class="progress-fill"></div>
       </div>
       <div id="points-text" class="points-text">0 / 100 points</div>
