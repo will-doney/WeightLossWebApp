@@ -7,34 +7,42 @@ A gamified weight loss tracking application built with Python Flask and HTML/CSS
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 Install these tools once:
+
 - **Git**: `winget install --id Git.Git -e --source winget`
+
 - **Python 3.13+**: [Download here](https://www.python.org/downloads/)
 - **GitHub Account**: [Create one here](https://github.com)
 
 ### Initial Setup
 
 1. **Clone the repository**
+
    ```powershell
    git clone https://github.com/will-doney/WeightLossWebApp.git
    cd WeightLossWebApp
    ```
 
 2. **Create and activate virtual environment**
+
    ```powershell
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    ```
 
 3. **Install dependencies**
+
    ```powershell
    pip install -r requirements.txt
    ```
 
 4. **Run the application**
+
    ```powershell
    python app.py
    ```
+
    Open http://localhost:5000 in your browser
 
 ---
@@ -42,6 +50,7 @@ Install these tools once:
 ## 📤 GitHub Workflow (For Team Collaboration)
 
 ### Before Starting Work
+
 ```powershell
 # Always pull the latest changes first
 git checkout main
@@ -49,6 +58,7 @@ git pull origin main
 ```
 
 ### Making Changes
+
 ```powershell
 # Create a feature branch (never work directly on main)
 git checkout -b feature/your-feature-name
@@ -58,6 +68,7 @@ git checkout -b feature/login-validation
 ```
 
 ### Committing Your Work
+
 ```powershell
 # Check what files changed
 git status
@@ -73,6 +84,7 @@ git push -u origin feature/your-feature-name
 ```
 
 ### Creating a Pull Request
+
 1. Go to GitHub → your branch
 2. Click "Compare & Pull Request"
 3. Add description of your changes
@@ -84,18 +96,21 @@ git push -u origin feature/your-feature-name
 ## 💡 Coding Best Practices
 
 ### Commits
+
 - ✅ Make small, focused commits (one feature per commit)
 - ✅ Write clear commit messages: "Fix password validation" not "stuff"
 - ✅ Commit frequently (at least once per task)
 - ❌ Don't commit large changes all at once
 
 ### Branches
+
 - ✅ Create a new branch for every feature/fix
 - ✅ Use descriptive names: `feature/login`, `bugfix/typo`, `docs/readme`
 - ✅ Delete old branches after merging
 - ❌ Never push directly to main
 
 ### Code Quality
+
 - ✅ Add comments for complex logic
 - ✅ Keep functions small and focused
 - ✅ Use meaningful variable names
@@ -104,6 +119,7 @@ git push -u origin feature/your-feature-name
 - ❌ Don't commit sensitive data (API keys, passwords)
 
 ### Pull Requests
+
 - ✅ Keep PRs focused on one feature
 - ✅ Add description of what changed and why
 - ✅ Wait for team review before merging
@@ -143,4 +159,3 @@ WeightLossWebApp/
 - **Never hardcode** passwords or API keys
 - Use environment variables for secrets
 - Check .gitignore before pushing sensitive files
-

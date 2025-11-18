@@ -1,35 +1,273 @@
 {#
 ============================================================
 Template: tasks.html
-Purpose : Present daily habit prompts that help users maintain momentum.
-          Currently static cards; future iterations can wire this to Firestore.
-
-Content :
-  - Section title and responsive grid of habit cards.
-  - Placeholder copy describing intent for each task.
+Purpose : Daily task management using existing CSS classes only.
+          Simple add/remove/complete functionality without timestamps or difficulty.
 
 Author  : will-doney
-Updated : November 2025 by GPT-5-Codex
+Updated : November 2025 - Simplified with existing styles
 ============================================================
 #}
 {% extends 'base.html' %}
 {% block content %}
   <h2 class="section-title">Daily Tasks</h2>
-  {% set task_list = tasks if tasks is defined else [
-      {"task": "10-minute walk", "details": "Completion tracking and points can be added here."},
-      {"task": "Drink 2 liters of water", "details": "Track hydration and rewards."},
-      {"task": "Stretch for 5 minutes", "details": "Short mobility tasks build consistency."}
-    ]
-  %}
-
-  <div class="grid">
-    {% for task in task_list %}
-      <div class="card">
-        <h3>{{ task.task if task.task is defined else task["task"] }}</h3>
-        <p class="muted">
-          {{ task.details if task.details is defined else task.get('description', 'Build consistent healthy habits.') }}
-        </p>
+  
+  <!-- Add New Task Form -->
+  <div class="card">
+    <h3>Add New Task</h3>
+    <form method="POST" action="{{ url_for('add_task') }}" class="add-task-form">
+      <div class="form-group">
+        <label for="task_name">Task Name:</label>
+        <input type="text" id="task_name" name="task_name" required 
+               placeholder="Enter task name" class="form-control">
       </div>
-    {% endfor %}
+      
+      <div class="form-group">
+        <label for="task_description">Description (optional):</label>
+        <textarea id="task_description" name="task_description" 
+                  placeholder="Enter task description" rows="2" class="form-control"></textarea>
+      </div>
+      
+      <button type="submit">Add Task</button>
+    </form>
   </div>
+
+  <!-- Tasks Progress -->
+  {% if tasks and tasks|length > 0 %}
+    {% set completed_count = tasks|selectattr('completed')|list|length %}
+    {% set total_count = tasks|length %}
+    <p class="progress-info">Progress: {{ completed_count }}/{{ total_count }} tasks completed</p>
+  {% endif %}
+
+  <!-- Tasks Grid -->
+  <div class="grid">
+    {% if tasks and tasks|length > 0 %}
+      {% for task in tasks %}
+        <div class="card {{ 'completed-task' if task.completed else '' }}">
+          <div class="task-header">
+            <div class="task-checkbox">
+              <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form">
+                <input type="checkbox" id="task_{{ task.id }}" 
+                       {{ 'checked' if task.completed else '' }}
+                       onchange="toggleTask(this, '{{ task.name }}', {{ 'true' if task.completed else 'false' }})"
+                       title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}">
+                <label for="task_{{ task.id }}">Toggle completion</label>
+              </form>
+            </div>
+            
+            <div class="task-info">
+              <h3 class="task-name">
+                {{ task.name }}
+              </h3>
+              {% if task.description %}
+                <p class="task-description">{{ task.description }}</p>
+              {% endif %}
+            </div>
+            
+            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
+                  onsubmit="return confirm('Delete this task?')" class="task-form">
+              <button type="submit" class="btn-delete">×</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="card no-tasks">
+        <h3>No tasks yet!</h3>
+        <p class="muted">Add your first task above to get started.</p>
+      </div>
+    {% endif %}
+  </div>
+
+<style>
+
+.card {
+  background-color: #4a4a4a;
+  border: 1px solid #666;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  color: black;
+}
+
+.card h3 {
+  color: black;
+  margin-top: 0;
+}
+
+
+.completed-task {
+  background-color: #5a6b5a;
+  border-color: #6b7a6b;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: black;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #666;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: white;
+  color: black;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-name {
+  margin: 0;
+  font-size: 1.1em;
+  color: black;
+}
+
+.completed-task .task-name {
+  text-decoration: line-through;
+  opacity: 0.7;
+  color: #666;
+}
+
+.task-description {
+  margin: 5px 0 0 0;
+  color: black;
+}
+
+.completed-task .task-description {
+  opacity: 0.7;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+}
+
+.task-form {
+  margin: 0;
+}
+
+.task-checkbox {
+  margin-right: 10px;
+}
+
+.task-checkbox label {
+  font-size: 0;
+  visibility: hidden;
+}
+
+.add-task-form .form-group {
+  margin-bottom: 15px;
+}
+
+.add-task-form button {
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-task-form button:hover {
+  background-color: #0056b3;
+}
+
+.no-tasks {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.progress-info {
+  margin: 20px 0;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Popup styles */
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #28a745;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 1000;
+  font-weight: 600;
+  animation: slideIn 0.3s ease-out;
+}
+
+.popup.reopened {
+  background-color: #ffc107;
+  color: black;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+</style>
+
+<script>
+function toggleTask(checkbox, taskName, wasCompleted) {
+  // Show popup immediately for better UX
+  const action = wasCompleted ? 'reopened' : 'completed';
+  const popup = document.createElement('div');
+  popup.className = `popup ${action === 'reopened' ? 'reopened' : ''}`;
+  popup.textContent = `Task "${taskName}" ${action}!`;
+  
+  document.body.appendChild(popup);
+  
+  // Remove popup after 3 seconds
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.parentNode.removeChild(popup);
+    }
+  }, 3000);
+  
+  // Submit the form to update the server
+  checkbox.form.submit();
+}
+</script>
 {% endblock %}

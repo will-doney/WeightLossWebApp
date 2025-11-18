@@ -363,19 +363,16 @@ TASKS_SAMPLE = [
     {
         "id": 1,
         "task": "10-minute walk",
-        "difficulty": "easy",
-        "details": "Short outdoor or indoor walk to boost circulation."
+        "details":           "Short outdoor or indoor walk to boost circulation."
     },
     {
         "id": 2,
-        "task": "Drink 2 liters of water",
-        "difficulty": "easy",
+        "task": "Drink 2 liters of water", 
         "details": "Stay hydrated throughout the day with measured intake."
     },
     {
         "id": 3,
         "task": "Stretch for 5 minutes",
-        "difficulty": "easy",
         "details": "Loosen muscles with a quick flexibility routine."
     },
 ]
@@ -386,8 +383,142 @@ TASKS_SAMPLE = [
 # ============================================================
 @app.route('/tasks')
 def tasks():
-    """Display daily tasks and challenges."""
-    return render_template('tasks.html', tasks=TASKS_SAMPLE)
+    """Display daily tasks and challenges with user-specific data."""
+    if 'user_id' not in session:
+        flash('Please login to access tasks', 'error')
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    
+    # Get user's tasks from Firestore
+    tasks_ref = db.collection('tasks').where('user_id', '==', user_id)
+    user_tasks = []
+    
+    if db:
+        for task_doc in tasks_ref.stream():
+            task_data = task_doc.to_dict()
+            task_data['id'] = task_doc.id
+            user_tasks.append(task_data)
+    
+    # If no tasks exist, create default ones
+    if not user_tasks and db:
+        for sample_task in TASKS_SAMPLE:
+            task_data = {
+                'user_id': user_id,
+                'name': sample_task['task'],
+                'description': sample_task['details'],
+                'completed': False
+            }
+            doc_ref = db.collection('tasks').add(task_data)
+            task_data['id'] = doc_ref[1].id
+            user_tasks.append(task_data)
+    
+    return render_template('tasks.html', tasks=user_tasks)
+
+
+# ============================================================
+# ROUTE: Add New Task
+# ============================================================
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    """Add a new task for the current user."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    task_name = request.form.get('task_name', '').strip()
+    task_description = request.form.get('task_description', '').strip()
+    
+    if not task_name:
+        flash('Task name is required!', 'error')
+        return redirect(url_for('tasks'))
+    
+    if db:
+        task_data = {
+            'user_id': session['user_id'],
+            'name': task_name,
+            'description': task_description,
+            'completed': False
+        }
+        
+        db.collection('tasks').add(task_data)
+        flash('Task added successfully!', 'success')
+    else:
+        flash('Database not available', 'error')
+    
+    return redirect(url_for('tasks'))
+
+
+# ============================================================
+# ROUTE: Toggle Task Completion
+# ============================================================
+@app.route('/toggle_task/<task_id>', methods=['POST'])
+def toggle_task(task_id):
+    """Toggle completion status of a task."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if db:
+        try:
+            task_ref = db.collection('tasks').document(task_id)
+            task_doc = task_ref.get()
+            
+            if task_doc.exists:
+                task_data = task_doc.to_dict()
+                
+                # Verify task belongs to current user
+                if task_data.get('user_id') == session['user_id']:
+                    new_completed = not task_data.get('completed', False)
+                    update_data = {
+                        'completed': new_completed
+                    }
+                    
+                    task_ref.update(update_data)
+                    
+                    status = 'completed' if new_completed else 'reopened'
+                    flash(f'Task {status}!', 'success')
+                else:
+                    flash('Unauthorized task access', 'error')
+            else:
+                flash('Task not found', 'error')
+                
+        except Exception as e:
+            flash('Error updating task', 'error')
+            print(f"Task toggle error: {e}")
+    
+    return redirect(url_for('tasks'))
+
+
+# ============================================================
+# ROUTE: Delete Task
+# ============================================================
+@app.route('/delete_task/<task_id>', methods=['POST'])
+def delete_task(task_id):
+    """Delete a task for the current user."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if db:
+        try:
+            task_ref = db.collection('tasks').document(task_id)
+            task_doc = task_ref.get()
+            
+            if task_doc.exists:
+                task_data = task_doc.to_dict()
+                
+                # Verify task belongs to current user
+                if task_data.get('user_id') == session['user_id']:
+                    task_ref.delete()
+                    flash('Task deleted successfully!', 'success')
+                else:
+                    flash('Unauthorized task access', 'error')
+            else:
+                flash('Task not found', 'error')
+                
+        except Exception as e:
+            flash('Error deleting task', 'error')
+            print(f"Task deletion error: {e}")
+    
+    return redirect(url_for('tasks'))
 
 
 # ============================================================
@@ -396,7 +527,20 @@ def tasks():
 @app.route('/api/tasks')
 def tasks_api():
     """Return daily tasks as JSON for frontend or integrations."""
-    return jsonify(TASKS_SAMPLE)
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    user_id = session['user_id']
+    tasks_list = []
+    
+    if db:
+        tasks_ref = db.collection('tasks').where('user_id', '==', user_id)
+        for task_doc in tasks_ref.stream():
+            task_data = task_doc.to_dict()
+            task_data['id'] = task_doc.id
+            tasks_list.append(task_data)
+    
+    return jsonify(tasks_list)
 
 
 # ============================================================
