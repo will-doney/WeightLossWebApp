@@ -10,6 +10,14 @@ Updated : November 2025 - Simplified with existing styles
 #}
 {% extends 'base.html' %}
 {% block content %}
+  <!-- Notification Banner Container -->
+  <div id="notificationBanner" class="notification-banner hidden">
+    <div class="banner-content">
+      <span id="bannerMessage"></span>
+      <button id="bannerClose" class="banner-close" onclick="hideBanner()">&times;</button>
+    </div>
+  </div>
+
   <h2 class="section-title">Daily Tasks</h2>
   
   <!-- Add New Task Form -->
@@ -217,48 +225,119 @@ Updated : November 2025 - Simplified with existing styles
   color: #555;
 }
 
-/* Popup styles */
-.popup {
+/* Banner Notification Styles */
+.notification-banner {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
   background-color: #28a745;
   color: white;
-  padding: 15px 25px;
-  border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  z-index: 1000;
+  padding: 15px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
   font-weight: 600;
-  animation: slideIn 0.3s ease-out;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease-out;
+  text-align: center;
 }
 
-.popup.reopened {
+.notification-banner.show {
+  transform: translateY(0);
+}
+
+.notification-banner.hidden {
+  display: none;
+}
+
+.notification-banner.success {
+  background-color: #28a745;
+}
+
+.notification-banner.warning {
   background-color: #ffc107;
   color: black;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+.notification-banner.error {
+  background-color: #dc3545;
+}
+
+.notification-banner.info {
+  background-color: #17a2b8;
+}
+
+.banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banner-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.banner-close:hover {
+  opacity: 1;
+}
+
+/* Adjust body padding when banner is shown */
+body.banner-active {
+  padding-top: 60px;
+  transition: padding-top 0.3s ease-out;
 }
 </style>
 
 <script>
-function toggleTask(checkbox, taskName, wasCompleted) {
-  // Show popup immediately for better UX
-  const action = wasCompleted ? 'reopened' : 'completed';
+// Banner notification system
+function showBanner(message, type = 'success', duration = 4000) {
+  const banner = document.getElementById('notificationBanner');
+  const bannerMessage = document.getElementById('bannerMessage');
+  
+  // Set message and type
+  bannerMessage.textContent = message;
+  banner.className = `notification-banner ${type} show`;
+  
+  // Add body padding
+  document.body.classList.add('banner-active');
+  
+  // Auto-hide after duration
+  clearTimeout(window.bannerTimeout);
+  window.bannerTimeout = setTimeout(() => {
+    hideBanner();
+  }, duration);
+}
 
+function hideBanner() {
+  const banner = document.getElementById('notificationBanner');
+  banner.classList.remove('show');
+  document.body.classList.remove('banner-active');
+  
+  // Hide completely after transition
+  setTimeout(() => {
+    banner.classList.add('hidden');
+  }, 300);
+}
+
+function toggleTask(checkbox, taskName, wasCompleted) {
+  // Show banner immediately for better UX
+  const action = wasCompleted ? 'reopened' : 'completed';
+  
   // If the task is being completed (wasCompleted === false), award points
   let pointsAwarded = 0;
   if (!wasCompleted) {
     pointsAwarded = 10; // points per completed task — changeable
-
+    
     try {
       const STORAGE_KEY = 'avatar_points_v1';
       const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
@@ -267,22 +346,37 @@ function toggleTask(checkbox, taskName, wasCompleted) {
       // ignore localStorage errors (e.g., privacy mode)
     }
   }
-
-  const popup = document.createElement('div');
-  popup.className = `popup ${action === 'reopened' ? 'reopened' : ''}`;
-  popup.textContent = `Task "${taskName}" ${action}!` + (pointsAwarded ? ` (+${pointsAwarded} pts)` : '');
-
-  document.body.appendChild(popup);
-
-  // Remove popup after 3 seconds
-  setTimeout(() => {
-    if (popup.parentNode) {
-      popup.parentNode.removeChild(popup);
-    }
-  }, 3000);
-
+  
+  const message = `Task "${taskName}" ${action}!` + (pointsAwarded ? ` (+${pointsAwarded} pts)` : '');
+  const bannerType = wasCompleted ? 'warning' : 'success';
+  
+  showBanner(message, bannerType);
+  
   // Submit the form to update the server
   checkbox.form.submit();
 }
+
+// Show flash messages as banners on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Check for flash messages from server
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        setTimeout(() => {
+          showBanner('{{ message|safe }}', '{{ category }}', 5000);
+        }, 100);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+  // Handle form submissions with banner feedback
+  const addTaskForm = document.querySelector('.add-task-form');
+  if (addTaskForm) {
+    addTaskForm.addEventListener('submit', function(e) {
+      // Show loading banner
+      showBanner('Adding task...', 'info', 2000);
+    });
+  }
+});
 </script>
 {% endblock %}
