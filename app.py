@@ -51,7 +51,16 @@ except Exception as firebase_error:
 
 # Utility function: Format timestamp as relative time (e.g., "2 hours ago")
 def format_timesince(dt):
-    now = datetime.utcnow()
+    from datetime import timezone
+    
+    # Ensure both datetimes are timezone-aware or both are naive
+    if dt.tzinfo is not None:
+        # dt is timezone-aware, make now timezone-aware too
+        now = datetime.now(timezone.utc)
+    else:
+        # dt is timezone-naive, use naive now
+        now = datetime.utcnow()
+    
     diff = now - dt
     if diff.days > 0:
         return f"{diff.days} days ago"
@@ -268,8 +277,15 @@ def dashboard():
     # Sort activities by recency (newest first)
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
+    # Safely get user name from session email or fallback to user_id
+    user_email = session.get('email') or session.get('user_id') or ''
+    if user_email and '@' in user_email:
+        user_name = user_email.split('@')[0]
+    else:
+        user_name = user_email or 'User'
+
     return render_template('dashboard.html',
-        user_name=session['email'].split('@')[0],  # Use email username part
+        user_name=user_name,
         current_weight=weight_data[-1]['weight'] if weight_data else None,
         weight_change=0,  # You can calculate this later
         last_updated="Recently",
@@ -394,6 +410,138 @@ def set_goal():
     return render_template('set_goal.html')
 
 
+# ============================================================
+# ROUTE: Update Profile (Comprehensive User Data Entry)
+# ============================================================
+@app.route('/update_profile', methods=['GET', 'POST'])
+def update_profile():
+    """Comprehensive user profile update with historical tracking.
+    
+    Handles weight, height, age, sex, goals, activity level, and notes.
+    Stores complete profile snapshots with timestamps for history tracking.
+    """
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    
+    if request.method == 'POST':
+        try:
+            # Extract form data
+            current_weight = float(request.form['current_weight'])  # kg
+            height_cm = int(request.form['height_cm'])  # cm
+            age = int(request.form['age'])
+            sex = request.form['sex'].strip().lower()
+            target_weight = float(request.form['target_weight'])  # kg
+            target_date = datetime.strptime(request.form['target_date'], '%Y-%m-%d')
+            weekly_goal = float(request.form['weekly_goal'])  # kg per week
+            activity_level = request.form['activity_level'].strip()
+            exercise_goals = request.form.get('exercise_goals', '').strip()
+            notes = request.form.get('notes', '').strip()
+            
+            # Calculate BMI using metric formula: weight(kg) / height(m)²
+            height_meters = height_cm / 100.0
+            bmi = current_weight / (height_meters ** 2)
+            
+            # Create comprehensive profile entry
+            profile_data = {
+                'user_id': user_id,
+                'timestamp': datetime.utcnow(),
+                'current_weight': current_weight,  # kg
+                'height_cm': height_cm,
+                'height_meters': height_meters,
+                'age': age,
+                'sex': sex,
+                'bmi': round(bmi, 1),
+                'target_weight': target_weight,  # kg
+                'target_date': target_date,
+                'weekly_goal': weekly_goal,  # kg per week
+                'activity_level': activity_level,
+                'exercise_goals': exercise_goals,
+                'notes': notes,
+                'weight_to_lose': current_weight - target_weight  # kg
+            }
+            
+            # Store in profile_entries collection for history
+            db.collection('profile_entries').add(profile_data)
+            
+            # Also add weight entry for dashboard tracking
+            weight_entry = {
+                'user_id': user_id,
+                'weight': current_weight,  # kg
+                'notes': f"Profile update - BMI: {bmi:.1f}, Height: {height_cm}cm",
+                'date': datetime.utcnow()
+            }
+            db.collection('weight_entries').add(weight_entry)
+            
+            # Update or create current goals
+            goal_entry = {
+                'user_id': user_id,
+                'target_weight': target_weight,
+                'deadline': target_date,
+                'weekly_goal': weekly_goal,
+                'created_at': datetime.utcnow(),
+                'is_active': True
+            }
+            db.collection('goals').add(goal_entry)
+            
+            flash(f'Profile updated successfully! Current BMI: {bmi:.1f}', 'success')
+            return redirect(url_for('dashboard'))
+            
+        except (ValueError, KeyError) as e:
+            flash('Please check all fields and enter valid data.', 'error')
+            print(f"Profile update error: {e}")
+    
+    # GET request - load current data and history
+    current_data = None
+    profile_history = []
+    
+    if db:
+        # Get all profile entries for user (avoid compound index)
+        all_profiles = db.collection('profile_entries')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))
+        
+        profile_docs = []
+        for profile_doc in all_profiles.stream():
+            doc_data = profile_doc.to_dict()
+            doc_data['doc_id'] = profile_doc.id
+            profile_docs.append(doc_data)
+        
+        # Sort by timestamp in Python (client-side)
+        if profile_docs:
+            profile_docs.sort(key=lambda x: x.get('timestamp', datetime.min), reverse=True)
+            
+            # Get most recent profile entry
+            current_data = profile_docs[0]
+            if current_data.get('target_date'):
+                # Handle both datetime and date objects
+                target_date_obj = current_data['target_date']
+                if hasattr(target_date_obj, 'date'):
+                    # It's a datetime object
+                    current_data['target_date'] = target_date_obj.strftime('%Y-%m-%d')
+                else:
+                    # It might be a string or other format
+                    current_data['target_date'] = str(target_date_obj)[:10]
+            
+            # Get profile history (last 10 entries)
+            for history_data in profile_docs[:10]:
+                history_entry = {
+                    'date_formatted': history_data['timestamp'].strftime('%m/%d/%Y %I:%M %p'),
+                    'weight_change': f"{history_data.get('current_weight', 0)} kg",
+                    'goal_change': f"Target: {history_data.get('target_weight', 0)} kg",
+                    'other_changes': f"BMI: {history_data.get('bmi', 0)}, {history_data.get('height_cm', 0)}cm"
+                }
+                profile_history.append(history_entry)
+    
+    # Provide today's date for minimum date validation
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    return render_template('update_profile.html', 
+                         current_data=current_data, 
+                         profile_history=profile_history,
+                         today=today)
+
+
 # Sample tasks payload used by both HTML view and API response.
 TASKS_SAMPLE = [
     {
@@ -436,18 +584,27 @@ def tasks():
             task_data['id'] = task_doc.id
             user_tasks.append(task_data)
     
-    # If no tasks exist, create default ones
+    # Create default tasks only for new users (one-time setup)
     if not user_tasks and db:
-        for sample_task in TASKS_SAMPLE:
-            task_data = {
-                'user_id': user_id,
-                'name': sample_task['task'],
-                'description': sample_task['details'],
-                'completed': False
-            }
-            doc_ref = db.collection('tasks').add(task_data)
-            task_data['id'] = doc_ref[1].id
-            user_tasks.append(task_data)
+        # Check if user has ever had tasks before
+        user_ref = db.collection('users').document(user_id)
+        user_doc = user_ref.get()
+        
+        if not user_doc.exists or not user_doc.to_dict().get('tasks_initialized', False):
+            # First time setup - create sample tasks
+            for sample_task in TASKS_SAMPLE:
+                task_data = {
+                    'user_id': user_id,
+                    'name': sample_task['task'],
+                    'description': sample_task['details'],
+                    'completed': False
+                }
+                doc_ref = db.collection('tasks').add(task_data)
+                task_data['id'] = doc_ref[1].id
+                user_tasks.append(task_data)
+            
+            # Mark user as initialized to prevent recreating tasks
+            user_ref.set({'tasks_initialized': True}, merge=True)
     
     return render_template('tasks.html', tasks=user_tasks)
 
@@ -477,7 +634,7 @@ def add_task():
         }
         
         db.collection('tasks').add(task_data)
-        flash('Task added successfully!', 'success')
+        flash(f'Task "{task_name}" added successfully!', 'success')
     else:
         flash('Database not available', 'error')
     
@@ -510,8 +667,10 @@ def toggle_task(task_id):
                     
                     task_ref.update(update_data)
                     
-                    status = 'completed' if new_completed else 'reopened'
-                    flash(f'Task {status}!', 'success')
+                    if new_completed:
+                        flash(f'Task "{task_data.get("name", "Unknown")}" completed! (+10 pts)', 'success')
+                    else:
+                        flash(f'Task "{task_data.get("name", "Unknown")}" reopened! (-10 pts)', 'warning')
                 else:
                     flash('Unauthorized task access', 'error')
             else:
@@ -543,8 +702,9 @@ def delete_task(task_id):
                 
                 # Verify task belongs to current user
                 if task_data.get('user_id') == session['user_id']:
+                    task_name = task_data.get('name', 'Unknown')
                     task_ref.delete()
-                    flash('Task deleted successfully!', 'success')
+                    flash(f'Task "{task_name}" deleted successfully!', 'success')
                 else:
                     flash('Unauthorized task access', 'error')
             else:

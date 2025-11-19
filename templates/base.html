@@ -56,15 +56,9 @@ Updated : November 2025
          Renders flash messages (if any) and child template content.
     ============================================================ -->
     <main class="container main-content">
-      <!-- Flash Messages -->
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <div class="flash-messages">
-            {% for message in messages %}
-              <div class="flash-message">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
+      <!-- Flash messages consumed by banner system -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Messages handled by individual page banner systems -->
       {% endwith %}
 
       {% block content %}{% endblock %}

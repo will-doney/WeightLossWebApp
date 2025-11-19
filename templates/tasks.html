@@ -10,6 +10,30 @@ Updated : November 2025 - Simplified with existing styles
 #}
 {% extends 'base.html' %}
 {% block content %}
+  <!-- Notification Banner Container -->
+  <div id="notificationBanner" class="notification-banner hidden">
+    <div class="banner-content">
+      <span id="bannerMessage"></span>
+      <button id="bannerClose" class="banner-close" onclick="hideBanner()">&times;</button>
+    </div>
+  </div>
+
+  <!-- Flash message data for JavaScript -->
+  <script id="flash-data" type="application/json">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        [
+        {% for category, message in messages %}
+          {"message": {{ message|tojson }}, "category": {{ category|tojson }}}
+          {%- if not loop.last -%},{%- endif -%}
+        {% endfor %}
+        ]
+      {% else %}
+        []
+      {% endif %}
+    {% endwith %}
+  </script>
+
   <h2 class="section-title">Daily Tasks</h2>
   
   <!-- Add New Task Form -->
@@ -49,7 +73,13 @@ Updated : November 2025 - Simplified with existing styles
               <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form" onsubmit="return false;">
                 <input type="checkbox" id="task_{{ task.id }}" 
                        {{ 'checked' if task.completed else '' }}
+<<<<<<< HEAD
                        onchange="toggleTask(this, '{{ task.name }}', {{ 'true' if task.completed else 'false' }}, '{{ task.id }}')"
+=======
+                       data-task-name="{{ task.name|escape }}"
+                       data-was-completed="{{ task.completed|lower }}"
+                       onchange="toggleTask(this)"
+>>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
                        title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}">
                 <label for="task_{{ task.id }}">Toggle completion</label>
               </form>
@@ -217,39 +247,81 @@ Updated : November 2025 - Simplified with existing styles
   color: #555;
 }
 
-/* Popup styles */
-.popup {
+/* Banner Notification Styles */
+.notification-banner {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
   background-color: #28a745;
   color: white;
-  padding: 15px 25px;
-  border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  z-index: 1000;
+  padding: 15px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 9999;
   font-weight: 600;
-  animation: slideIn 0.3s ease-out;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease-out;
+  text-align: center;
 }
 
-.popup.reopened {
+.notification-banner.show {
+  transform: translateY(0);
+}
+
+.notification-banner.hidden {
+  display: none;
+}
+
+.notification-banner.success {
+  background-color: #28a745;
+}
+
+.notification-banner.warning {
   background-color: #ffc107;
   color: black;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+.notification-banner.error {
+  background-color: #dc3545;
+}
+
+.notification-banner.info {
+  background-color: #17a2b8;
+}
+
+.banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.banner-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 20px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.banner-close:hover {
+  opacity: 1;
+}
+
+/* Adjust body padding when banner is shown */
+body.banner-active {
+  padding-top: 60px;
+  transition: padding-top 0.3s ease-out;
 }
 </style>
 
 <script>
+<<<<<<< HEAD
 async function toggleTask(checkbox, taskName, wasCompleted, taskId) {
   // We'll call the server via AJAX to toggle the task; on success, persist points.
   const action = wasCompleted ? 'reopened' : 'completed';
@@ -305,6 +377,61 @@ async function toggleTask(checkbox, taskName, wasCompleted, taskId) {
     } else {
       // Non-OK response — fallback to full form submit to preserve behavior
       checkbox.form.submit();
+=======
+// Banner notification system
+function showBanner(message, type = 'success', duration = 4000) {
+  const banner = document.getElementById('notificationBanner');
+  const bannerMessage = document.getElementById('bannerMessage');
+  
+  // Set message and type
+  bannerMessage.textContent = message;
+  banner.className = `notification-banner ${type} show`;
+  
+  // Add body padding
+  document.body.classList.add('banner-active');
+  
+  // Auto-hide after duration
+  clearTimeout(window.bannerTimeout);
+  window.bannerTimeout = setTimeout(() => {
+    hideBanner();
+  }, duration);
+}
+
+function hideBanner() {
+  const banner = document.getElementById('notificationBanner');
+  banner.classList.remove('show');
+  document.body.classList.remove('banner-active');
+  
+  // Hide completely after transition
+  setTimeout(() => {
+    banner.classList.add('hidden');
+  }, 300);
+}
+
+function toggleTask(checkbox) {
+  // Get task data from attributes
+  const taskName = checkbox.getAttribute('data-task-name');
+  const wasCompleted = checkbox.getAttribute('data-was-completed') === 'true';
+  
+  // Handle points in localStorage
+  if (!wasCompleted) {
+    // Task being completed - add points
+    try {
+      const STORAGE_KEY = 'avatar_points_v1';
+      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+      localStorage.setItem(STORAGE_KEY, String(current + 10));
+    } catch (e) {
+      // ignore localStorage errors (e.g., privacy mode)
+    }
+  } else {
+    // Task being reopened - subtract points
+    try {
+      const STORAGE_KEY = 'avatar_points_v1';
+      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+      localStorage.setItem(STORAGE_KEY, String(Math.max(0, current - 10)));
+    } catch (e) {
+      // ignore localStorage errors (e.g., privacy mode)
+>>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
     }
   } catch (err) {
     console.warn('Task toggle failed, falling back to form submit', err);
@@ -312,6 +439,26 @@ async function toggleTask(checkbox, taskName, wasCompleted, taskId) {
   } finally {
     checkbox.disabled = false;
   }
+<<<<<<< HEAD
+=======
+  
+  // Submit the form to update the server (server will show banner)
+  checkbox.form.submit();
+>>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
 }
+
+// Show flash messages as banners on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Flash messages are handled via server-side data attributes
+  const flashData = document.getElementById('flash-data');
+  if (flashData) {
+    const messages = JSON.parse(flashData.textContent || '[]');
+    messages.forEach((msg, index) => {
+      setTimeout(() => {
+        showBanner(msg.message, msg.category, 4000);
+      }, 100 * (index + 1));
+    });
+  }
+});
 </script>
 {% endblock %}
