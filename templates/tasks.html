@@ -253,19 +253,34 @@ Updated : November 2025 - Simplified with existing styles
 function toggleTask(checkbox, taskName, wasCompleted) {
   // Show popup immediately for better UX
   const action = wasCompleted ? 'reopened' : 'completed';
+
+  // If the task is being completed (wasCompleted === false), award points
+  let pointsAwarded = 0;
+  if (!wasCompleted) {
+    pointsAwarded = 10; // points per completed task — changeable
+
+    try {
+      const STORAGE_KEY = 'avatar_points_v1';
+      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+      localStorage.setItem(STORAGE_KEY, String(current + pointsAwarded));
+    } catch (e) {
+      // ignore localStorage errors (e.g., privacy mode)
+    }
+  }
+
   const popup = document.createElement('div');
   popup.className = `popup ${action === 'reopened' ? 'reopened' : ''}`;
-  popup.textContent = `Task "${taskName}" ${action}!`;
-  
+  popup.textContent = `Task "${taskName}" ${action}!` + (pointsAwarded ? ` (+${pointsAwarded} pts)` : '');
+
   document.body.appendChild(popup);
-  
+
   // Remove popup after 3 seconds
   setTimeout(() => {
     if (popup.parentNode) {
       popup.parentNode.removeChild(popup);
     }
   }, 3000);
-  
+
   // Submit the form to update the server
   checkbox.form.submit();
 }
