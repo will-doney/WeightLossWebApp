@@ -18,6 +18,22 @@ Updated : November 2025 - Simplified with existing styles
     </div>
   </div>
 
+  <!-- Flash message data for JavaScript -->
+  <script id="flash-data" type="application/json">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        [
+        {% for category, message in messages %}
+          {"message": "{{ message|safe|replace('"', '\\"') }}", "category": "{{ category }}"}
+          {%- if not loop.last -%},{%- endif -%}
+        {% endfor %}
+        ]
+      {% else %}
+        []
+      {% endif %}
+    {% endwith %}
+  </script>
+
   <h2 class="section-title">Daily Tasks</h2>
   
   <!-- Add New Task Form -->
@@ -57,7 +73,9 @@ Updated : November 2025 - Simplified with existing styles
               <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form">
                 <input type="checkbox" id="task_{{ task.id }}" 
                        {{ 'checked' if task.completed else '' }}
-                       onchange="toggleTask(this, '{{ task.name }}', {{ 'true' if task.completed else 'false' }})"
+                       data-task-name="{{ task.name|escape }}"
+                       data-was-completed="{{ task.completed|lower }}"
+                       onchange="toggleTask(this)"
                        title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}">
                 <label for="task_{{ task.id }}">Toggle completion</label>
               </form>
@@ -329,7 +347,11 @@ function hideBanner() {
   }, 300);
 }
 
-function toggleTask(checkbox, taskName, wasCompleted) {
+function toggleTask(checkbox) {
+  // Get task data from attributes
+  const taskName = checkbox.getAttribute('data-task-name');
+  const wasCompleted = checkbox.getAttribute('data-was-completed') === 'true';
+  
   // Handle points in localStorage
   if (!wasCompleted) {
     // Task being completed - add points
@@ -357,16 +379,16 @@ function toggleTask(checkbox, taskName, wasCompleted) {
 
 // Show flash messages as banners on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check for flash messages from server
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        setTimeout(() => {
-          showBanner('{{ message|safe }}', '{{ category }}', 4000);
-        }, 100);
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+  // Flash messages are handled via server-side data attributes
+  const flashData = document.getElementById('flash-data');
+  if (flashData) {
+    const messages = JSON.parse(flashData.textContent || '[]');
+    messages.forEach((msg, index) => {
+      setTimeout(() => {
+        showBanner(msg.message, msg.category, 4000);
+      }, 100 * (index + 1));
+    });
+  }
 });
 </script>
 {% endblock %}
