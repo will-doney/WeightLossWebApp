@@ -73,6 +73,20 @@ Updated : November 2025
 
       let points = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
 
+      // Try to load canonical points from server (if user is authenticated).
+      // If the server returns a value, use it and update localStorage/UI.
+      fetch('/api/avatar/points', { method: 'GET', headers: { 'Accept': 'application/json' } })
+        .then(res => res.json())
+        .then(data => {
+          if (data && typeof data.points === 'number') {
+            points = data.points;
+            localStorage.setItem(STORAGE_KEY, String(points));
+            updateUI();
+          }
+        }).catch(() => {
+          // ignore: user might not be logged in or network error
+        });
+
       const progressFill = document.getElementById('progress-fill');
       const pointsText = document.getElementById('points-text');
       const levelBadge = document.getElementById('level-badge');
@@ -97,18 +111,48 @@ Updated : November 2025
         points = Math.max(0, points + Number(n || 0));
         localStorage.setItem(STORAGE_KEY, String(points));
         updateUI();
+
+        // Persist to server (saves to Firestore via server-side Firebase Admin)
+        fetch('/api/avatar/points', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points })
+        }).then(res => res.json()).then(data => {
+          if (data && data.ok) return;
+          // optional: show non-blocking console warning
+          if (data && data.error) console.warn('Persist points error:', data.error);
+        }).catch(err => console.warn('Persist points failed', err));
       };
 
       window.resetPoints = function () {
         points = 0;
         localStorage.setItem(STORAGE_KEY, '0');
         updateUI();
+
+        // Persist reset to server
+        fetch('/api/avatar/points', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points })
+        }).catch(err => console.warn('Persist points failed', err));
       };
 
      
 
 
-      // initialize
+      // Keep UI in sync when other pages/tabs update localStorage
+      window.addEventListener('storage', function (e) {
+        if (e.key === STORAGE_KEY) {
+          try {
+            points = parseInt(e.newValue || '0', 10) || 0;
+            updateUI();
+          } catch (err) {
+            /* ignore parse errors */
+          }
+        }
+      });
+
+      // initialize (UI will also be refreshed if server returns value above)
       updateUI();
     })();
   </script>
