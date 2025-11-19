@@ -153,8 +153,8 @@ Updated : November 2025
               <div class="bar {{ bar_height_class }} {% if loop.last %}current{% endif %}" 
                    data-weight="{{ entry.weight }} lbs">
                 <div class="bar-date">
-                  {% if entry.date %}
-                    {{ entry.date }}
+                  {% if entry.date_formatted %}
+                    {{ entry.date_formatted }}
                   {% else %}
                     Day {{ loop.index }}
                   {% endif %}

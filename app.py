@@ -198,7 +198,6 @@ def dashboard():
     # Fetch user's weight entries
     weight_entries = db.collection('weight_entries')\
         .where('user_id', '==', user_id)\
-        .order_by('date')\
         .stream()
     
     weight_data = []
@@ -206,8 +205,12 @@ def dashboard():
         data = entry.to_dict()
         weight_data.append({
             'weight': data['weight'],
-            'date': data['date'].strftime('%b %d')
+            'date': data['date'],
+            'date_formatted': data['date'].strftime('%b %d')
         })
+    
+    # Sort by date in Python instead of Firestore
+    weight_data.sort(key=lambda x: x['date'])
     
     # Calculate total calories burned from all workouts
     workouts = db.collection('workouts')\
@@ -221,12 +224,18 @@ def dashboard():
     # Get last 3 weight entries
     recent_weights = db.collection('weight_entries')\
         .where('user_id', '==', user_id)\
-        .order_by('date', direction=firestore.Query.DESCENDING)\
-        .limit(3)\
         .stream()
     
+    # Convert to list and sort by date (newest first)
+    weight_list = []
     for weight in recent_weights:
         data = weight.to_dict()
+        weight_list.append(data)
+    
+    weight_list.sort(key=lambda x: x['date'], reverse=True)
+    
+    # Take only the 3 most recent
+    for data in weight_list[:3]:
         recent_activities.append({
             'icon': '⚖️',
             'title': 'Logged Weight',
@@ -237,12 +246,18 @@ def dashboard():
     # Get last 2 workouts
     recent_workouts = db.collection('workouts')\
         .where('user_id', '==', user_id)\
-        .order_by('date', direction=firestore.Query.DESCENDING)\
-        .limit(2)\
         .stream()
     
+    # Convert to list and sort by date (newest first)
+    workout_list = []
     for workout in recent_workouts:
         data = workout.to_dict()
+        workout_list.append(data)
+    
+    workout_list.sort(key=lambda x: x['date'], reverse=True)
+    
+    # Take only the 2 most recent
+    for data in workout_list[:2]:
         recent_activities.append({
             'icon': '🏃‍♂️',
             'title': data.get('workout_type', 'Workout').title(),
@@ -254,7 +269,7 @@ def dashboard():
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
     return render_template('dashboard.html',
-        user_name=session['username'],
+        user_name=session['email'].split('@')[0],  # Use email username part
         current_weight=weight_data[-1]['weight'] if weight_data else None,
         weight_change=0,  # You can calculate this later
         last_updated="Recently",
@@ -574,6 +589,15 @@ def settings():
 
 
 # ============================================================
+# ROUTE: Progress View
+# ============================================================
+@app.route('/view_progress')
+def view_progress():
+    """Display detailed progress analytics."""
+    # For now, redirect to dashboard, but this can be expanded later
+    # to show detailed progress charts and analytics
+    return redirect(url_for('dashboard'))
+
 # ROUTE: Avatar Customization
 # ============================================================
 @app.route('/myavatar')
