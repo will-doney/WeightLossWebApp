@@ -70,16 +70,12 @@ Updated : November 2025 - Simplified with existing styles
         <div class="card {{ 'completed-task' if task.completed else '' }}">
           <div class="task-header">
             <div class="task-checkbox">
-              <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form" onsubmit="return false;">
+              <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form">
                 <input type="checkbox" id="task_{{ task.id }}" 
                        {{ 'checked' if task.completed else '' }}
-<<<<<<< HEAD
-                       onchange="toggleTask(this, '{{ task.name }}', {{ 'true' if task.completed else 'false' }}, '{{ task.id }}')"
-=======
                        data-task-name="{{ task.name|escape }}"
                        data-was-completed="{{ task.completed|lower }}"
                        onchange="toggleTask(this)"
->>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
                        title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}">
                 <label for="task_{{ task.id }}">Toggle completion</label>
               </form>
@@ -318,66 +314,14 @@ body.banner-active {
   padding-top: 60px;
   transition: padding-top 0.3s ease-out;
 }
+
+/* Clean up any extra styles */
+.task-checkbox input[type="checkbox"] {
+  margin-right: 10px;
+}
 </style>
 
 <script>
-<<<<<<< HEAD
-async function toggleTask(checkbox, taskName, wasCompleted, taskId) {
-  // We'll call the server via AJAX to toggle the task; on success, persist points.
-  const action = wasCompleted ? 'reopened' : 'completed';
-
-  // Disable checkbox while request in-flight
-  checkbox.disabled = true;
-
-  try {
-    const res = await fetch(`{{ url_for('toggle_task', task_id='') }}${taskId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ })
-    });
-
-    // If server returned JSON, use it; otherwise fallback to reload behavior
-    if (res.ok) {
-      const data = await res.json().catch(() => null);
-      const completedNow = data && typeof data.completed !== 'undefined' ? data.completed : !wasCompleted;
-
-      // Award points only when the task transitioned to completed
-      let pointsAwarded = 0;
-      if (completedNow && !wasCompleted) {
-        pointsAwarded = 10; // changeable
-
-        try {
-          const STORAGE_KEY = 'avatar_points_v1';
-          const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
-          const total = current + pointsAwarded;
-          localStorage.setItem(STORAGE_KEY, String(total));
-
-          // Persist to server-side Firestore via avatar points endpoint
-          fetch('/api/avatar/points', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ points: total })
-          }).catch(err => console.warn('Persist points failed', err));
-        } catch (e) {
-          console.warn('localStorage unavailable', e);
-        }
-      }
-
-      // Update checkbox state to reflect server state
-      checkbox.checked = completedNow;
-
-      const popup = document.createElement('div');
-      popup.className = `popup ${completedNow ? '' : 'reopened'}`;
-      popup.textContent = `Task "${taskName}" ${completedNow ? 'completed' : 'reopened'}!` + (pointsAwarded ? ` (+${pointsAwarded} pts)` : '');
-      document.body.appendChild(popup);
-      setTimeout(() => { if (popup.parentNode) popup.parentNode.removeChild(popup); }, 3000);
-    } else {
-      // Non-OK response — fallback to full form submit to preserve behavior
-      checkbox.form.submit();
-=======
 // Banner notification system
 function showBanner(message, type = 'success', duration = 4000) {
   const banner = document.getElementById('notificationBanner');
@@ -431,20 +375,11 @@ function toggleTask(checkbox) {
       localStorage.setItem(STORAGE_KEY, String(Math.max(0, current - 10)));
     } catch (e) {
       // ignore localStorage errors (e.g., privacy mode)
->>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
     }
-  } catch (err) {
-    console.warn('Task toggle failed, falling back to form submit', err);
-    checkbox.form.submit();
-  } finally {
-    checkbox.disabled = false;
   }
-<<<<<<< HEAD
-=======
   
   // Submit the form to update the server (server will show banner)
   checkbox.form.submit();
->>>>>>> 5cb8bee5b4fe398346dbbbe0e6d77e42a1598987
 }
 
 // Show flash messages as banners on page load
