@@ -30,7 +30,7 @@ Date: November 2025
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid
 import os
 import json
@@ -145,7 +145,7 @@ def signup():
                 if db:
                     user_data = {
                         'email': email,
-                        'created_at': datetime.utcnow(),
+                        'created_at': datetime.now(UTC),
                         'avatar': 'default.png',
                         'is_active': True
                     }
@@ -197,7 +197,7 @@ def dashboard():
     
     # Fetch user's weight entries
     weight_entries = db.collection('weight_entries')\
-        .where('user_id', '==', user_id)\
+        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     
     weight_data = []
@@ -214,7 +214,7 @@ def dashboard():
     
     # Calculate total calories burned from all workouts
     workouts = db.collection('workouts')\
-        .where('user_id', '==', user_id)\
+        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     total_calories = sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
     
@@ -223,7 +223,7 @@ def dashboard():
     
     # Get last 3 weight entries
     recent_weights = db.collection('weight_entries')\
-        .where('user_id', '==', user_id)\
+        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     
     # Convert to list and sort by date (newest first)
@@ -245,7 +245,7 @@ def dashboard():
     
     # Get last 2 workouts
     recent_workouts = db.collection('workouts')\
-        .where('user_id', '==', user_id)\
+        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     
     # Convert to list and sort by date (newest first)
@@ -427,7 +427,7 @@ def tasks():
     user_id = session['user_id']
     
     # Get user's tasks from Firestore
-    tasks_ref = db.collection('tasks').where('user_id', '==', user_id)
+    tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
     user_tasks = []
     
     if db:
@@ -570,7 +570,7 @@ def tasks_api():
     tasks_list = []
     
     if db:
-        tasks_ref = db.collection('tasks').where('user_id', '==', user_id)
+        tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
         for task_doc in tasks_ref.stream():
             task_data = task_doc.to_dict()
             task_data['id'] = task_doc.id
