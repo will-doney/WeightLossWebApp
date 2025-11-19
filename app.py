@@ -436,18 +436,27 @@ def tasks():
             task_data['id'] = task_doc.id
             user_tasks.append(task_data)
     
-    # If no tasks exist, create default ones
+    # Create default tasks only for new users (one-time setup)
     if not user_tasks and db:
-        for sample_task in TASKS_SAMPLE:
-            task_data = {
-                'user_id': user_id,
-                'name': sample_task['task'],
-                'description': sample_task['details'],
-                'completed': False
-            }
-            doc_ref = db.collection('tasks').add(task_data)
-            task_data['id'] = doc_ref[1].id
-            user_tasks.append(task_data)
+        # Check if user has ever had tasks before
+        user_ref = db.collection('users').document(user_id)
+        user_doc = user_ref.get()
+        
+        if not user_doc.exists or not user_doc.to_dict().get('tasks_initialized', False):
+            # First time setup - create sample tasks
+            for sample_task in TASKS_SAMPLE:
+                task_data = {
+                    'user_id': user_id,
+                    'name': sample_task['task'],
+                    'description': sample_task['details'],
+                    'completed': False
+                }
+                doc_ref = db.collection('tasks').add(task_data)
+                task_data['id'] = doc_ref[1].id
+                user_tasks.append(task_data)
+            
+            # Mark user as initialized to prevent recreating tasks
+            user_ref.set({'tasks_initialized': True}, merge=True)
     
     return render_template('tasks.html', tasks=user_tasks)
 
@@ -465,7 +474,7 @@ def add_task():
     task_description = request.form.get('task_description', '').strip()
     
     if not task_name:
-        flash('Task name is required!', 'error')
+        # Task name required (handled by form validation)
         return redirect(url_for('tasks'))
     
     if db:
@@ -477,9 +486,11 @@ def add_task():
         }
         
         db.collection('tasks').add(task_data)
-        flash('Task added successfully!', 'success')
+        # Task added (banner handles notification)
+        pass
     else:
-        flash('Database not available', 'error')
+        # Database not available (handled by banner system)
+        pass
     
     return redirect(url_for('tasks'))
 
@@ -511,7 +522,7 @@ def toggle_task(task_id):
                     task_ref.update(update_data)
                     
                     status = 'completed' if new_completed else 'reopened'
-                    flash(f'Task {status}!', 'success')
+                    # Task status updated (banner handles notification)
                 else:
                     flash('Unauthorized task access', 'error')
             else:
@@ -544,14 +555,17 @@ def delete_task(task_id):
                 # Verify task belongs to current user
                 if task_data.get('user_id') == session['user_id']:
                     task_ref.delete()
-                    flash('Task deleted successfully!', 'success')
+                    # Task deleted (banner handles notification)
+                    pass
                 else:
-                    flash('Unauthorized task access', 'error')
+                    # Unauthorized access (handled by banner system)
+                    pass
             else:
-                flash('Task not found', 'error')
+                # Task not found (handled by banner system)
+                pass
                 
         except Exception as e:
-            flash('Error deleting task', 'error')
+            # Error deleting task (handled by banner system)
             print(f"Task deletion error: {e}")
     
     return redirect(url_for('tasks'))

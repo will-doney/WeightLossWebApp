@@ -356,27 +356,9 @@ function toggleTask(checkbox, taskName, wasCompleted) {
   checkbox.form.submit();
 }
 
-// Show flash messages as banners on page load
+// Banner system ready - no additional setup needed
 document.addEventListener('DOMContentLoaded', function() {
-  // Check for flash messages from server
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        setTimeout(() => {
-          showBanner('{{ message|safe }}', '{{ category }}', 5000);
-        }, 100);
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-  
-  // Handle form submissions with banner feedback
-  const addTaskForm = document.querySelector('.add-task-form');
-  if (addTaskForm) {
-    addTaskForm.addEventListener('submit', function(e) {
-      // Show loading banner
-      showBanner('Adding task...', 'info', 2000);
-    });
-  }
+  console.log('Task page loaded with banner notification system');
 });
 </script>
 {% endblock %}
