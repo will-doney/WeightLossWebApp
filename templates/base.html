@@ -13,7 +13,7 @@ Context :
   - year (opt.)  → footer year override when provided.
 
 Author  : will-doney
-Updated : November 2025 by GPT-5-Codex
+Updated : November 2025 
 ============================================================
 #}
 <!doctype html>
@@ -41,7 +41,7 @@ Updated : November 2025 by GPT-5-Codex
           {% if session.user_id %}
             <!-- Show when user is LOGGED IN -->
             <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">Settings</a>
-            <a href="/logout" class="nav-link">Logout ({{ session.username }})</a>
+            <a href="#" class="nav-link" id="logoutBtn">Logout ({{ session.email }})</a>
           {% else %}
             <!-- Show when user is LOGGED OUT -->
             <a href="/signup" class="nav-link {% if request.path == '/signup' %}active{% endif %}">Signup</a>
@@ -76,5 +76,38 @@ Updated : November 2025 by GPT-5-Codex
     <footer class="site-footer">
       © {{ year if year is defined else "" }} WeightGame — Team Project Base
     </footer>
+
+    {% if session.user_id %}
+    <!-- Firebase Logout -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+      import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBn3O0A7K9OEJzFZEFdz4qC6b-PHeAfuD4",
+        authDomain: "weightgame-fitness.firebaseapp.com",
+        projectId: "weightgame-fitness",
+        storageBucket: "weightgame-fitness.firebasestorage.app",
+        messagingSenderId: "906461675569",
+        appId: "1:906461675569:web:f5a71dc47819831aadd510"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          await signOut(auth);
+          window.location.href = '/logout';
+        } catch (error) {
+          console.error('Logout error:', error);
+          // Fallback to server logout even if Firebase logout fails
+          window.location.href = '/logout';
+        }
+      });
+    </script>
+    {% endif %}
   </body>
 </html>

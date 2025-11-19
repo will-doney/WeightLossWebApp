@@ -29,10 +29,11 @@ Date: November 2025
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 from datetime import datetime
 import uuid
 import os
+import json
 
 
 # Initialize Flask application
@@ -75,27 +76,46 @@ def home():
 # ============================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Handle user login with username/password authentication.
-    
-    TODO: Implement password hashing (use werkzeug.security.check_password_hash)
-    TODO: Add login attempt rate limiting to prevent brute force
-    """
+    """Handle user login with Firebase Authentication."""
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        password = request.form['password']
+        # Get the ID token from the client
+        id_token = request.form.get('idToken')
         
-        # Query Firebase for user with matching credentials
-        users_ref = db.collection('users')
-        user_query = users_ref.where('username', '==', username).where('password', '==', password).get()
+        if id_token:
+            try:
+                # Verify the ID token
+                decoded_token = auth.verify_id_token(id_token)
+                uid = decoded_token['uid']
+                email = decoded_token.get('email', '')
+                
+                # Store user info in session
+                session['user_id'] = uid
+                session['email'] = email
+                
+                # Create or update user document in Firestore
+                if db:
+                    user_ref = db.collection('users').document(uid)
+                    user_doc = user_ref.get()
+                    
+                    if not user_doc.exists:
+                        # Create new user document
+                        user_data = {
+                            'email': email,
+                            'created_at': datetime.utcnow(),
+                            'avatar': 'default.png',
+                            'is_active': True
+                        }
+                        user_ref.set(user_data)
+                
+                return jsonify({'success': True, 'redirect': url_for('dashboard')})
+            except Exception as e:
+                print(f"Firebase Auth error: {e}")
+                return jsonify({'success': False, 'error': 'Invalid authentication'})
         
-        if user_query:
-            user_data = user_query[0].to_dict()
-            session['user_id'] = user_query[0].id
-            session['username'] = user_data['username']
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid username or password!', 'error')
+        # Handle form-based fallback (if JavaScript fails)
+        email = request.form.get('email', '').strip()
+        if email:
+            flash('Please use the Firebase login button', 'info')
     
     return render_template('login.html')
 
@@ -105,40 +125,41 @@ def login():
 # ============================================================
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    """Create a new user account.
-    
-    SECURITY WARNING: Passwords are stored in plaintext!
-    TODO: Hash passwords before storing (use werkzeug.security.generate_password_hash)
-    TODO: Add email validation
-    TODO: Implement password strength requirements
-    """
+    """Handle user registration with Firebase Authentication."""
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        email = request.form['email'].strip()
-        password = request.form['password']
+        # Get the ID token from the client
+        id_token = request.form.get('idToken')
         
-        # Check if username already exists
-        users_ref = db.collection('users')
-        existing_user = users_ref.where('username', '==', username).get()
+        if id_token:
+            try:
+                # Verify the ID token
+                decoded_token = auth.verify_id_token(id_token)
+                uid = decoded_token['uid']
+                email = decoded_token.get('email', '')
+                
+                # Store user info in session
+                session['user_id'] = uid
+                session['email'] = email
+                
+                # Create user document in Firestore
+                if db:
+                    user_data = {
+                        'email': email,
+                        'created_at': datetime.utcnow(),
+                        'avatar': 'default.png',
+                        'is_active': True
+                    }
+                    db.collection('users').document(uid).set(user_data)
+                
+                return jsonify({'success': True, 'redirect': url_for('dashboard')})
+            except Exception as e:
+                print(f"Firebase Auth error: {e}")
+                return jsonify({'success': False, 'error': 'Registration failed'})
         
-        if existing_user:
-            flash('Username already exists!', 'error')
-            return redirect(url_for('signup'))
-        
-        # Create new user document
-        user_id = str(uuid.uuid4())
-        user_data = {
-            'username': username,
-            'email': email,
-            'password': password,  # SECURITY: Should be hashed in production
-            'created_at': datetime.utcnow(),
-            'avatar': 'default.png',
-            'is_active': True
-        }
-        
-        users_ref.document(user_id).set(user_data)
-        flash('Account created successfully! Please login.', 'success')
-        return redirect(url_for('login'))
+        # Handle form-based fallback (if JavaScript fails)
+        email = request.form.get('email', '').strip()
+        if email:
+            flash('Please use the Firebase signup button', 'info')
     
     return render_template('signup.html')
 
@@ -148,9 +169,9 @@ def signup():
 # ============================================================
 @app.route('/logout')
 def logout():
-    """Clear user session and redirect to home page."""
+    """Clear user session and Firebase auth, redirect to home page."""
     session.clear()
-    flash('You have been logged out.', 'info')
+    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('home'))
 
 
