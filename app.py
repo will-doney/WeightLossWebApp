@@ -474,7 +474,7 @@ def add_task():
     task_description = request.form.get('task_description', '').strip()
     
     if not task_name:
-        # Task name required (handled by form validation)
+        flash('Task name is required!', 'error')
         return redirect(url_for('tasks'))
     
     if db:
@@ -486,11 +486,9 @@ def add_task():
         }
         
         db.collection('tasks').add(task_data)
-        # Task added (banner handles notification)
-        pass
+        flash(f'Task "{task_name}" added successfully!', 'success')
     else:
-        # Database not available (handled by banner system)
-        pass
+        flash('Database not available', 'error')
     
     return redirect(url_for('tasks'))
 
@@ -521,8 +519,10 @@ def toggle_task(task_id):
                     
                     task_ref.update(update_data)
                     
-                    status = 'completed' if new_completed else 'reopened'
-                    # Task status updated (banner handles notification)
+                    if new_completed:
+                        flash(f'Task "{task_data.get("name", "Unknown")}" completed! (+10 pts)', 'success')
+                    else:
+                        flash(f'Task "{task_data.get("name", "Unknown")}" reopened! (-10 pts)', 'warning')
                 else:
                     flash('Unauthorized task access', 'error')
             else:
@@ -554,18 +554,16 @@ def delete_task(task_id):
                 
                 # Verify task belongs to current user
                 if task_data.get('user_id') == session['user_id']:
+                    task_name = task_data.get('name', 'Unknown')
                     task_ref.delete()
-                    # Task deleted (banner handles notification)
-                    pass
+                    flash(f'Task "{task_name}" deleted successfully!', 'success')
                 else:
-                    # Unauthorized access (handled by banner system)
-                    pass
+                    flash('Unauthorized task access', 'error')
             else:
-                # Task not found (handled by banner system)
-                pass
+                flash('Task not found', 'error')
                 
         except Exception as e:
-            # Error deleting task (handled by banner system)
+            flash('Error deleting task', 'error')
             print(f"Task deletion error: {e}")
     
     return redirect(url_for('tasks'))

@@ -330,35 +330,43 @@ function hideBanner() {
 }
 
 function toggleTask(checkbox, taskName, wasCompleted) {
-  // Show banner immediately for better UX
-  const action = wasCompleted ? 'reopened' : 'completed';
-  
-  // If the task is being completed (wasCompleted === false), award points
-  let pointsAwarded = 0;
+  // Handle points in localStorage
   if (!wasCompleted) {
-    pointsAwarded = 10; // points per completed task — changeable
-    
+    // Task being completed - add points
     try {
       const STORAGE_KEY = 'avatar_points_v1';
       const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
-      localStorage.setItem(STORAGE_KEY, String(current + pointsAwarded));
+      localStorage.setItem(STORAGE_KEY, String(current + 10));
+    } catch (e) {
+      // ignore localStorage errors (e.g., privacy mode)
+    }
+  } else {
+    // Task being reopened - subtract points
+    try {
+      const STORAGE_KEY = 'avatar_points_v1';
+      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+      localStorage.setItem(STORAGE_KEY, String(Math.max(0, current - 10)));
     } catch (e) {
       // ignore localStorage errors (e.g., privacy mode)
     }
   }
   
-  const message = `Task "${taskName}" ${action}!` + (pointsAwarded ? ` (+${pointsAwarded} pts)` : '');
-  const bannerType = wasCompleted ? 'warning' : 'success';
-  
-  showBanner(message, bannerType);
-  
-  // Submit the form to update the server
+  // Submit the form to update the server (server will show banner)
   checkbox.form.submit();
 }
 
-// Banner system ready - no additional setup needed
+// Show flash messages as banners on page load
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Task page loaded with banner notification system');
+  // Check for flash messages from server
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        setTimeout(() => {
+          showBanner('{{ message|safe }}', '{{ category }}', 4000);
+        }, 100);
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 });
 </script>
 {% endblock %}
