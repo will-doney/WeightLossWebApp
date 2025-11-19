@@ -51,7 +51,16 @@ except Exception as firebase_error:
 
 # Utility function: Format timestamp as relative time (e.g., "2 hours ago")
 def format_timesince(dt):
-    now = datetime.utcnow()
+    from datetime import timezone
+    
+    # Ensure both datetimes are timezone-aware or both are naive
+    if dt.tzinfo is not None:
+        # dt is timezone-aware, make now timezone-aware too
+        now = datetime.now(timezone.utc)
+    else:
+        # dt is timezone-naive, use naive now
+        now = datetime.utcnow()
+    
     diff = now - dt
     if diff.days > 0:
         return f"{diff.days} days ago"
@@ -392,6 +401,138 @@ def set_goal():
             flash('Please enter a valid weight and deadline.', 'error')
     
     return render_template('set_goal.html')
+
+
+# ============================================================
+# ROUTE: Update Profile (Comprehensive User Data Entry)
+# ============================================================
+@app.route('/update_profile', methods=['GET', 'POST'])
+def update_profile():
+    """Comprehensive user profile update with historical tracking.
+    
+    Handles weight, height, age, sex, goals, activity level, and notes.
+    Stores complete profile snapshots with timestamps for history tracking.
+    """
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    
+    if request.method == 'POST':
+        try:
+            # Extract form data
+            current_weight = float(request.form['current_weight'])  # kg
+            height_cm = int(request.form['height_cm'])  # cm
+            age = int(request.form['age'])
+            sex = request.form['sex'].strip().lower()
+            target_weight = float(request.form['target_weight'])  # kg
+            target_date = datetime.strptime(request.form['target_date'], '%Y-%m-%d')
+            weekly_goal = float(request.form['weekly_goal'])  # kg per week
+            activity_level = request.form['activity_level'].strip()
+            exercise_goals = request.form.get('exercise_goals', '').strip()
+            notes = request.form.get('notes', '').strip()
+            
+            # Calculate BMI using metric formula: weight(kg) / height(m)²
+            height_meters = height_cm / 100.0
+            bmi = current_weight / (height_meters ** 2)
+            
+            # Create comprehensive profile entry
+            profile_data = {
+                'user_id': user_id,
+                'timestamp': datetime.utcnow(),
+                'current_weight': current_weight,  # kg
+                'height_cm': height_cm,
+                'height_meters': height_meters,
+                'age': age,
+                'sex': sex,
+                'bmi': round(bmi, 1),
+                'target_weight': target_weight,  # kg
+                'target_date': target_date,
+                'weekly_goal': weekly_goal,  # kg per week
+                'activity_level': activity_level,
+                'exercise_goals': exercise_goals,
+                'notes': notes,
+                'weight_to_lose': current_weight - target_weight  # kg
+            }
+            
+            # Store in profile_entries collection for history
+            db.collection('profile_entries').add(profile_data)
+            
+            # Also add weight entry for dashboard tracking
+            weight_entry = {
+                'user_id': user_id,
+                'weight': current_weight,  # kg
+                'notes': f"Profile update - BMI: {bmi:.1f}, Height: {height_cm}cm",
+                'date': datetime.utcnow()
+            }
+            db.collection('weight_entries').add(weight_entry)
+            
+            # Update or create current goals
+            goal_entry = {
+                'user_id': user_id,
+                'target_weight': target_weight,
+                'deadline': target_date,
+                'weekly_goal': weekly_goal,
+                'created_at': datetime.utcnow(),
+                'is_active': True
+            }
+            db.collection('goals').add(goal_entry)
+            
+            flash(f'Profile updated successfully! Current BMI: {bmi:.1f}', 'success')
+            return redirect(url_for('dashboard'))
+            
+        except (ValueError, KeyError) as e:
+            flash('Please check all fields and enter valid data.', 'error')
+            print(f"Profile update error: {e}")
+    
+    # GET request - load current data and history
+    current_data = None
+    profile_history = []
+    
+    if db:
+        # Get all profile entries for user (avoid compound index)
+        all_profiles = db.collection('profile_entries')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))
+        
+        profile_docs = []
+        for profile_doc in all_profiles.stream():
+            doc_data = profile_doc.to_dict()
+            doc_data['doc_id'] = profile_doc.id
+            profile_docs.append(doc_data)
+        
+        # Sort by timestamp in Python (client-side)
+        if profile_docs:
+            profile_docs.sort(key=lambda x: x.get('timestamp', datetime.min), reverse=True)
+            
+            # Get most recent profile entry
+            current_data = profile_docs[0]
+            if current_data.get('target_date'):
+                # Handle both datetime and date objects
+                target_date_obj = current_data['target_date']
+                if hasattr(target_date_obj, 'date'):
+                    # It's a datetime object
+                    current_data['target_date'] = target_date_obj.strftime('%Y-%m-%d')
+                else:
+                    # It might be a string or other format
+                    current_data['target_date'] = str(target_date_obj)[:10]
+            
+            # Get profile history (last 10 entries)
+            for history_data in profile_docs[:10]:
+                history_entry = {
+                    'date_formatted': history_data['timestamp'].strftime('%m/%d/%Y %I:%M %p'),
+                    'weight_change': f"{history_data.get('current_weight', 0)} kg",
+                    'goal_change': f"Target: {history_data.get('target_weight', 0)} kg",
+                    'other_changes': f"BMI: {history_data.get('bmi', 0)}, {history_data.get('height_cm', 0)}cm"
+                }
+                profile_history.append(history_entry)
+    
+    # Provide today's date for minimum date validation
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    return render_template('update_profile.html', 
+                         current_data=current_data, 
+                         profile_history=profile_history,
+                         today=today)
 
 
 # Sample tasks payload used by both HTML view and API response.

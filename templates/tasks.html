@@ -24,7 +24,7 @@ Updated : November 2025 - Simplified with existing styles
       {% if messages %}
         [
         {% for category, message in messages %}
-          {"message": "{{ message|safe|replace('"', '\\"') }}", "category": "{{ category }}"}
+          {"message": {{ message|tojson }}, "category": {{ category|tojson }}}
           {%- if not loop.last -%},{%- endif -%}
         {% endfor %}
         ]
