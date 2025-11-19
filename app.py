@@ -268,8 +268,15 @@ def dashboard():
     # Sort activities by recency (newest first)
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
+    # Safely get user name from session email or fallback to user_id
+    user_email = session.get('email') or session.get('user_id') or ''
+    if user_email and '@' in user_email:
+        user_name = user_email.split('@')[0]
+    else:
+        user_name = user_email or 'User'
+
     return render_template('dashboard.html',
-        user_name=session['email'].split('@')[0],  # Use email username part
+        user_name=user_name,
         current_weight=weight_data[-1]['weight'] if weight_data else None,
         weight_change=0,  # You can calculate this later
         last_updated="Recently",

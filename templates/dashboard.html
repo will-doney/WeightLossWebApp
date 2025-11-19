@@ -51,7 +51,7 @@ Updated : November 2025
           {% if last_updated %}
             Last updated: {{ last_updated }}
           {% else %}
-            <a href="{{ url_for('log_weight') }}">Add your weight data</a>
+            Add your weight data
           {% endif %}
         </div>
       </div>
@@ -59,7 +59,7 @@ Updated : November 2025
 
     <!-- Calories Burned Card -->
     <div class="stat-card success">
-      <div class="stat-icon">🔥</div>
+              <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
       <div class="stat-content">
         <h3>Calories Burned</h3>
         <div class="stat-value">
@@ -155,6 +155,7 @@ Updated : November 2025
                 <div class="bar-date">
                   {% if entry.date_formatted %}
                     {{ entry.date_formatted }}
+
                   {% else %}
                     Day {{ loop.index }}
                   {% endif %}
@@ -163,10 +164,10 @@ Updated : November 2025
             {% endfor %}
           </div>
         {% else %}
-          <div class="no-data-message">
-            <p>No weight data available yet.</p>
-            <a href="{{ url_for('log_weight') }}" class="btn-primary">Add Your First Weight Entry</a>
-          </div>
+            <div class="no-data-message">
+              <p>No weight data available yet.</p>
+              <span class="btn-primary">Add Your First Weight Entry</span>
+            </div>
         {% endif %}
       </div>
     </div>
@@ -199,7 +200,7 @@ Updated : November 2025
         {% else %}
           <div class="no-badges">
             <p>Complete activities to earn badges!</p>
-            <a href="{{ url_for('log_workout') }}" class="btn-secondary">Start Working Out</a>
+            <span class="btn-secondary">Start Working Out</span>
           </div>
         {% endif %}
       </div>
@@ -227,37 +228,53 @@ Updated : November 2025
         {% else %}
           <div class="no-activity">
             <p>No recent activity</p>
-            <a href="{{ url_for('log_workout') }}" class="btn-secondary">Log Your First Workout</a>
+            <span class="btn-secondary">Log Your First Workout</span>
           </div>
         {% endif %}
       </div>
     </div>
   </div>
-
-  <!-- Quick Actions / I might remove this at some point-->
-  <div class="quick-actions">
-    <h3>Quick Actions</h3>
-    <div class="action-buttons">
-      <a href="{{ url_for('log_weight') }}" class="action-btn">
-        <span class="action-icon">⚖️</span>
-        Log Weight
-      </a>
-      <a href="{{ url_for('log_workout') }}" class="action-btn">
-        <span class="action-icon">🏃‍♂️</span>
-        Log Workout
-      </a>
-      <a href="{{ url_for('set_goal') }}" class="action-btn">
-        <span class="action-icon">🎯</span>
-        Set Goal
-      </a>
-      <a href="{{ url_for('view_progress') }}" class="action-btn">
-        <span class="action-icon">📈</span>
-        View Progress
-      </a>
-    </div>
-  </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- Dashboard dynamic scripts: fetch Firebase-backed tasks and inject into page -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Fetch tasks from the Flask API which reads Firestore
+  fetch('{{ url_for("api_tasks") if (url_for is defined) else "/api/tasks" }}')
+    .then(res => res.json())
+    .then(tasks => {
+      if (!Array.isArray(tasks) || tasks.length === 0) return;
+      // Create a small tasks list and append to the Achievements card
+      const badgesGrid = document.querySelector('.badges-grid');
+      if (!badgesGrid) return;
+
+      // Insert tasks at top
+      const tasksContainer = document.createElement('div');
+      tasksContainer.className = 'tasks-list';
+      const title = document.createElement('h4');
+      title.textContent = 'Suggested Tasks';
+      tasksContainer.appendChild(title);
+
+      const ul = document.createElement('ul');
+      ul.className = 'tasks-ul';
+      tasks.slice(0,5).forEach(t => {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        li.textContent = t.task + (t.details ? ' — ' + t.details : '');
+        ul.appendChild(li);
+      });
+      tasksContainer.appendChild(ul);
+      badgesGrid.insertBefore(tasksContainer, badgesGrid.firstChild);
+    })
+    .catch(err => {
+      // silent fail - don't break the dashboard
+      console.debug('Could not load tasks:', err);
+    });
+});
+</script>
 {% endblock %}
 
 
