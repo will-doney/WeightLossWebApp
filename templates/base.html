@@ -1,35 +1,17 @@
-{#
-============================================================
-Template: base.html
-Purpose : Shared site layout for every page in WeightGame. Defines navigation,
-          flash messaging, and footer structure. All other templates extend this.
-
-Blocks  :
-  - content → main page body injected by child templates.
-
-Context :
-  - request.path → used to highlight the active navigation link.
-  - session      → determines which auth links to render.
-  - year (opt.)  → footer year override when provided.
-
-Author  : will-doney
-Updated : November 2025 
-============================================================
-#}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WeightGame</title>
-    <link rel="stylesheet" href="/static/css/styles.css" />
-  </head>
-  <body>
-        <!-- ============================================================
-          PRIMARY NAVIGATION BAR
-          Provides global navigation and authentication links.
-        ============================================================ -->
-        <header class="site-header">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WeightGame</title>
+<link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <!-- ============================================================
+    PRIMARY NAVIGATION BAR
+    Provides global navigation and authentication links.
+  ============================================================ -->
+  <header class="site-header">
       <div class="container navbar">
         <h1 class="brand"><a href="/">WeightGame</a></h1>
         <nav>
