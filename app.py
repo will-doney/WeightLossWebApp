@@ -667,6 +667,16 @@ def toggle_task(task_id):
                     
                     task_ref.update(update_data)
                     
+                    # If task was just completed, atomically increment avatar points by 10
+                    if new_completed:
+                        try:
+                            db.collection('avatars').document(session['user_id']).set({
+                                'points': firestore.Increment(10),
+                                'updated_at': datetime.utcnow()
+                            }, merge=True)
+                        except Exception as e:
+                            print(f"Error incrementing avatar points for {session['user_id']}: {e}")
+                        
                     if new_completed:
                         flash(f'Task "{task_data.get("name", "Unknown")}" completed! (+10 pts)', 'success')
                     else:
