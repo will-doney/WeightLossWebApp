@@ -9,6 +9,7 @@ Content :
   - General panel (theme selector).
   - Account panel (display name + password placeholders).
   - Save/Reset controls using localStorage.
+  - Firebase password reset functionality.
 
 TODO    : Replace localStorage with authenticated API calls, add missing
           inputs referenced by script (notifyToggle, autoTheme, etc.).
@@ -22,6 +23,19 @@ Updated : November 2025
 {% block content %}
 <h1 class="page-title">Settings</h1>
 
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <style>
   .panel{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:10px;padding:18px 18px;margin:14px 0}
   .panel h2{margin:0 0 10px 0;font-size:18px;opacity:.9}
@@ -33,6 +47,7 @@ Updated : November 2025
   .btns{display:flex;gap:10px;margin-top:14px}
   .btn{padding:8px 14px;border-radius:8px;border:1px solid #ffffff22;background:#ffffff14;cursor:pointer}
   .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
+  .btn.warning{background:#f59e0b;border-color:#f59e0b;color:#fff}
   .inline{display:flex;align-items:center;gap:10px}
   input[type="text"],input[type="password"],select{
     background:#0f172a;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:8px 10px;width:100%;
@@ -54,6 +69,7 @@ Updated : November 2025
       <div class="hint">Choose the app appearance.</div>
     </div>
   </div>
+</div>
 
 <div class="panel">
   <h2>Account</h2>
@@ -65,20 +81,54 @@ Updated : November 2025
     </div>
   </div>
 
+  <!-- Current Password Demo Section (LocalStorage only) -->
   <div class="row">
-    <div class="label">Change password</div>
+    <div class="label">Change password (Demo)</div>
     <div class="field two">
       <input id="pwdCurrent" type="password" placeholder="Current password">
       <input id="pwdNew" type="password" placeholder="New password">
       <input id="pwdConfirm" type="password" placeholder="Confirm new password">
     </div>
   </div>
-  <div class="hint">Password change is demo only (no server update yet).</div>
+  <div class="hint">Password change above is demo only (no server update yet).</div>
 </div>
 
+<!-- NEW: Firebase Password Reset Section -->
+<div class="panel">
+  <h2>Security</h2>
+  
+  <div class="password-reset-section">
+    <div class="row">
+      <div class="label">
+        <strong>Reset Password via Email</strong>
+      </div>
+      <div class="field">
+        <p style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">
+          We'll send a password reset link to your registered email address.
+        </p>
+        <form method="POST" action="{{ url_for('change_password') }}" style="margin: 0;">
+          <button type="submit" class="btn warning" style="width: 100%;">
+            🔒 Send Password Reset Email
+          </button>
+        </form>
+        <div class="hint">Uses Firebase Authentication - works immediately</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="security-warning">
+    <strong>Note:</strong> The password reset above will send a real email through Firebase Authentication. 
+    The demo password fields above only save to your browser's local storage.
+  </div>
+</div>
+
+<div class="panel">
   <div class="btns">
     <button class="btn primary" onclick="saveSettings()">Save changes</button>
     <button class="btn" onclick="resetSettings()">Reset</button>
+    <a href="{{ url_for('dashboard') }}" class="btn" style="text-decoration: none; text-align: center;">
+      ← Back to Dashboard
+    </a>
   </div>
 </div>
 
@@ -157,7 +207,7 @@ Updated : November 2025
       localStorage.setItem('privacy', optional.privacyMode.checked ? '1' : '0');
     }
 
-    alert('Settings saved.');
+    alert('Settings saved to local storage.');
   }
 
   function resetSettings(){
@@ -193,6 +243,5 @@ Updated : November 2025
   });
 </script>
 {% endblock %}
-
 
 
