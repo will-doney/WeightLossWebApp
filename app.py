@@ -28,6 +28,7 @@ Date: November 2025
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from markupsafe import Markup
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from datetime import datetime, UTC
@@ -831,16 +832,34 @@ def change_password():
 
         # NOTE: firebase_admin does NOT send the email for you. The admin SDK can
         # generate a reset link — you must send it via your own email provider (SMTP, SendGrid, etc.).
-        # For development, we log the link to server console so you can manually open it.
+        # For development we log the link to server console so you can manually open it.
         print(f"Password reset link (generated) for {user_email}: {reset_link}")
 
-        flash('✅ Password reset link generated and logged on the server (dev). In production configure an email sender to deliver the link to users.', 'success')
+        # Optionally expose the link in the UI for development/testing only.
+        # To enable: set environment variable SHOW_RESET_LINK=1 or run Flask in debug mode.
+        show_link = os.environ.get('SHOW_RESET_LINK', '0') == '1' or app.debug
+        if show_link:
+            msg = (
+                f"✅ Password reset link generated (development). "
+                f"<a href=\"{reset_link}\" target=\"_blank\" rel=\"noopener noreferrer\">Open reset link</a> "
+                " — In production configure an email sender to deliver the link to users."
+            )
+            flash(Markup(msg), 'success')
+        else:
+            flash('✅ Password reset link generated and logged on the server (dev). In production configure an email sender to deliver the link to users.', 'success')
+
         return redirect(url_for('settings'))
         
     except firebase_admin.exceptions.FirebaseError as auth_error:
         error_message = f"Firebase Admin SDK error: {auth_error}"
         print(f"Auth Error: {error_message}")
-        flash('❌ Authentication error. Please check your Firebase configuration and ensure email sending is enabled.', 'error')
+        # Provide a friendlier message for known rate-limit error
+        auth_str = str(auth_error)
+        if 'RESET_PASSWORD_EXCEED_LIMIT' in auth_str or 'resetPasswordExceedLimit' in auth_str:
+            # This error occurs when too many password reset requests were made for this user
+            flash('❌ Too many password reset attempts. Please wait a few minutes and try again. If you still have issues, contact support.', 'error')
+        else:
+            flash('❌ Authentication error. Please check your Firebase configuration and ensure email sending is enabled.', 'error')
         return redirect(url_for('settings'))
     except Exception as e:
         error_message = f"Error sending reset email: {str(e)}"
