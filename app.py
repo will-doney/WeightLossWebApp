@@ -826,19 +826,19 @@ def change_password():
             flash('❌ User account not found in Firebase. Please contact support.', 'error')
             return redirect(url_for('settings'))
         
-        # Send password reset email via Firebase Authentication
+        # Generate password reset link via Firebase Authentication
         reset_link = auth.generate_password_reset_link(user_email)
-        auth.send_password_reset_email(user_email)
-        
-        # Log for debugging
-        print(f"Password reset email sent to: {user_email}")
-        print(f"Reset link (for testing): {reset_link}")
-        
-        flash('✅ Password reset email sent! Check your inbox and spam folder. Link expires in 1 hour.', 'success')
+
+        # NOTE: firebase_admin does NOT send the email for you. The admin SDK can
+        # generate a reset link — you must send it via your own email provider (SMTP, SendGrid, etc.).
+        # For development, we log the link to server console so you can manually open it.
+        print(f"Password reset link (generated) for {user_email}: {reset_link}")
+
+        flash('✅ Password reset link generated and logged on the server (dev). In production configure an email sender to deliver the link to users.', 'success')
         return redirect(url_for('settings'))
         
-    except auth.AuthError as auth_error:
-        error_message = f"Firebase Auth Error: {auth_error.code} - {auth_error.message}"
+    except firebase_admin.exceptions.FirebaseError as auth_error:
+        error_message = f"Firebase Admin SDK error: {auth_error}"
         print(f"Auth Error: {error_message}")
         flash('❌ Authentication error. Please check your Firebase configuration and ensure email sending is enabled.', 'error')
         return redirect(url_for('settings'))
