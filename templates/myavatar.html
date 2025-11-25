@@ -62,7 +62,13 @@ Updated : November 2025
   <script>
     // ...existing code...
     function changeAvatar(mood) {
+      // Normalize moods: map neutral -> happy, fallback to happy if unknown
+      if (!mood) mood = 'happy';
+      if (mood === 'neutral') mood = 'happy';
       const avatarImage = document.getElementById('avatar-image');
+      // guard: ensure mood corresponds to an available image
+      const allowed = ['happy','sad','fit'];
+      if (!allowed.includes(mood)) mood = 'happy';
       avatarImage.src = `/static/avatars/avatar_${mood}.png`;
     }
     
@@ -82,6 +88,22 @@ Updated : November 2025
         }
       }
       const pointsPerLevel = 100;
+      // Mood keys (per-user) — react to task events in other tabs
+      const MOOD_KEY = `avatar_mood_v1_${USER_ID}`;
+      const GLOBAL_MOOD_KEY = 'avatar_mood_v1';
+
+      // migrate global mood key into per-user key when present
+      if (!localStorage.getItem(MOOD_KEY) && localStorage.getItem(GLOBAL_MOOD_KEY)) {
+        try { localStorage.setItem(MOOD_KEY, localStorage.getItem(GLOBAL_MOOD_KEY)); } catch (e) {}
+      }
+
+      // apply current stored mood to UI on load
+      try {
+        const currentMood = localStorage.getItem(MOOD_KEY) || localStorage.getItem(GLOBAL_MOOD_KEY);
+        if (currentMood) changeAvatar(currentMood);
+      } catch (e) {
+        // ignore storage errors
+      }
 
       let points = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
 
@@ -163,12 +185,23 @@ Updated : November 2025
 
       // Keep UI in sync when other pages/tabs update localStorage
       window.addEventListener('storage', function (e) {
+        // Update points
         if (e.key === STORAGE_KEY || e.key === GLOBAL_KEY) {
           try {
             points = parseInt(e.newValue || '0', 10) || 0;
             updateUI();
           } catch (err) {
             /* ignore parse errors */
+          }
+        }
+
+        // Update mood when tasks change it from other tabs
+        if (e.key === MOOD_KEY || e.key === GLOBAL_MOOD_KEY) {
+          try {
+            const mood = e.newValue || '';
+            if (mood) changeAvatar(mood);
+          } catch (err) {
+            // ignore
           }
         }
       });
