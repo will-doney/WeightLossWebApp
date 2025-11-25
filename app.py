@@ -798,22 +798,19 @@ def change_password():
             flash('User email not found in session', 'error')
             return redirect(url_for('settings'))
         
-        # Import Firebase auth
-        from firebase_admin import auth
-        
-        # Send password reset email
-        reset_link = auth.generate_password_reset_link(user_email)
+        # Send password reset email via Firebase Authentication
+        auth.send_password_reset_email(user_email)
         
         # Log for debugging (remove in production)
-        print(f"Password reset link generated for: {user_email}")
+        print(f"Password reset email sent to: {user_email}")
         
-        flash('Password reset email sent! Check your inbox.', 'success')
+        flash('✅ Password reset email sent! Check your inbox and spam folder.', 'success')
         return redirect(url_for('settings'))
         
     except Exception as e:
         error_message = f"Error sending reset email: {str(e)}"
         print(error_message)
-        flash('Error sending password reset email. Please try again.', 'error')
+        flash('❌ Error sending password reset email. Please try again.', 'error')
         return redirect(url_for('settings'))
 
 
