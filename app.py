@@ -793,7 +793,7 @@ def change_password():
         return redirect(url_for('settings'))
     
     try:
-        user_email = session.get('user_email')
+        user_email = session.get('email')
         if not user_email:
             flash('User email not found in session', 'error')
             return redirect(url_for('settings'))
