@@ -119,7 +119,11 @@ def login():
                         try:
                             avatar_ref = db.collection('avatars').document(uid)
                             if not avatar_ref.get().exists:
-                                avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()})
+                                avatar_ref.set({
+                                    'user_id': uid,
+                                    'points': 0,
+                                    'updated_at': datetime.utcnow()
+                                })
                         except Exception as e:
                             print(f"Warning: could not create avatar doc for {uid}: {e}")
                 
@@ -170,7 +174,11 @@ def signup():
                 try:
                     avatar_ref = db.collection('avatars').document(uid)
                     if not avatar_ref.get().exists:
-                        avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()})
+                        avatar_ref.set({
+                            'user_id': uid,
+                            'points': 0,
+                            'updated_at': datetime.utcnow()
+                        })
                 except Exception as e:
                     print(f"Warning: could not create avatar doc for {uid} on signup: {e}")
                 
@@ -685,10 +693,18 @@ def toggle_task(task_id):
                         avatar_ref = db.collection('avatars').document(session['user_id'])
                         if new_completed:
                             # add 10 points
-                            avatar_ref.set({'points': firestore.Increment(10), 'updated_at': datetime.utcnow()}, merge=True)
+                            avatar_ref.set({
+                                'user_id': session['user_id'],
+                                'points': firestore.Increment(10),
+                                'updated_at': datetime.utcnow()
+                            }, merge=True)
                         else:
                             # remove 10 points
-                            avatar_ref.set({'points': firestore.Increment(-10), 'updated_at': datetime.utcnow()}, merge=True)
+                            avatar_ref.set({
+                                'user_id': session['user_id'],
+                                'points': firestore.Increment(-10),
+                                'updated_at': datetime.utcnow()
+                            }, merge=True)
 
                         # Clamp to zero if negative
                         try:
@@ -696,7 +712,11 @@ def toggle_task(task_id):
                             if avatar_doc.exists:
                                 pts = int(avatar_doc.to_dict().get('points', 0) or 0)
                                 if pts < 0:
-                                    avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()}, merge=True)
+                                    avatar_ref.set({
+                                        'user_id': session['user_id'],
+                                        'points': 0,
+                                        'updated_at': datetime.utcnow()
+                                    }, merge=True)
                         except Exception:
                             pass
                     except Exception as e:
@@ -826,6 +846,7 @@ def avatar_points_api():
 
     try:
         db.collection('avatars').document(uid).set({
+            'user_id': uid,
             'points': points,
             'updated_at': datetime.utcnow()
         }, merge=True)
