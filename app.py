@@ -115,6 +115,13 @@ def login():
                             'is_active': True
                         }
                         user_ref.set(user_data)
+                        # Ensure avatar document exists for this user with 0 points
+                        try:
+                            avatar_ref = db.collection('avatars').document(uid)
+                            if not avatar_ref.get().exists:
+                                avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()})
+                        except Exception as e:
+                            print(f"Warning: could not create avatar doc for {uid}: {e}")
                 
                 return jsonify({'success': True, 'redirect': url_for('dashboard')})
             except Exception as e:
@@ -159,6 +166,13 @@ def signup():
                         'is_active': True
                     }
                     db.collection('users').document(uid).set(user_data)
+                # Ensure avatar doc exists for new signup
+                try:
+                    avatar_ref = db.collection('avatars').document(uid)
+                    if not avatar_ref.get().exists:
+                        avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()})
+                except Exception as e:
+                    print(f"Warning: could not create avatar doc for {uid} on signup: {e}")
                 
                 return jsonify({'success': True, 'redirect': url_for('dashboard')})
             except Exception as e:
@@ -666,17 +680,28 @@ def toggle_task(task_id):
                     }
                     
                     task_ref.update(update_data)
-                    
-                    # If task was just completed, atomically increment avatar points by 10
-                    if new_completed:
+                    # Atomically update avatar points when task completion changes
+                    try:
+                        avatar_ref = db.collection('avatars').document(session['user_id'])
+                        if new_completed:
+                            # add 10 points
+                            avatar_ref.set({'points': firestore.Increment(10), 'updated_at': datetime.utcnow()}, merge=True)
+                        else:
+                            # remove 10 points
+                            avatar_ref.set({'points': firestore.Increment(-10), 'updated_at': datetime.utcnow()}, merge=True)
+
+                        # Clamp to zero if negative
                         try:
-                            db.collection('avatars').document(session['user_id']).set({
-                                'points': firestore.Increment(10),
-                                'updated_at': datetime.utcnow()
-                            }, merge=True)
-                        except Exception as e:
-                            print(f"Error incrementing avatar points for {session['user_id']}: {e}")
-                        
+                            avatar_doc = avatar_ref.get()
+                            if avatar_doc.exists:
+                                pts = int(avatar_doc.to_dict().get('points', 0) or 0)
+                                if pts < 0:
+                                    avatar_ref.set({'points': 0, 'updated_at': datetime.utcnow()}, merge=True)
+                        except Exception:
+                            pass
+                    except Exception as e:
+                        print(f"Error updating avatar points for {session.get('user_id')}: {e}")
+
                     if new_completed:
                         flash(f'Task "{task_data.get("name", "Unknown")}" completed! (+10 pts)', 'success')
                     else:

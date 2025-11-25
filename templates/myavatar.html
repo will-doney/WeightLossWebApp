@@ -79,9 +79,18 @@ Updated : November 2025
         .then(res => res.json())
         .then(data => {
           if (data && typeof data.points === 'number') {
-            points = data.points;
-            localStorage.setItem(STORAGE_KEY, String(points));
-            updateUI();
+            try {
+              const serverPoints = Number(data.points) || 0;
+              const localPoints = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+              // Only adopt server value if it's greater than local (prevents older server value overwriting newer local progress)
+              if (serverPoints > localPoints) {
+                points = serverPoints;
+                localStorage.setItem(STORAGE_KEY, String(points));
+                updateUI();
+              }
+            } catch (err) {
+              // ignore parse errors
+            }
           }
         }).catch(() => {
           // ignore: user might not be logged in or network error
