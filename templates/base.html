@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WeightGame</title>
 <link rel="stylesheet" href="/static/css/styles.css" />
+<!-- Firebase Client SDK for password reset and auth -->
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js"></script>
+<script>
+  // Initialize Firebase Client SDK
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQHBT1xWQh6v-eVDqbMFPGGR3O0tNJKhc",
+    authDomain: "weight-loss-app-e85b3.firebaseapp.com",
+    projectId: "weight-loss-app-e85b3",
+    storageBucket: "weight-loss-app-e85b3.appspot.com",
+    messagingSenderId: "370373055330",
+    appId: "1:370373055330:web:c6e6c7ac3ab90c94c6d3bc"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
 </head>
 <body>
   <!-- ============================================================
@@ -31,6 +46,14 @@
             <a href="/login" class="nav-link {% if request.path == '/login' %}active{% endif %}">Login</a>
           {% endif %}
         </nav>
+        <!-- Theme toggle (lamp icon) -->
+        <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme" type="button">
+          <!-- lamp / bulb SVG -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M9 18h6v1a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-1z" fill="currentColor"/>
+            <path d="M12 2a6 6 0 0 0-4 10.6V15a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.4A6 6 0 0 0 12 2z" fill="currentColor"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -53,6 +76,41 @@
     <footer class="site-footer">
       © {{ year if year is defined else "" }} WeightGame — Team Project Base
     </footer>
+
+    <!-- Global theme script: apply persisted theme and wire toggle -->
+    <script>
+      (function () {
+        const body = document.body;
+        const btn = document.getElementById('themeToggleBtn');
+
+        function applyThemeClass(theme) {
+          body.classList.remove('light-mode', 'dark-mode');
+          body.classList.add(theme === 'dark' ? 'dark-mode' : 'light-mode');
+          if (btn) {
+            btn.setAttribute('data-theme', theme);
+            btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+          }
+          // If the settings page select exists, keep it in sync
+          const sel = document.getElementById('themeSelect');
+          if (sel) sel.value = theme;
+        }
+
+        const saved = localStorage.getItem('theme') || 'light';
+        applyThemeClass(saved);
+
+        btn?.addEventListener('click', () => {
+          const cur = body.classList.contains('dark-mode') ? 'dark' : 'light';
+          const next = cur === 'dark' ? 'light' : 'dark';
+          localStorage.setItem('theme', next);
+          applyThemeClass(next);
+        });
+
+        // Respond to changes from other tabs
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'theme') applyThemeClass(e.newValue || 'light');
+        });
+      })();
+    </script>
 
     {% if session.user_id %}
     <!-- Firebase Logout -->

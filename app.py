@@ -806,66 +806,17 @@ def settings():
 # ============================================================
 # ROUTE: Change Password (Firebase)
 # ============================================================
-@app.route('/change_password', methods=['POST'])
-def change_password():
-    """Send password reset email to user via Firebase."""
+@app.route('/api/check_auth', methods=['GET'])
+def check_auth():
+    """Return user email if authenticated, for use by client-side Firebase sendPasswordResetEmail."""
     if 'user_id' not in session:
-        flash('Please login first', 'error')
-        return redirect(url_for('settings'))
+        return jsonify({'authenticated': False}), 401
     
-    try:
-        user_email = session.get('email')
-        if not user_email:
-            flash('User email not found in session', 'error')
-            return redirect(url_for('settings'))
-        
-        # Verify user exists in Firebase Auth
-        try:
-            user = auth.get_user_by_email(user_email)
-            print(f"User found in Firebase: {user_email}")
-        except auth.UserNotFoundError:
-            flash('❌ User account not found in Firebase. Please contact support.', 'error')
-            return redirect(url_for('settings'))
-        
-        # Generate password reset link via Firebase Authentication
-        reset_link = auth.generate_password_reset_link(user_email)
-
-        # NOTE: firebase_admin does NOT send the email for you. The admin SDK can
-        # generate a reset link — you must send it via your own email provider (SMTP, SendGrid, etc.).
-        # For development we log the link to server console so you can manually open it.
-        print(f"Password reset link (generated) for {user_email}: {reset_link}")
-
-        # Optionally expose the link in the UI for development/testing only.
-        # To enable: set environment variable SHOW_RESET_LINK=1 or run Flask in debug mode.
-        show_link = os.environ.get('SHOW_RESET_LINK', '0') == '1' or app.debug
-        if show_link:
-            msg = (
-                f"✅ Password reset link generated (development). "
-                f"<a href=\"{reset_link}\" target=\"_blank\" rel=\"noopener noreferrer\">Open reset link</a> "
-                " — In production configure an email sender to deliver the link to users."
-            )
-            flash(Markup(msg), 'success')
-        else:
-            flash('✅ Password reset link generated and logged on the server (dev). In production configure an email sender to deliver the link to users.', 'success')
-
-        return redirect(url_for('settings'))
-        
-    except firebase_admin.exceptions.FirebaseError as auth_error:
-        error_message = f"Firebase Admin SDK error: {auth_error}"
-        print(f"Auth Error: {error_message}")
-        # Provide a friendlier message for known rate-limit error
-        auth_str = str(auth_error)
-        if 'RESET_PASSWORD_EXCEED_LIMIT' in auth_str or 'resetPasswordExceedLimit' in auth_str:
-            # This error occurs when too many password reset requests were made for this user
-            flash('❌ Too many password reset attempts. Please wait a few minutes and try again. If you still have issues, contact support.', 'error')
-        else:
-            flash('❌ Authentication error. Please check your Firebase configuration and ensure email sending is enabled.', 'error')
-        return redirect(url_for('settings'))
-    except Exception as e:
-        error_message = f"Error sending reset email: {str(e)}"
-        print(f"Exception: {error_message}")
-        flash('❌ Error sending password reset email. Please try again.', 'error')
-        return redirect(url_for('settings'))
+    user_email = session.get('email')
+    if not user_email:
+        return jsonify({'authenticated': False}), 401
+    
+    return jsonify({'authenticated': True, 'email': user_email}), 200
 
 
 

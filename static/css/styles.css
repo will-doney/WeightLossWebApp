@@ -32,6 +32,41 @@ body {
   font-family: inherit;
 }
 
+/* Theme classes applied to <body> to allow manual switching across pages */
+body.light-mode {
+  background-color: #f8fafc;
+  color: #111827;
+}
+
+body.dark-mode {
+  background-color: #0f172a;
+  color: #e5e7eb;
+}
+
+/* Nav adjustments when in dark mode */
+body.dark-mode .brand a { color: #93c5fd; }
+body.dark-mode nav a { color: #cbd5e1; }
+body.dark-mode nav a.active, body.dark-mode nav a:hover {
+  color: #60a5fa;
+  background: rgba(96,165,250,0.06);
+}
+
+/* Theme toggle (lamp) button beside navbar */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(16,24,40,0.06);
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 0.75rem;
+}
+.theme-toggle svg { width: 20px; height: 20px; display: block; }
+.theme-toggle[data-theme="dark"] svg { filter: invert(1) hue-rotate(180deg) saturate(1.2); }
+
 .container {
   max-width: 980px;
   margin: 0 auto;
