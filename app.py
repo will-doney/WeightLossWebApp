@@ -28,13 +28,10 @@ Date: November 2025
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from markupsafe import Markup
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from datetime import datetime, UTC
-import uuid
 import os
-import json
 
 
 # Initialize Flask application
@@ -565,26 +562,6 @@ def update_profile():
                          today=today)
 
 
-# Sample tasks payload used by both HTML view and API response.
-TASKS_SAMPLE = [
-    {
-        "id": 1,
-        "task": "10-minute walk",
-        "details":           "Short outdoor or indoor walk to boost circulation."
-    },
-    {
-        "id": 2,
-        "task": "Drink 2 liters of water", 
-        "details": "Stay hydrated throughout the day with measured intake."
-    },
-    {
-        "id": 3,
-        "task": "Stretch for 5 minutes",
-        "details": "Loosen muscles with a quick flexibility routine."
-    },
-]
-
-
 # ============================================================
 # ROUTE: Daily Tasks (HTML)
 # ============================================================
@@ -596,38 +573,14 @@ def tasks():
         return redirect(url_for('login'))
     
     user_id = session['user_id']
-    
-    # Get user's tasks from Firestore
-    tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
     user_tasks = []
     
     if db:
+        tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
         for task_doc in tasks_ref.stream():
             task_data = task_doc.to_dict()
             task_data['id'] = task_doc.id
             user_tasks.append(task_data)
-    
-    # Create default tasks only for new users (one-time setup)
-    if not user_tasks and db:
-        # Check if user has ever had tasks before
-        user_ref = db.collection('users').document(user_id)
-        user_doc = user_ref.get()
-        
-        if not user_doc.exists or not user_doc.to_dict().get('tasks_initialized', False):
-            # First time setup - create sample tasks
-            for sample_task in TASKS_SAMPLE:
-                task_data = {
-                    'user_id': user_id,
-                    'name': sample_task['task'],
-                    'description': sample_task['details'],
-                    'completed': False
-                }
-                doc_ref = db.collection('tasks').add(task_data)
-                task_data['id'] = doc_ref[1].id
-                user_tasks.append(task_data)
-            
-            # Mark user as initialized to prevent recreating tasks
-            user_ref.set({'tasks_initialized': True}, merge=True)
     
     return render_template('tasks.html', tasks=user_tasks)
 
@@ -669,72 +622,62 @@ def add_task():
 # ============================================================
 @app.route('/toggle_task/<task_id>', methods=['POST'])
 def toggle_task(task_id):
-    """Toggle completion status of a task."""
+    """Toggle completion status of a task and update avatar points."""
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    if db:
+    if not db:
+        flash('Database not available', 'error')
+        return redirect(url_for('tasks'))
+    
+    try:
+        task_ref = db.collection('tasks').document(task_id)
+        task_doc = task_ref.get()
+        
+        if not task_doc.exists:
+            flash('Task not found', 'error')
+            return redirect(url_for('tasks'))
+        
+        task_data = task_doc.to_dict()
+        
+        if task_data.get('user_id') != session['user_id']:
+            flash('Unauthorized task access', 'error')
+            return redirect(url_for('tasks'))
+        
+        # Toggle completion status
+        new_completed = not task_data.get('completed', False)
+        task_ref.update({'completed': new_completed})
+        
+        # Update avatar points atomically
         try:
-            task_ref = db.collection('tasks').document(task_id)
-            task_doc = task_ref.get()
+            avatar_ref = db.collection('avatars').document(session['user_id'])
+            point_change = 10 if new_completed else -10
             
-            if task_doc.exists:
-                task_data = task_doc.to_dict()
-                
-                # Verify task belongs to current user
-                if task_data.get('user_id') == session['user_id']:
-                    new_completed = not task_data.get('completed', False)
-                    update_data = {
-                        'completed': new_completed
-                    }
-                    
-                    task_ref.update(update_data)
-                    # Atomically update avatar points when task completion changes
-                    try:
-                        avatar_ref = db.collection('avatars').document(session['user_id'])
-                        if new_completed:
-                            # add 10 points
-                            avatar_ref.set({
-                                'user_id': session['user_id'],
-                                'points': firestore.Increment(10),
-                                'updated_at': datetime.utcnow()
-                            }, merge=True)
-                        else:
-                            # remove 10 points
-                            avatar_ref.set({
-                                'user_id': session['user_id'],
-                                'points': firestore.Increment(-10),
-                                'updated_at': datetime.utcnow()
-                            }, merge=True)
-
-                        # Clamp to zero if negative
-                        try:
-                            avatar_doc = avatar_ref.get()
-                            if avatar_doc.exists:
-                                pts = int(avatar_doc.to_dict().get('points', 0) or 0)
-                                if pts < 0:
-                                    avatar_ref.set({
-                                        'user_id': session['user_id'],
-                                        'points': 0,
-                                        'updated_at': datetime.utcnow()
-                                    }, merge=True)
-                        except Exception:
-                            pass
-                    except Exception as e:
-                        print(f"Error updating avatar points for {session.get('user_id')}: {e}")
-
-                    if new_completed:
-                        flash(f'Task "{task_data.get("name", "Unknown")}" completed! (+10 pts)', 'success')
-                    else:
-                        flash(f'Task "{task_data.get("name", "Unknown")}" reopened! (-10 pts)', 'warning')
-                else:
-                    flash('Unauthorized task access', 'error')
-            else:
-                flash('Task not found', 'error')
-                
+            avatar_ref.set({
+                'user_id': session['user_id'],
+                'points': firestore.Increment(point_change),
+                'updated_at': datetime.utcnow()
+            }, merge=True)
+            
+            # Ensure points don't go below zero
+            avatar_doc = avatar_ref.get()
+            if avatar_doc.exists:
+                points = int(avatar_doc.to_dict().get('points', 0) or 0)
+                if points < 0:
+                    avatar_ref.update({'points': 0})
         except Exception as e:
-            flash('Error updating task', 'error')
-            print(f"Task toggle error: {e}")
+            print(f"Error updating avatar points: {e}")
+        
+        # Flash appropriate message
+        task_name = task_data.get('name', 'Unknown')
+        if new_completed:
+            flash(f'Task "{task_name}" completed! (+10 pts)', 'success')
+        else:
+            flash(f'Task "{task_name}" reopened! (-10 pts)', 'warning')
+            
+    except Exception as e:
+        flash('Error updating task', 'error')
+        print(f"Task toggle error: {e}")
     
     return redirect(url_for('tasks'))
 
@@ -748,27 +691,31 @@ def delete_task(task_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    if db:
-        try:
-            task_ref = db.collection('tasks').document(task_id)
-            task_doc = task_ref.get()
+    if not db:
+        flash('Database not available', 'error')
+        return redirect(url_for('tasks'))
+    
+    try:
+        task_ref = db.collection('tasks').document(task_id)
+        task_doc = task_ref.get()
+        
+        if not task_doc.exists:
+            flash('Task not found', 'error')
+            return redirect(url_for('tasks'))
+        
+        task_data = task_doc.to_dict()
+        
+        if task_data.get('user_id') != session['user_id']:
+            flash('Unauthorized task access', 'error')
+            return redirect(url_for('tasks'))
+        
+        task_name = task_data.get('name', 'Unknown')
+        task_ref.delete()
+        flash(f'Task "{task_name}" deleted successfully!', 'success')
             
-            if task_doc.exists:
-                task_data = task_doc.to_dict()
-                
-                # Verify task belongs to current user
-                if task_data.get('user_id') == session['user_id']:
-                    task_name = task_data.get('name', 'Unknown')
-                    task_ref.delete()
-                    flash(f'Task "{task_name}" deleted successfully!', 'success')
-                else:
-                    flash('Unauthorized task access', 'error')
-            else:
-                flash('Task not found', 'error')
-                
-        except Exception as e:
-            flash('Error deleting task', 'error')
-            print(f"Task deletion error: {e}")
+    except Exception as e:
+        flash('Error deleting task', 'error')
+        print(f"Task deletion error: {e}")
     
     return redirect(url_for('tasks'))
 
@@ -803,12 +750,13 @@ def settings():
     """Display user preferences and settings."""
     return render_template('settings.html')
 
+
 # ============================================================
-# ROUTE: Change Password (Firebase)
+# ROUTE: Check Authentication
 # ============================================================
 @app.route('/api/check_auth', methods=['GET'])
 def check_auth():
-    """Return user email if authenticated, for use by client-side Firebase sendPasswordResetEmail."""
+    """Return user email if authenticated for Firebase password reset."""
     if 'user_id' not in session:
         return jsonify({'authenticated': False}), 401
     
@@ -819,23 +767,7 @@ def check_auth():
     return jsonify({'authenticated': True, 'email': user_email}), 200
 
 
-
-
-
-
-
-
-
 # ============================================================
-# ROUTE: Progress View
-# ============================================================
-@app.route('/view_progress')
-def view_progress():
-    """Display detailed progress analytics."""
-    # For now, redirect to dashboard, but this can be expanded later
-    # to show detailed progress charts and analytics
-    return redirect(url_for('dashboard'))
-
 # ROUTE: Avatar Customization
 # ============================================================
 @app.route('/myavatar')
@@ -849,11 +781,7 @@ def myavatar():
 # ============================================================
 @app.route('/api/avatar/points', methods=['POST'])
 def avatar_points_api():
-    """Persist avatar points for the current authenticated user.
-
-    Expects JSON body: { "points": <int> }
-    Requires user session (`session['user_id']`) populated by login flow.
-    """
+    """Persist avatar points for authenticated user."""
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401
 
@@ -881,7 +809,7 @@ def avatar_points_api():
 
 @app.route('/api/avatar/points', methods=['GET'])
 def avatar_points_get():
-    """Return persisted avatar points for the current authenticated user."""
+    """Return persisted avatar points for authenticated user."""
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401
 
@@ -893,7 +821,6 @@ def avatar_points_get():
         doc = db.collection('avatars').document(uid).get()
         if doc.exists:
             data = doc.to_dict() or {}
-            # Return points field (default 0) and other metadata
             return jsonify({'points': int(data.get('points', 0)), 'updated_at': data.get('updated_at')}), 200
         return jsonify({'points': 0}), 200
     except Exception as e:
