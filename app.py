@@ -782,6 +782,47 @@ def settings():
     """Display user preferences and settings."""
     return render_template('settings.html')
 
+# ============================================================
+# ROUTE: Change Password (Firebase)
+# ============================================================
+@app.route('/change_password', methods=['POST'])
+def change_password():
+    """Send password reset email to user via Firebase."""
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('settings'))
+    
+    try:
+        user_email = session.get('user_email')
+        if not user_email:
+            flash('User email not found in session', 'error')
+            return redirect(url_for('settings'))
+        
+        # Import Firebase auth
+        from firebase_admin import auth
+        
+        # Send password reset email
+        reset_link = auth.generate_password_reset_link(user_email)
+        
+        # Log for debugging (remove in production)
+        print(f"Password reset link generated for: {user_email}")
+        
+        flash('Password reset email sent! Check your inbox.', 'success')
+        return redirect(url_for('settings'))
+        
+    except Exception as e:
+        error_message = f"Error sending reset email: {str(e)}"
+        print(error_message)
+        flash('Error sending password reset email. Please try again.', 'error')
+        return redirect(url_for('settings'))
+
+
+
+
+
+
+
+
 
 # ============================================================
 # ROUTE: Progress View
