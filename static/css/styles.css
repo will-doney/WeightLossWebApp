@@ -90,6 +90,9 @@ nav a.active, nav a:hover {
 
 /* === Avatar Page Styles === */
 
+/* (header mini avatar widget removed) */
+
+
 /* Avatar Page Styles (consolidated from template) */
 .avatar-container {
   display: flex;

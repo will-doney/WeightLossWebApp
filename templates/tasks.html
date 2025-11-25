@@ -91,7 +91,7 @@ Updated : November 2025 - Simplified with existing styles
             </div>
             
             <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
-                  onsubmit="return confirm('Delete this task?')" class="task-form">
+              onsubmit="return onDeleteTask(this)" data-was-completed="{{ 'true' if task.completed else 'false' }}" class="task-form">
               <button type="submit" class="btn-delete">×</button>
             </form>
           </div>
@@ -350,6 +350,14 @@ function hideBanner() {
   setTimeout(() => {
     banner.classList.add('hidden');
   }, 300);
+}
+
+function onDeleteTask(form) {
+  // Confirm deletion
+  if (!confirm('Delete this task?')) return false;
+
+  // No local points adjustment on delete — server remains authoritative for point totals.
+  return true;
 }
 
 function toggleTask(checkbox) {
