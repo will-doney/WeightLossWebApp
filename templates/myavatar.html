@@ -68,7 +68,19 @@ Updated : November 2025
     
     // Points/Level logic
     (function () {
-      const STORAGE_KEY = 'avatar_points_v1';
+      // Use a per-user key so different users (on same browser) won't share progress.
+      const USER_ID = '{{ session.get("user_id", "anon") }}';
+      const STORAGE_KEY = `avatar_points_v1_${USER_ID}`;
+
+      // Migrate old global key into per-user key when possible
+      const GLOBAL_KEY = 'avatar_points_v1';
+      if (!localStorage.getItem(STORAGE_KEY) && localStorage.getItem(GLOBAL_KEY)) {
+        try {
+          localStorage.setItem(STORAGE_KEY, localStorage.getItem(GLOBAL_KEY));
+        } catch (e) {
+          // ignore storage errors
+        }
+      }
       const pointsPerLevel = 100;
 
       let points = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
@@ -81,7 +93,7 @@ Updated : November 2025
           if (data && typeof data.points === 'number') {
             try {
               const serverPoints = Number(data.points) || 0;
-              const localPoints = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+                  const localPoints = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
               // Only adopt server value if it's greater than local (prevents older server value overwriting newer local progress)
               if (serverPoints > localPoints) {
                 points = serverPoints;
@@ -151,7 +163,7 @@ Updated : November 2025
 
       // Keep UI in sync when other pages/tabs update localStorage
       window.addEventListener('storage', function (e) {
-        if (e.key === STORAGE_KEY) {
+        if (e.key === STORAGE_KEY || e.key === GLOBAL_KEY) {
           try {
             points = parseInt(e.newValue || '0', 10) || 0;
             updateUI();
