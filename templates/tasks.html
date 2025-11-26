@@ -43,27 +43,58 @@ Updated : November 2025
   {% endwith %}
 </script>
 
-<h1 class="page-title">✅ Daily Tasks</h1>
+<h1 class="page-title">Daily Tasks</h1>
 
 <!-- Add New Task Form -->
 <div class="card">
-  <h3 style="color: black;">Add New Task</h3>
+  <h3 class="add-task-heading">Add Custom Task</h3>
   <form method="POST" action="{{ url_for('add_task') }}" class="add-task-form" onsubmit="return onAddTask(this)">
     <div class="form-group">
-      <label for="task_name" style="color: black;">Task Name:</label>
+      <label for="task_name" class="task-label">Task Name:</label>
       <input type="text" id="task_name" name="task_name" required 
-             placeholder="Enter task name" class="form-control" style="background-color: #f0f0f0; color: black;">
+             placeholder="Enter task name" class="form-control task-input">
     </div>
     
     <div class="form-group">
-      <label for="task_description" style="color: black;">Description (optional):</label>
+      <label for="task_description" class="task-label">Description (optional):</label>
       <textarea id="task_description" name="task_description" 
-                placeholder="Enter task description" rows="2" class="form-control" style="background-color: #f0f0f0; color: black;"></textarea>
+                placeholder="Enter task description" rows="2" class="form-control task-input"></textarea>
     </div>
     
-    <button type="submit" style="background-color: black; color: white; padding: 15px 40px; font-size: 18px; border-radius: 25px; border: none; cursor: pointer;">Add Task</button>
+    <button type="submit" class="add-task-btn">Add Task</button>
   </form>
 </div>
+
+<!-- Suggested Tasks Section -->
+{% if suggested_tasks and suggested_tasks|length > 0 %}
+<div class="card suggested-tasks-card">
+  <div class="suggested-header">
+    <div class="suggested-header-left">
+      <h3 class="suggested-title">💡 Suggested For You</h3>
+      <p class="suggested-subtitle">Based on your fitness profile</p>
+    </div>
+    <button class="btn-refresh-suggestions" onclick="refreshSuggestions()" title="Refresh suggestions">
+      Refresh
+    </button>
+  </div>
+  
+  <div class="suggested-tasks-list">
+    {% for task in suggested_tasks %}
+      <div class="suggested-task-item">
+        <div class="suggested-task-info">
+          <strong class="suggested-task-name">{{ task.name }}</strong>
+          <span class="suggested-task-description">{{ task.description }}</span>
+        </div>
+        <button class="btn-add-suggestion" 
+                onclick="addSuggestedTask('{{ task.name|escape }}', '{{ task.description|escape }}')"
+                title="Add to my tasks">
+          + Add
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 <!-- Tasks Progress -->
 {% if tasks and tasks|length > 0 %}
@@ -73,35 +104,32 @@ Updated : November 2025
 {% endif %}
 
 <!-- Tasks Grid -->
-<div class="grid">
+<div class="tasks-list">
   {% if tasks and tasks|length > 0 %}
     {% for task in tasks %}
-      <div class="card {{ 'completed-task' if task.completed else '' }}" style="{{ 'background-color: #28a745;' if task.completed else '' }}">
+      <div class="card task-card {{ 'completed-task' if task.completed else '' }}">
         <div class="task-header">
-          <div class="task-checkbox">
-            <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form">
-              <input type="checkbox" id="task_{{ task.id }}" 
-                     {{ 'checked' if task.completed else '' }}
-                     data-task-name="{{ task.name|escape }}"
-                     data-was-completed="{{ task.completed|lower }}"
-                     onchange="toggleTask(this)"
-                     title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}"
-                     style="width: 24px; height: 24px; cursor: pointer;">
-            </form>
-          </div>
+          <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form task-checkbox-form">
+            <input type="checkbox" id="task_{{ task.id }}" 
+                   {{ 'checked' if task.completed else '' }}
+                   data-task-name="{{ task.name|escape }}"
+                   data-was-completed="{{ task.completed|lower }}"
+                   onchange="toggleTask(this)"
+                   title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}"
+                   class="task-checkbox-input">
+          </form>
           
-          <div class="task-info">
-            <h3 class="task-name" style="color: black;">
-              {{ task.name }}
-            </h3>
-            {% if task.description %}
-              <p class="task-description" style="color: black;">{{ task.description }}</p>
-            {% endif %}
-          </div>
+          <span class="task-name">{{ task.name }}</span>
+          
+          {% if task.description %}
+            <span class="task-description">{{ task.description }}</span>
+          {% endif %}
+          
+          <button class="btn-edit" onclick="editTask('{{ task.id }}', '{{ task.name|escape }}', '{{ task.description|escape if task.description else '' }}')">✏️</button>
           
           <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
-            onsubmit="return onDeleteTask(this)" data-was-completed="{{ 'true' if task.completed else 'false' }}" class="task-form">
-            <button type="submit" class="btn-delete" style="background-color: #dc3545; color: white;">×</button>
+            onsubmit="return onDeleteTask(this)" data-was-completed="{{ 'true' if task.completed else 'false' }}" class="task-form task-delete-form">
+            <button type="submit" class="btn-delete">×</button>
           </form>
         </div>
       </div>
@@ -115,7 +143,232 @@ Updated : November 2025
 </div>
 
 <style>
+/* Add Task Form Styles */
+.add-task-heading {
+  color: black !important;
+}
 
+.task-label {
+  color: black !important;
+}
+
+.task-input {
+  background-color: #f0f0f0;
+  color: black !important;
+}
+
+.add-task-btn {
+  background-color: black;
+  color: white;
+  padding: 15px 40px;
+  font-size: 18px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+}
+
+.add-task-btn:hover {
+  background-color: #333;
+}
+
+/* Suggested Tasks Styles */
+.suggested-tasks-card {
+  background: linear-gradient( #667eea);
+  color: white;
+  margin-bottom: 20px;
+}
+
+.suggested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.suggested-header-left {
+  flex-grow: 1;
+}
+
+.suggested-title {
+  color: white !important;
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+}
+
+.suggested-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.btn-refresh-suggestions {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-refresh-suggestions:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.suggested-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggested-task-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: background 0.2s;
+}
+
+.suggested-task-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.suggested-task-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.suggested-task-name {
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.suggested-task-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.btn-add-suggestion {
+  background-color: white;
+  color: #667eea;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-add-suggestion:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+/* Task Card Styles */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-card {
+  margin: 0;
+}
+
+.task-card.completed-task {
+  background-color: #28a745;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.task-checkbox-form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.task-checkbox-input {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.task-name {
+  color: black !important;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 1;
+  min-width: 150px;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.task-description {
+  color: black !important;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  flex-grow: 1;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.task-delete-form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+  color: black;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 20px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+/* Banner Notification Styles */
 .notification-banner {
   position: fixed;
   top: 0;
@@ -194,6 +447,34 @@ function onDeleteTask(form) {
   return confirm('Delete this task?');
 }
 
+function editTask(taskId, taskName, taskDescription) {
+  const newName = prompt('Edit task name:', taskName);
+  if (newName === null) return; // User cancelled
+  
+  const newDescription = prompt('Edit task description:', taskDescription);
+  if (newDescription === null) return; // User cancelled
+  
+  // Create a form and submit
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = `/edit_task/${taskId}`;
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'hidden';
+  nameInput.name = 'task_name';
+  nameInput.value = newName;
+  form.appendChild(nameInput);
+  
+  const descInput = document.createElement('input');
+  descInput.type = 'hidden';
+  descInput.name = 'task_description';
+  descInput.value = newDescription;
+  form.appendChild(descInput);
+  
+  document.body.appendChild(form);
+  form.submit();
+}
+
 function toggleTask(checkbox) {
   const wasCompleted = checkbox.getAttribute('data-was-completed') === 'true';
   const USER_ID = '{{ session.get("user_id", "anon") }}';
@@ -225,6 +506,33 @@ function onAddTask(form) {
   const MOOD_KEY = `avatar_mood_v1_${USER_ID}`;
   try { localStorage.setItem(MOOD_KEY, 'neutral'); } catch (e) {}
   return true;
+}
+
+function addSuggestedTask(taskName, taskDescription) {
+  // Create a form and submit to add_task route
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '{{ url_for("add_task") }}';
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'hidden';
+  nameInput.name = 'task_name';
+  nameInput.value = taskName;
+  form.appendChild(nameInput);
+  
+  const descInput = document.createElement('input');
+  descInput.type = 'hidden';
+  descInput.name = 'task_description';
+  descInput.value = taskDescription;
+  form.appendChild(descInput);
+  
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function refreshSuggestions() {
+  // Simply reload the page to get new random suggestions
+  window.location.reload();
 }
 
 document.addEventListener('DOMContentLoaded', function() {

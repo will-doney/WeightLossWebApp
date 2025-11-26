@@ -9,7 +9,6 @@ Content :
   - General panel (theme selector).
   - Account panel (display name + password placeholders).
   - Save/Reset controls using localStorage.
-  - Firebase password reset functionality.
 
 TODO    : Replace localStorage with authenticated API calls, add missing
           inputs referenced by script (notifyToggle, autoTheme, etc.).
@@ -21,238 +20,25 @@ Updated : November 2025
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="page-title">⚙️ Settings</h1>
-
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-{% endwith %}
-
-<div class="settings-container">
+<h1 class="page-title">Settings</h1>
 
 <style>
-  .page-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    color: #111827;
+  .panel{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:10px;padding:18px 18px;margin:14px 0}
+  .panel h2{margin:0 0 10px 0;font-size:18px;opacity:.9}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed #ffffff1a}
+  .row:last-child{border-bottom:none}
+  .label{opacity:.9}
+  .hint{opacity:.6;font-size:12px;margin-top:6px}
+  .field{min-width:220px}
+  .btns{display:flex;gap:10px;margin-top:14px}
+  .btn{padding:8px 14px;border-radius:8px;border:1px solid #ffffff22;background:#ffffff14;cursor:pointer}
+  .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
+  .inline{display:flex;align-items:center;gap:10px}
+  input[type="text"],input[type="password"],select{
+    background:#0f172a;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:8px 10px;width:100%;
   }
-
-  .flash-messages {
-    max-width: 600px;
-    margin: 0 auto 2rem;
-  }
-
-  .alert {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .alert.alert-success {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-  }
-
-  .alert.alert-error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
-  }
-
-  .settings-container {
-    max-width: 700px;
-    margin: 0 auto;
-  }
-
-  .panel {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  .panel h2 {
-    margin: 0 0 1rem 0;
-    font-size: 1.25rem;
-    color: #111827;
-    font-weight: 700;
-  }
-
-  .row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid #f3f4f6;
-  }
-
-  .row:last-child {
-    border-bottom: none;
-  }
-
-  .label {
-    font-weight: 600;
-    color: #374151;
-    min-width: 150px;
-    padding-top: 0.5rem;
-  }
-
-  .hint {
-    opacity: 0.75;
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-top: 0.5rem;
-  }
-
-  .field {
-    flex: 1;
-    min-width: 250px;
-  }
-
-  .btns {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    background: #f3f4f6;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .btn:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-  }
-
-  .btn.primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-color: #667eea;
-    color: white;
-  }
-
-  .btn.primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  }
-
-  .btn.warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    border-color: #f59e0b;
-    color: white;
-  }
-
-  .btn.warning:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-  }
-
-  .btn a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  input[type="text"],
-  input[type="password"],
-  select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    background: #ffffff;
-    color: #111827;
-  }
-
-  input[type="text"]:focus,
-  input[type="password"]:focus,
-  select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .two {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .three {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .password-reset-section {
-    background: linear-gradient(135deg, #f0fdf4, #f0f9ff);
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #10b981;
-  }
-
-  .security-warning {
-    background: #fef3c7;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #f59e0b;
-    color: #92400e;
-    font-size: 0.875rem;
-    margin-top: 1rem;
-  }
-
-  .security-warning strong {
-    color: #d97706;
-  }
-
-  @media (max-width: 720px) {
-    .row {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .field {
-      width: 100%;
-    }
-
-    .two,
-    .three {
-      grid-template-columns: 1fr;
-    }
-
-    .page-title {
-      font-size: 1.5rem;
-    }
-
-    .settings-container {
-      padding: 0 1rem;
-    }
-  }
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:720px){.two{grid-template-columns:1fr}}
 </style>
 
 <div class="panel">
@@ -268,7 +54,6 @@ Updated : November 2025
       <div class="hint">Choose the app appearance.</div>
     </div>
   </div>
-</div>
 
 <div class="panel">
   <h2>Account</h2>
@@ -280,58 +65,24 @@ Updated : November 2025
     </div>
   </div>
 
-  <!-- Current Password Demo Section (LocalStorage only) -->
   <div class="row">
-    <div class="label">Change password (Demo)</div>
+    <div class="label">Change password</div>
     <div class="field two">
       <input id="pwdCurrent" type="password" placeholder="Current password">
       <input id="pwdNew" type="password" placeholder="New password">
       <input id="pwdConfirm" type="password" placeholder="Confirm new password">
     </div>
   </div>
-  <div class="hint">Password change above is demo only (no server update yet).</div>
+  <div class="hint">Password change is demo only (no server update yet).</div>
 </div>
 
-<!-- NEW: Firebase Password Reset Section -->
-<div class="panel">
-  <h2>🔐 Security</h2>
-  
-  <div class="password-reset-section">
-    <div class="row">
-      <div class="label">
-        <strong>Reset Password</strong>
-      </div>
-      <div class="field">
-        <p style="margin: 0 0 1rem 0; font-size: 0.9rem; opacity: 0.9;">
-          We'll send a password reset link to your registered email address. Click the link in the email to create a new password.
-        </p>
-        <button id="resetPasswordBtn" class="btn warning" style="width: 100%; cursor: pointer;" onclick="sendPasswordReset()">
-          🔒 Send Password Reset Email
-        </button>
-        <div class="hint" style="margin-top: 0.75rem;">
-          ✓ Uses Firebase Authentication - email will arrive within seconds
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="security-warning">
-    <strong>⚠️ Important:</strong> The password reset above sends a real email through Firebase Authentication to your registered email address. The demo password fields above only save to your browser.
-  </div>
-</div>
-
-<div class="panel">
   <div class="btns">
-    <button class="btn primary" onclick="saveSettings()">💾 Save changes</button>
-    <button class="btn" onclick="resetSettings()">🔄 Reset</button>
-    <a href="{{ url_for('dashboard') }}" class="btn" style="text-decoration: none; text-align: center;">
-      ← Back to Dashboard
-    </a>
+    <button class="btn primary" onclick="saveSettings()">Save changes</button>
+    <button class="btn" onclick="resetSettings()">Reset</button>
   </div>
 </div>
 
-<p class="hint" style="text-align: center; margin-top: 2rem;">More settings will be added in future updates.</p>
-</div>
+<p class="hint">More settings will be added in future updates.</p>
 
 <script>
   function getEl(id) {
@@ -406,7 +157,7 @@ Updated : November 2025
       localStorage.setItem('privacy', optional.privacyMode.checked ? '1' : '0');
     }
 
-    alert('Settings saved to local storage.');
+    alert('Settings saved.');
   }
 
   function resetSettings(){
@@ -416,10 +167,14 @@ Updated : November 2025
   }
 
   function applyTheme(theme) {
-    // Use body classes so theme preference applies across all pages
     const body = document.body;
-    body.classList.remove('light-mode', 'dark-mode');
-    body.classList.add(theme === 'dark' ? 'dark-mode' : 'light-mode');
+    if (theme === 'dark') {
+      body.style.backgroundColor = '#0f172a';
+      body.style.color = '#e5e7eb';
+    } else {
+      body.style.backgroundColor = '#f8fafc';
+      body.style.color = '#111827';
+    }
   }
 
   const themeSelect = getEl('themeSelect');
@@ -436,82 +191,8 @@ Updated : November 2025
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
   });
-
-  // ========== Password Reset via Firebase Client SDK ==========
-  let resetCooldownEnd = 0;
-  
-  async function sendPasswordReset() {
-    const btn = document.getElementById('resetPasswordBtn');
-    
-    // Check cooldown
-    const now = Date.now();
-    if (now < resetCooldownEnd) {
-      const remainingSecs = Math.ceil((resetCooldownEnd - now) / 1000);
-      alert(`Please wait ${remainingSecs} second(s) before requesting another reset.`);
-      return;
-    }
-    
-    // Disable button and show loading state
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = '⏳ Sending...';
-    
-    try {
-      // Verify user is authenticated on server
-      const authCheckRes = await fetch('{{ url_for("check_auth") }}');
-      if (!authCheckRes.ok) {
-        alert('You must be logged in to reset your password.');
-        btn.disabled = false;
-        btn.textContent = originalText;
-        return;
-      }
-      
-      const authData = await authCheckRes.json();
-      const userEmail = authData.email;
-      
-      // Send password reset email via Firebase client SDK
-      const auth = firebase.auth();
-      await auth.sendPasswordResetEmail(userEmail);
-      
-      // Success: show message and start cooldown
-      alert('✅ Password reset email sent! Check your inbox (and spam folder). The link expires in 1 hour.');
-      
-      // Set 30-second cooldown
-      resetCooldownEnd = now + 30000;
-      btn.disabled = true;
-      btn.textContent = '⏱️ Wait 30s';
-      
-      // Countdown timer
-      let remaining = 30;
-      const interval = setInterval(() => {
-        remaining--;
-        btn.textContent = `⏱️ Wait ${remaining}s`;
-        if (remaining <= 0) {
-          clearInterval(interval);
-          btn.disabled = false;
-          btn.textContent = originalText;
-        }
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Password reset error:', error);
-      let errorMsg = '❌ Error sending password reset email.';
-      
-      // Provide user-friendly error messages
-      if (error.code === 'auth/too-many-requests') {
-        errorMsg = '❌ Too many reset attempts. Please wait a few minutes and try again.';
-      } else if (error.code === 'auth/user-not-found') {
-        errorMsg = '❌ User account not found. Please check your email.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMsg = '❌ Invalid email address.';
-      }
-      
-      alert(errorMsg);
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
-  }
 </script>
 {% endblock %}
+
 
 
