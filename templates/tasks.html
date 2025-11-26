@@ -5,6 +5,7 @@
 
 <div id="notificationBanner" class="notification-banner hidden">
   <div class="banner-content">
+    <img id="bannerAvatar" class="banner-avatar" src="" alt="Avatar" style="display: none;">
     <span id="bannerMessage"></span>
     <button id="bannerClose" class="banner-close" onclick="hideBanner()">&times;</button>
   </div>
@@ -388,16 +389,33 @@
 }
 
 .banner-close:hover { opacity: 1; }
+
+.banner-avatar {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 </style>
 
 <script>
 // Banner notification system for user feedback
-function showBanner(message, type = 'success', duration = 4000) {
+function showBanner(message, type = 'success', duration = 4000, avatarMood = null) {
   const banner = document.getElementById('notificationBanner');
   const bannerMessage = document.getElementById('bannerMessage');
+  const bannerAvatar = document.getElementById('bannerAvatar');
   
   bannerMessage.textContent = message;
   banner.className = `notification-banner ${type} show`;
+  
+  // Show avatar image if mood is specified
+  if (avatarMood) {
+    bannerAvatar.src = `/static/avatars/avatar_${avatarMood}.png`;
+    bannerAvatar.style.display = 'block';
+  } else {
+    bannerAvatar.style.display = 'none';
+  }
   
   document.body.classList.add('banner-active');
   
@@ -514,7 +532,18 @@ document.addEventListener('DOMContentLoaded', function() {
   if (flashData) {
     const messages = JSON.parse(flashData.textContent || '[]');
     messages.forEach((msg, index) => {
-      setTimeout(() => showBanner(msg.message, msg.category, 4000), 100 * (index + 1));
+      // Determine avatar mood based on message content
+      let avatarMood = null;
+      if (msg.message.includes('completed!')) {
+        avatarMood = 'fit';
+      } else if (msg.message.includes('deleted')) {
+        avatarMood = 'sad';
+      } else if (msg.message.includes('reopened!')) {
+        avatarMood = 'sad';
+      } else if (msg.message.includes('added')) {
+        avatarMood = 'happy';
+      }
+      setTimeout(() => showBanner(msg.message, msg.category, 4000, avatarMood), 100 * (index + 1));
     });
   }
 });
