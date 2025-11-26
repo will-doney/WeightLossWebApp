@@ -1,22 +1,4 @@
-{#
-============================================================
-Template: settings.html
-Purpose : Client-side prototype for user settings (theme, notifications,
-          account details). Persists preferences to localStorage until
-          backend wiring is implemented.
-
-Content :
-  - General panel (theme selector).
-  - Account panel (display name + password placeholders).
-  - Save/Reset controls using localStorage.
-
-TODO    : Replace localStorage with authenticated API calls, add missing
-          inputs referenced by script (notifyToggle, autoTheme, etc.).
-
-Author  : will-doney
-Updated : November 2025
-============================================================
-#}
+{# settings.html - User settings page with theme and account preferences (localStorage demo) #}
 {% extends "base.html" %}
 
 {% block content %}

@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WeightGame</title>
 <link rel="stylesheet" href="/static/css/styles.css" />
-<!-- Firebase Client SDK for password reset and auth -->
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js"></script>
 <script>
-  // Initialize Firebase Client SDK
+  // Firebase client SDK initialization for password reset
   const firebaseConfig = {
     apiKey: "AIzaSyBQHBT1xWQh6v-eVDqbMFPGGR3O0tNJKhc",
     authDomain: "weight-loss-app-e85b3.firebaseapp.com",
@@ -22,14 +21,9 @@
 </script>
 </head>
 <body>
-  <!-- ============================================================
-    PRIMARY NAVIGATION BAR
-    Provides global navigation and authentication links.
-  ============================================================ -->
   <header class="site-header">
       <div class="container navbar">
         <h1 class="brand"><a href="/">WeightGame</a></h1>
-        <!-- header navigation -->
         <nav>
           <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
           <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
@@ -37,18 +31,14 @@
           <a href="/myavatar" class="nav-link {% if request.path == '/myavatar' %}active{% endif %}">Avatar</a>
           
           {% if session.user_id %}
-            <!-- Show when user is LOGGED IN -->
             <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">Settings</a>
             <a href="#" class="nav-link" id="logoutBtn">Logout ({{ session.email }})</a>
           {% else %}
-            <!-- Show when user is LOGGED OUT -->
             <a href="/signup" class="nav-link {% if request.path == '/signup' %}active{% endif %}">Signup</a>
             <a href="/login" class="nav-link {% if request.path == '/login' %}active{% endif %}">Login</a>
           {% endif %}
         </nav>
-        <!-- Theme toggle (lamp icon) -->
         <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme" type="button">
-          <!-- lamp / bulb SVG -->
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M9 18h6v1a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-1z" fill="currentColor"/>
             <path d="M12 2a6 6 0 0 0-4 10.6V15a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.4A6 6 0 0 0 12 2z" fill="currentColor"/>
@@ -57,32 +47,24 @@
       </div>
     </header>
 
-    <!-- ============================================================
-         MAIN CONTENT AREA
-         Renders flash messages (if any) and child template content.
-    ============================================================ -->
     <main class="container main-content">
-      <!-- Flash messages consumed by banner system -->
       {% with messages = get_flashed_messages(with_categories=true) %}
-        <!-- Messages handled by individual page banner systems -->
       {% endwith %}
 
       {% block content %}{% endblock %}
     </main>
 
-    <!-- ============================================================
-         GLOBAL FOOTER
-    ============================================================ -->
     <footer class="site-footer">
       © {{ year if year is defined else "" }} WeightGame — Team Project Base
     </footer>
 
-    <!-- Global theme script: apply persisted theme and wire toggle -->
     <script>
+      // Theme toggle system with localStorage persistence
       (function () {
         const body = document.body;
         const btn = document.getElementById('themeToggleBtn');
 
+        // Apply theme class to body and update button state
         function applyThemeClass(theme) {
           body.classList.remove('light-mode', 'dark-mode');
           body.classList.add(theme === 'dark' ? 'dark-mode' : 'light-mode');
@@ -90,7 +72,6 @@
             btn.setAttribute('data-theme', theme);
             btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
           }
-          // If the settings page select exists, keep it in sync
           const sel = document.getElementById('themeSelect');
           if (sel) sel.value = theme;
         }
@@ -105,7 +86,6 @@
           applyThemeClass(next);
         });
 
-        // Respond to changes from other tabs
         window.addEventListener('storage', (e) => {
           if (e.key === 'theme') applyThemeClass(e.newValue || 'light');
         });
@@ -113,12 +93,11 @@
     </script>
 
     {% if session.user_id %}
-    <!-- Firebase Logout -->
     <script type="module">
+      // Firebase client-side logout handler
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
       import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
-      // Your web app's Firebase configuration
       const firebaseConfig = {
         apiKey: "AIzaSyBn3O0A7K9OEJzFZEFdz4qC6b-PHeAfuD4",
         authDomain: "weightgame-fitness.firebaseapp.com",
@@ -138,7 +117,6 @@
           window.location.href = '/logout';
         } catch (error) {
           console.error('Logout error:', error);
-          // Fallback to server logout even if Firebase logout fails
           window.location.href = '/logout';
         }
       });

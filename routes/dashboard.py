@@ -1,8 +1,7 @@
-"""
-Dashboard Routes
-================
-Handles the main dashboard and user profile/activity management.
-"""
+# Dashboard Routes Module
+# =======================
+# Handles user dashboard, profile management, and activity tracking.
+# Provides weight logging, workout tracking, goals, and profile updates.
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from firebase_admin import firestore
@@ -11,10 +10,10 @@ from datetime import datetime, UTC
 dashboard_bp = Blueprint('dashboard', __name__)
 
 def format_timesince(dt):
-    """Format timestamp as relative time (e.g., '2 hours ago')."""
+    # Format datetime as relative time string (e.g., '2 hours ago').
     from datetime import timezone
     
-    # Ensure both datetimes are timezone-aware or both are naive
+    # Handle timezone-aware and timezone-naive datetimes
     if dt.tzinfo is not None:
         now = datetime.now(timezone.utc)
     else:
@@ -30,17 +29,12 @@ def format_timesince(dt):
     else:
         return "Just now"
 
-
-# ============================================================
-# ROUTE: User Dashboard
-# ============================================================
 @dashboard_bp.route('/dashboard')
 def dashboard():
-    """Display user's dashboard with weight tracking and stats."""
+    # Display user dashboard with weight tracking, stats, and activity feed.
     from app import get_db
     db = get_db()
     
-    # Check if user is logged in
     if 'user_id' not in session:
         flash('Please login to access the dashboard', 'error')
         return redirect(url_for('auth.login'))
@@ -68,7 +62,7 @@ def dashboard():
             recent_activities=[]
         )
     
-    # Fetch user's weight entries
+    # Fetch user's weight entries for chart
     weight_entries = db.collection('weight_entries')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
@@ -82,19 +76,16 @@ def dashboard():
             'date_formatted': data['date'].strftime('%b %d')
         })
     
-    # Sort by date in Python
     weight_data.sort(key=lambda x: x['date'])
     
-    # Calculate total calories burned from all workouts
     workouts = db.collection('workouts')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     total_calories = sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
     
-    # Build recent activities feed
+    # Build recent activity feed from weight and workout logs
     recent_activities = []
     
-    # Get weight entries for activities
     recent_weights = db.collection('weight_entries')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
@@ -110,7 +101,6 @@ def dashboard():
             'time': format_timesince(data['date'])
         })
     
-    # Get workout entries for activities
     recent_workouts = db.collection('workouts')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
@@ -126,10 +116,8 @@ def dashboard():
             'time': format_timesince(data['date'])
         })
     
-    # Sort activities by recency
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
-    # Get user name
     user_email = session.get('email') or session.get('user_id') or ''
     if user_email and '@' in user_email:
         user_name = user_email.split('@')[0]
@@ -155,13 +143,9 @@ def dashboard():
         recent_activities=recent_activities[:5]
     )
 
-
-# ============================================================
-# ROUTE: Log Weight Entry
-# ============================================================
 @dashboard_bp.route('/log_weight', methods=['GET', 'POST'])
 def log_weight():
-    """Record a new weight entry for the user."""
+    # Record a new weight entry for the logged-in user.
     from app import get_db
     db = get_db()
     
@@ -192,13 +176,9 @@ def log_weight():
     
     return render_template('log_weight.html')
 
-
-# ============================================================
-# ROUTE: Log Workout
-# ============================================================
 @dashboard_bp.route('/log_workout', methods=['GET', 'POST'])
 def log_workout():
-    """Record a new workout session."""
+    # Record a new workout session with duration and calories.
     from app import get_db
     db = get_db()
     
@@ -235,13 +215,9 @@ def log_workout():
     
     return render_template('log_workout.html')
 
-
-# ============================================================
-# ROUTE: Set Weight Goal
-# ============================================================
 @dashboard_bp.route('/set_goal', methods=['GET', 'POST'])
 def set_goal():
-    """Create or update a weight loss goal."""
+    # Create or update user weight loss goal with target and deadline.
     from app import get_db
     db = get_db()
     
@@ -273,13 +249,9 @@ def set_goal():
     
     return render_template('set_goal.html')
 
-
-# ============================================================
-# ROUTE: Update Profile
-# ============================================================
 @dashboard_bp.route('/update_profile', methods=['GET', 'POST'])
 def update_profile():
-    """Comprehensive user profile update with historical tracking."""
+    # Comprehensive profile update with weight, height, age, goals, and BMI calculation.
     from app import get_db
     db = get_db()
     
@@ -297,7 +269,6 @@ def update_profile():
     
     if request.method == 'POST':
         try:
-            # Extract form data
             current_weight = float(request.form['current_weight'])
             height_cm = int(request.form['height_cm'])
             age = int(request.form['age'])
@@ -309,11 +280,10 @@ def update_profile():
             exercise_goals = request.form.get('exercise_goals', '').strip()
             notes = request.form.get('notes', '').strip()
             
-            # Calculate BMI
+            # Calculate BMI from weight and height
             height_meters = height_cm / 100.0
             bmi = current_weight / (height_meters ** 2)
             
-            # Create profile entry
             profile_data = {
                 'user_id': user_id,
                 'timestamp': datetime.utcnow(),
@@ -332,9 +302,10 @@ def update_profile():
                 'weight_to_lose': current_weight - target_weight
             }
             
+            # Save profile snapshot to history
             db.collection('profile_entries').add(profile_data)
             
-            # Add weight entry
+            # Also create weight entry for chart tracking
             weight_entry = {
                 'user_id': user_id,
                 'weight': current_weight,
@@ -343,7 +314,6 @@ def update_profile():
             }
             db.collection('weight_entries').add(weight_entry)
             
-            # Update goals
             goal_entry = {
                 'user_id': user_id,
                 'target_weight': target_weight,
@@ -361,7 +331,6 @@ def update_profile():
             flash('Please check all fields and enter valid data.', 'error')
             print(f"Profile update error: {e}")
     
-    # GET request - load data
     current_data = None
     profile_history = []
     

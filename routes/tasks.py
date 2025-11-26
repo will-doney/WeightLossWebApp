@@ -1,8 +1,7 @@
-"""
-Task Management Routes
-======================
-Handles daily task CRUD operations and API endpoints.
-"""
+# Task Management Routes Module
+# ==============================
+# Handles daily task CRUD operations, task completion tracking,
+# and personalized task suggestions based on user profile.
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from firebase_admin import firestore
@@ -11,13 +10,9 @@ from .task_library import get_task_suggestions
 
 tasks_bp = Blueprint('tasks', __name__)
 
-
-# ============================================================
-# ROUTE: Daily Tasks (HTML)
-# ============================================================
 @tasks_bp.route('/tasks')
 def tasks():
-    """Display daily tasks and challenges with user-specific data."""
+    # Display user tasks and personalized suggestions.
     from app import get_db
     db = get_db()
     
@@ -36,19 +31,15 @@ def tasks():
             task_data['id'] = task_doc.id
             user_tasks.append(task_data)
         
-        # Get personalized task suggestions, filtering out existing tasks
+        # Get personalized task suggestions based on profile
         existing_task_names = [task.get('name', '') for task in user_tasks]
         suggested_tasks = get_task_suggestions(db, user_id, existing_task_names)
     
     return render_template('tasks.html', tasks=user_tasks, suggested_tasks=suggested_tasks)
 
-
-# ============================================================
-# ROUTE: Add New Task
-# ============================================================
 @tasks_bp.route('/add_task', methods=['POST'])
 def add_task():
-    """Add a new task for the current user."""
+    # Create a new task for the current user.
     from app import get_db
     db = get_db()
     
@@ -77,13 +68,9 @@ def add_task():
     
     return redirect(url_for('tasks.tasks'))
 
-
-# ============================================================
-# ROUTE: Toggle Task Completion
-# ============================================================
 @tasks_bp.route('/toggle_task/<task_id>', methods=['POST'])
 def toggle_task(task_id):
-    """Toggle completion status of a task and update avatar points."""
+    # Toggle task completion status and update avatar points (+10 for complete, -10 for uncomplete).
     from app import get_db
     db = get_db()
     
@@ -108,11 +95,10 @@ def toggle_task(task_id):
             flash('Unauthorized task access', 'error')
             return redirect(url_for('tasks.tasks'))
         
-        # Toggle completion status
         new_completed = not task_data.get('completed', False)
         task_ref.update({'completed': new_completed})
         
-        # Update avatar points atomically
+        # Update avatar points: +10 for complete, -10 for uncomplete
         try:
             avatar_ref = db.collection('avatars').document(session['user_id'])
             point_change = 10 if new_completed else -10
@@ -123,7 +109,7 @@ def toggle_task(task_id):
                 'updated_at': datetime.utcnow()
             }, merge=True)
             
-            # Ensure points don't go below zero
+            # Prevent negative points
             avatar_doc = avatar_ref.get()
             if avatar_doc.exists:
                 points = int(avatar_doc.to_dict().get('points', 0) or 0)
@@ -132,7 +118,6 @@ def toggle_task(task_id):
         except Exception as e:
             print(f"Error updating avatar points: {e}")
         
-        # Flash appropriate message
         task_name = task_data.get('name', 'Unknown')
         if new_completed:
             flash(f'Task "{task_name}" completed! (+10 pts)', 'success')
@@ -145,13 +130,9 @@ def toggle_task(task_id):
     
     return redirect(url_for('tasks.tasks'))
 
-
-# ============================================================
-# ROUTE: Delete Task
-# ============================================================
 @tasks_bp.route('/delete_task/<task_id>', methods=['POST'])
 def delete_task(task_id):
-    """Delete a task for the current user."""
+    # Delete a task for the current user.
     from app import get_db
     db = get_db()
     
@@ -186,13 +167,9 @@ def delete_task(task_id):
     
     return redirect(url_for('tasks.tasks'))
 
-
-# ============================================================
-# ROUTE: Edit Task
-# ============================================================
 @tasks_bp.route('/edit_task/<task_id>', methods=['POST'])
 def edit_task(task_id):
-    """Edit a task for the current user."""
+    # Update task name and description.
     from app import get_db
     db = get_db()
     
@@ -236,13 +213,9 @@ def edit_task(task_id):
     
     return redirect(url_for('tasks.tasks'))
 
-
-# ============================================================
-# ROUTE: Daily Tasks (JSON API)
-# ============================================================
 @tasks_bp.route('/api/tasks')
 def tasks_api():
-    """Return daily tasks as JSON for frontend or integrations."""
+    # Return tasks as JSON for AJAX requests.
     from app import get_db
     db = get_db()
     

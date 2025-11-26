@@ -1,39 +1,25 @@
-"""
-Avatar and Settings Routes
-===========================
-Handles avatar customization and user settings.
-"""
+# Other Routes Module
+# ===================
+# Handles settings, avatar customization, and avatar points API.
 
 from flask import Blueprint, render_template, request, session, jsonify
 from datetime import datetime
 
 other_bp = Blueprint('other', __name__)
 
-
-# ============================================================
-# ROUTE: User Settings
-# ============================================================
 @other_bp.route('/settings')
 def settings():
-    """Display user preferences and settings."""
+    # Display user preferences and settings page.
     return render_template('settings.html')
 
-
-# ============================================================
-# ROUTE: Avatar Customization
-# ============================================================
 @other_bp.route('/myavatar')
 def myavatar():
-    """Display avatar customization page."""
+    # Display avatar customization page with points system.
     return render_template('myavatar.html')
 
-
-# ============================================================
-# API: Persist Avatar Points (POST)
-# ============================================================
 @other_bp.route('/api/avatar/points', methods=['POST'])
 def avatar_points_api():
-    """Persist avatar points for authenticated user."""
+    # Save avatar points to Firestore for authenticated user.
     from app import get_db
     db = get_db()
     
@@ -61,13 +47,9 @@ def avatar_points_api():
         print(f"Error saving avatar points for {uid}: {e}")
         return jsonify({'error': 'db_error'}), 500
 
-
-# ============================================================
-# API: Get Avatar Points (GET)
-# ============================================================
 @other_bp.route('/api/avatar/points', methods=['GET'])
 def avatar_points_get():
-    """Return persisted avatar points for authenticated user."""
+    # Retrieve avatar points from Firestore for authenticated user.
     from app import get_db
     db = get_db()
     

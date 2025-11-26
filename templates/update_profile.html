@@ -1,13 +1,4 @@
-{#
-============================================================
-Template: update_profile.html
-Purpose : Comprehensive user data entry form for weight, height, age,
-          sex, weight loss goals, and activity preferences.
-
-Author  : will-doney
-Updated : November 2025
-============================================================
-#}
+{# update_profile.html - Profile update form with weight, height, age, and goals #}
 {% extends 'base.html' %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -21,7 +12,6 @@ Updated : November 2025
   <div class="profile-form-container">
     <form method="POST" action="{{ url_for('update_profile') }}" class="profile-form">
       
-      <!-- Basic Information Section -->
       <div class="form-section">
         <h3 class="section-title">📊 Basic Information</h3>
         
@@ -63,7 +53,6 @@ Updated : November 2025
         </div>
       </div>
 
-      <!-- Goals Section -->
       <div class="form-section">
         <h3 class="section-title">🎯 Weight Loss Goals</h3>
         
@@ -95,12 +84,9 @@ Updated : November 2025
           </select>
         </div>
       </div>
-
-      <!-- Activity Level Section -->
+      
       <div class="form-section">
-        <h3 class="section-title">🏃 Activity Level</h3>
-        
-        <div class="form-group">
+        <h3 class="section-title">🏃 Activity Level</h3>        <div class="form-group">
           <label for="activity_level">Current Activity Level</label>
           <select id="activity_level" name="activity_level" required>
             <option value="">Select...</option>
@@ -118,12 +104,9 @@ Updated : November 2025
                     placeholder="e.g., Run 5km three times per week, strength training twice a week...">{{ current_data.exercise_goals if current_data else '' }}</textarea>
         </div>
       </div>
-
-      <!-- Additional Notes -->
+      
       <div class="form-section">
-        <h3 class="section-title">📝 Additional Notes</h3>
-        
-        <div class="form-group">
+        <h3 class="section-title">📝 Additional Notes</h3>        <div class="form-group">
           <label for="notes">Notes (optional)</label>
           <textarea id="notes" name="notes" rows="3" 
                     placeholder="Any additional information, medical considerations, or personal notes...">{{ current_data.notes if current_data else '' }}</textarea>
@@ -137,7 +120,6 @@ Updated : November 2025
     </form>
   </div>
 
-  <!-- Profile History -->
   {% if profile_history and profile_history|length > 0 %}
   <div class="profile-history">
     <h3>📈 Profile Update History</h3>
