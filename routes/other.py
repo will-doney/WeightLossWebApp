@@ -34,7 +34,8 @@ def myavatar():
 @other_bp.route('/api/avatar/points', methods=['POST'])
 def avatar_points_api():
     """Persist avatar points for authenticated user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401
@@ -67,7 +68,8 @@ def avatar_points_api():
 @other_bp.route('/api/avatar/points', methods=['GET'])
 def avatar_points_get():
     """Return persisted avatar points for authenticated user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401

@@ -40,14 +40,36 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # TODO: Use environment variable for production
 
 # Initialize Firebase Admin SDK
-db = None
-try:
-    cred = credentials.Certificate("firebase-key.json")
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    print("✓ Firebase initialized successfully")
-except Exception as firebase_error:
-    print(f"ERROR: Firebase initialization failed. Check firebase-key.json exists: {firebase_error}")
+_db = None
+
+def init_firebase():
+    """Initialize Firebase if not already initialized."""
+    global _db
+    if _db is None:
+        try:
+            # Check if Firebase is already initialized (for Flask reloader)
+            if not firebase_admin._apps:
+                cred = credentials.Certificate("firebase-key.json")
+                firebase_admin.initialize_app(cred)
+            _db = firestore.client()
+            print("✓ Firebase initialized successfully")
+        except Exception as firebase_error:
+            print(f"ERROR: Firebase initialization failed: {firebase_error}")
+            _db = None
+
+# Initialize Firebase immediately
+init_firebase()
+
+
+# ============================================================
+# DATABASE HELPER
+# ============================================================
+def get_db():
+    """Return the Firestore database client, initializing if needed."""
+    global _db
+    if _db is None:
+        init_firebase()
+    return _db
 
 
 # ============================================================

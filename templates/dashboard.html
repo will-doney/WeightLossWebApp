@@ -179,7 +179,7 @@ Updated : November 2025
       <div class="card-header">
         <h3>Weight Progress</h3>
         <div class="time-filter">
-          <form method="GET" action="{{ url_for('dashboard') }}" class="timeframe-form">
+          <form method="GET" action="{{ url_for('dashboard.dashboard') }}" class="timeframe-form">
             <select name="timeframe" aria-label="Select timeframe" onchange="this.form.submit()">
               <option value="7d" {% if selected_timeframe == '7d' %}selected{% endif %}>Last 7 Days</option>
               <option value="30d" {% if selected_timeframe == '30d' or not selected_timeframe %}selected{% endif %}>Last 30 Days</option>
@@ -286,7 +286,7 @@ Updated : November 2025
 
   <!-- Profile Update Action -->
   <div class="profile-update-section">
-    <a href="{{ url_for('update_profile') }}" class="profile-update-btn">
+    <a href="{{ url_for('dashboard.update_profile') }}" class="profile-update-btn">
       <span class="update-icon">👤</span>
       <span class="update-text">
         <strong>Update Your Profile</strong>
@@ -303,7 +303,7 @@ Updated : November 2025
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   // Fetch tasks from the Flask API which reads Firestore
-  fetch('{{ url_for("api_tasks") if (url_for is defined) else "/api/tasks" }}')
+  fetch('{{ url_for("tasks.api_tasks") }}')
     .then(res => res.json())
     .then(tasks => {
       if (!Array.isArray(tasks) || tasks.length === 0) return;

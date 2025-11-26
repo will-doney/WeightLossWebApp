@@ -37,7 +37,8 @@ def format_timesince(dt):
 @dashboard_bp.route('/dashboard')
 def dashboard():
     """Display user's dashboard with weight tracking and stats."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     # Check if user is logged in
     if 'user_id' not in session:
@@ -45,6 +46,27 @@ def dashboard():
         return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return render_template('dashboard.html',
+            user_name='User',
+            current_weight=None,
+            weight_change=0,
+            last_updated="No data",
+            calories_burned=0,
+            daily_calorie_goal=2000,
+            workout_streak=0,
+            goal_progress=0,
+            goal_remaining=0,
+            selected_timeframe='30d',
+            weight_data=[],
+            max_weight=1,
+            badges=[],
+            unlocked_badges=0,
+            total_badges=0,
+            recent_activities=[]
+        )
     
     # Fetch user's weight entries
     weight_entries = db.collection('weight_entries')\
@@ -140,10 +162,15 @@ def dashboard():
 @dashboard_bp.route('/log_weight', methods=['GET', 'POST'])
 def log_weight():
     """Record a new weight entry for the user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
     
     if request.method == 'POST':
         try:
@@ -172,10 +199,15 @@ def log_weight():
 @dashboard_bp.route('/log_workout', methods=['GET', 'POST'])
 def log_workout():
     """Record a new workout session."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
     
     if request.method == 'POST':
         try:
@@ -210,10 +242,15 @@ def log_workout():
 @dashboard_bp.route('/set_goal', methods=['GET', 'POST'])
 def set_goal():
     """Create or update a weight loss goal."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
     
     if request.method == 'POST':
         try:
@@ -243,12 +280,20 @@ def set_goal():
 @dashboard_bp.route('/update_profile', methods=['GET', 'POST'])
 def update_profile():
     """Comprehensive user profile update with historical tracking."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return render_template('update_profile.html', 
+                             current_data=None, 
+                             profile_history=[],
+                             today=datetime.now().strftime('%Y-%m-%d'))
     
     if request.method == 'POST':
         try:

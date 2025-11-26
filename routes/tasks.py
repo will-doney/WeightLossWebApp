@@ -18,7 +18,8 @@ tasks_bp = Blueprint('tasks', __name__)
 @tasks_bp.route('/tasks')
 def tasks():
     """Display daily tasks and challenges with user-specific data."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         flash('Please login to access tasks', 'error')
@@ -48,7 +49,8 @@ def tasks():
 @tasks_bp.route('/add_task', methods=['POST'])
 def add_task():
     """Add a new task for the current user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
@@ -82,7 +84,8 @@ def add_task():
 @tasks_bp.route('/toggle_task/<task_id>', methods=['POST'])
 def toggle_task(task_id):
     """Toggle completion status of a task and update avatar points."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
@@ -149,7 +152,8 @@ def toggle_task(task_id):
 @tasks_bp.route('/delete_task/<task_id>', methods=['POST'])
 def delete_task(task_id):
     """Delete a task for the current user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
@@ -189,7 +193,8 @@ def delete_task(task_id):
 @tasks_bp.route('/edit_task/<task_id>', methods=['POST'])
 def edit_task(task_id):
     """Edit a task for the current user."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
@@ -238,7 +243,8 @@ def edit_task(task_id):
 @tasks_bp.route('/api/tasks')
 def tasks_api():
     """Return daily tasks as JSON for frontend or integrations."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401

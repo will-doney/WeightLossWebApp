@@ -48,7 +48,7 @@ Updated : November 2025
 <!-- Add New Task Form -->
 <div class="card">
   <h3 class="add-task-heading">Add Custom Task</h3>
-  <form method="POST" action="{{ url_for('add_task') }}" class="add-task-form" onsubmit="return onAddTask(this)">
+  <form method="POST" action="{{ url_for('tasks.add_task') }}" class="add-task-form" onsubmit="return onAddTask(this)">
     <div class="form-group">
       <label for="task_name" class="task-label">Task Name:</label>
       <input type="text" id="task_name" name="task_name" required 
@@ -109,7 +109,7 @@ Updated : November 2025
     {% for task in tasks %}
       <div class="card task-card {{ 'completed-task' if task.completed else '' }}">
         <div class="task-header">
-          <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form task-checkbox-form">
+          <form method="POST" action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" class="task-form task-checkbox-form">
             <input type="checkbox" id="task_{{ task.id }}" 
                    {{ 'checked' if task.completed else '' }}
                    data-task-name="{{ task.name|escape }}"
@@ -127,7 +127,7 @@ Updated : November 2025
           
           <button class="btn-edit" onclick="editTask('{{ task.id }}', '{{ task.name|escape }}', '{{ task.description|escape if task.description else '' }}')">✏️</button>
           
-          <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
+          <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" 
             onsubmit="return onDeleteTask(this)" data-was-completed="{{ 'true' if task.completed else 'false' }}" class="task-form task-delete-form">
             <button type="submit" class="btn-delete">×</button>
           </form>
@@ -512,7 +512,7 @@ function addSuggestedTask(taskName, taskDescription) {
   // Create a form and submit to add_task route
   const form = document.createElement('form');
   form.method = 'POST';
-  form.action = '{{ url_for("add_task") }}';
+  form.action = '{{ url_for("tasks.add_task") }}';
   
   const nameInput = document.createElement('input');
   nameInput.type = 'hidden';

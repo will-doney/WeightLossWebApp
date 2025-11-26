@@ -16,7 +16,8 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Handle user login with Firebase Authentication."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if request.method == 'POST':
         # Get the ID token from the client
@@ -78,7 +79,8 @@ def login():
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     """Handle user registration with Firebase Authentication."""
-    from app import db
+    from app import get_db
+    db = get_db()
     
     if request.method == 'POST':
         # Get the ID token from the client

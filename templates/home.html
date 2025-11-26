@@ -27,8 +27,8 @@ Updated : November 2025
         </div>
         
         <div class="home-buttons">
-            <a href="{{ url_for('login') }}" class="btn-primary">Login</a>
-            <a href="{{ url_for('signup') }}" class="btn-secondary">Sign Up</a>
+            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
+            <a href="{{ url_for('auth.signup') }}" class="btn-secondary">Sign Up</a>
         </div>
         
         {% with messages = get_flashed_messages() %}
