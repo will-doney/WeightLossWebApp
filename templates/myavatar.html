@@ -37,6 +37,12 @@
     <button onclick="resetPoints()" class="btn">Reset</button>
   </div>
 
+  <!-- Milestones & Rewards Section -->
+  <div class="milestones-section">
+    <h3>Milestones & Rewards</h3>
+    <div id="milestones-container"></div>
+  </div>
+
   <script>
     // Change avatar image based on mood selection
     function changeAvatar(mood) {
@@ -168,6 +174,103 @@
       });
 
       updateUI();
+    })();
+
+    // ============================================================
+    // Milestones & Rewards System
+    // ============================================================
+    (function () {
+      const milestonesContainer = document.getElementById('milestones-container');
+
+      // Fetch milestones and render
+      function loadMilestones() {
+        fetch('/api/avatar/rewards', { method: 'GET', headers: { 'Accept': 'application/json' } })
+          .then(res => res.json())
+          .then(data => {
+            const milestones = data.milestones || [];
+            const claimed = data.claimed || [];
+            renderMilestones(milestones, claimed);
+          })
+          .catch(err => {
+            console.error('Failed to load milestones:', err);
+            milestonesContainer.innerHTML = '<p class="muted">Unable to load milestones</p>';
+          });
+      }
+
+      // Render milestone cards
+      function renderMilestones(milestones, claimed) {
+        if (!milestones.length) {
+          milestonesContainer.innerHTML = '<p class="muted">No milestones available</p>';
+          return;
+        }
+
+        const currentPoints = parseInt(localStorage.getItem('avatar_points_v1_{{ session.get("user_id", "anon") }}') || '0', 10);
+
+        const html = milestones.map(m => {
+          const isClaimed = claimed.includes(m.id);
+          const canClaim = currentPoints >= m.pts && !isClaimed;
+          const progress = Math.min(100, (currentPoints / m.pts) * 100);
+
+          return `
+            <div class="milestone ${isClaimed ? 'claimed' : ''}">
+              <div class="milestone-header">
+                <h4>${m.title}</h4>
+                <span class="milestone-points">${m.pts} pts</span>
+              </div>
+              <div class="milestone-progress">
+                <div class="milestone-fill" style="width: ${progress}%"></div>
+              </div>
+              <div class="milestone-reward">
+                <span class="reward-badge ${isClaimed ? '' : 'locked'}">${m.reward}</span>
+                ${isClaimed 
+                  ? '<span class="claimed-label">✓ Claimed</span>' 
+                  : canClaim 
+                    ? `<button class="claim-btn" onclick="claimReward('${m.id}')">Claim Reward</button>`
+                    : `<span class="muted">${currentPoints}/${m.pts}</span>`
+                }
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        milestonesContainer.innerHTML = html;
+      }
+
+      // Claim reward
+      window.claimReward = function (rewardId) {
+        fetch('/api/avatar/rewards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reward_id: rewardId })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.ok) {
+              alert('Reward claimed successfully! 🎉');
+              loadMilestones(); // Refresh
+            } else if (data.error === 'already_claimed') {
+              alert('You already claimed this reward!');
+            } else if (data.error === 'insufficient_points') {
+              alert(`Need ${data.required} points (you have ${data.have})`);
+            } else {
+              alert('Failed to claim reward: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Claim error:', err);
+            alert('Network error - please try again');
+          });
+      };
+
+      // Listen for points changes to update progress bars
+      window.addEventListener('storage', function (e) {
+        if (e.key && e.key.includes('avatar_points_v1')) {
+          loadMilestones();
+        }
+      });
+
+      // Initial load
+      loadMilestones();
     })();
   </script>
  {% endblock %}
