@@ -59,6 +59,21 @@ Updated : November 2025
     <button onclick="resetPoints()" class="btn">Reset</button>
   </div>
 
+  <!-- Milestones & Rewards -->
+  <div class="milestones-section card">
+    <h3>Milestones & Rewards</h3>
+    <p class="muted">Earn rewards as you collect points. Claim rewards when you reach each milestone.</p>
+    <div id="rewards-login-banner" style="display:none; margin:8px 0; padding:8px 12px; background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius:6px;">
+      Please log in to claim rewards.
+      <a href="{{ url_for('login') }}" style="color:#c2410c; text-decoration:underline; margin-left:6px;">Log in</a>
+    </div>
+    <div id="rewards-service-banner" style="display:none; margin:8px 0; padding:8px 12px; background:#fef2f2; color:#991b1b; border:1px solid #fecaca; border-radius:6px;">
+      Rewards service unavailable. You can still view milestones.
+    </div>
+    <div id="milestones-list" class="milestones-list"></div>
+    <div id="rewards-row" class="rewards-row" aria-live="polite"></div>
+  </div>
+
   <script>
     // ...existing code...
     function changeAvatar(mood) {
@@ -88,6 +103,173 @@ Updated : November 2025
         }
       }
       const pointsPerLevel = 100;
+      // Milestones - fallback definitions (also fetched from server when logged in)
+      let MILESTONES = [
+        { id: 'm50', pts: 50, title: 'First Steps', reward: 'Bronze Badge' },
+        { id: 'm100', pts: 100, title: 'On The Move', reward: 'Silver Badge' },
+        { id: 'm250', pts: 250, title: 'Committed', reward: 'Gold Badge' },
+        { id: 'm500', pts: 500, title: 'Halfway Hero', reward: 'Platinum Badge' },
+        { id: 'm1000', pts: 1000, title: 'Legend', reward: 'Diamond Badge' }
+      ];
+
+      // Claimed rewards from server (Firebase authoritative)
+      let claimedRewards = new Set();
+
+      async function syncClaimedRewardsFromServer() {
+        // Fetch claimed rewards and milestone definitions from server
+        try {
+          const res = await fetch('/api/avatar/rewards', { method: 'GET' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data) {
+              // Server returns both milestones and claimed rewards
+              if (Array.isArray(data.milestones) && data.milestones.length > 0) {
+                MILESTONES = data.milestones;
+              }
+              if (Array.isArray(data.rewards)) {
+                claimedRewards = new Set(data.rewards);
+              }
+              // hide login banner if visible
+              const banner = document.getElementById('rewards-login-banner');
+              if (banner) banner.style.display = 'none';
+              // hide service banner on success
+              const svcBanner = document.getElementById('rewards-service-banner');
+              if (svcBanner) svcBanner.style.display = 'none';
+              renderMilestones();
+            }
+          } else {
+            // Not logged in or error - still render with fallback milestones
+            if (res.status === 401) {
+              const banner = document.getElementById('rewards-login-banner');
+              if (banner) banner.style.display = '';
+            }
+            if (res.status === 404) {
+              const svcBanner = document.getElementById('rewards-service-banner');
+              if (svcBanner) svcBanner.style.display = '';
+            }
+            renderMilestones();
+          }
+        } catch (e) {
+          console.warn('Could not sync rewards from server:', e);
+          // Still render with fallback milestones
+          renderMilestones();
+        }
+      }
+
+      function renderMilestones() {
+        const container = document.getElementById('milestones-list');
+        const rewardsRow = document.getElementById('rewards-row');
+        if (!container || !rewardsRow) return;
+        container.innerHTML = '';
+        rewardsRow.innerHTML = '';
+
+        MILESTONES.forEach(m => {
+          const achieved = points >= m.pts;
+          // Use claimed status from server (stored in Firebase per-user)
+          const claimed = m.claimed || claimedRewards.has(m.id);
+
+          const mEl = document.createElement('div');
+          mEl.className = 'milestone' + (claimed ? ' claimed' : '');
+
+          const title = document.createElement('div'); title.className = 'title'; title.textContent = m.title;
+          const reward = document.createElement('div'); reward.className = 'reward'; reward.textContent = m.reward;
+          const threshold = document.createElement('div'); threshold.className = 'threshold'; threshold.textContent = `${m.pts} pts`;
+
+          const progressBg = document.createElement('div'); progressBg.className = 'milestone-progress';
+          const progressFill = document.createElement('div'); progressFill.className = 'milestone-fill';
+          const progressPct = Math.min(100, Math.round((points / m.pts) * 100));
+          progressFill.style.width = progressPct + '%';
+          progressBg.appendChild(progressFill);
+
+          const claimBtn = document.createElement('button');
+          claimBtn.className = 'claim-btn';
+          claimBtn.textContent = claimed ? 'Claimed' : (achieved ? 'Claim Reward' : 'Locked');
+          claimBtn.disabled = !achieved || claimed;
+          if (claimed) claimBtn.style.background = '#6b7280';
+
+          claimBtn.addEventListener('click', async function () {
+            if (!achieved || claimed) return;
+            claimBtn.disabled = true;
+            claimBtn.textContent = 'Claiming...';
+            
+            try {
+              const response = await fetch('/api/avatar/rewards', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ reward_id: m.id }) 
+              });
+              
+              if (response.ok) {
+                // Server validated and saved - refresh from server to get authoritative state
+                await syncClaimedRewardsFromServer();
+                renderMilestones();
+              } else {
+                let errorMsg = 'Failed to claim reward';
+                try {
+                  const ct = response.headers.get('content-type') || '';
+                  if (ct.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMsg = errorData.message || errorData.error || errorMsg;
+                  } else {
+                    const text = await response.text();
+                    if (response.status === 401) errorMsg = 'Please log in to claim rewards.';
+                    else if (response.status === 403) errorMsg = 'Not enough points to claim this reward.';
+                    else if (response.status === 404) {
+                      errorMsg = 'Rewards service unavailable.';
+                      const svcBanner = document.getElementById('rewards-service-banner');
+                      if (svcBanner) svcBanner.style.display = '';
+                    }
+                    else errorMsg = text?.slice(0, 200) || errorMsg;
+                  }
+                } catch (_) {
+                  if (response.status === 404) {
+                    errorMsg = 'Rewards service unavailable.';
+                    const svcBanner = document.getElementById('rewards-service-banner');
+                    if (svcBanner) svcBanner.style.display = '';
+                  }
+                }
+                // Non-intrusive: keep inline banner, avoid popup
+                claimBtn.disabled = false;
+                claimBtn.textContent = 'Claim Reward';
+              }
+            } catch (e) {
+              const svcBanner = document.getElementById('rewards-service-banner');
+              if (svcBanner) svcBanner.textContent = 'Network error. Please try again.';
+              if (svcBanner) svcBanner.style.display = '';
+              claimBtn.disabled = false;
+              claimBtn.textContent = 'Claim Reward';
+            }
+          });
+
+          const row = document.createElement('div');
+          row.style.display = 'flex'; row.style.width = '100%'; row.style.alignItems = 'center';
+          const left = document.createElement('div'); left.style.flex = '1';
+          left.appendChild(title); left.appendChild(reward); left.appendChild(progressBg);
+          const right = document.createElement('div'); right.appendChild(threshold); right.appendChild(claimBtn);
+          row.appendChild(left); row.appendChild(right);
+
+          mEl.appendChild(row);
+          container.appendChild(mEl);
+        });
+
+        // render badges of claimed rewards
+        renderRewards();
+      }
+
+      function renderRewards() {
+        const rewardsRow = document.getElementById('rewards-row');
+        if (!rewardsRow) return;
+        rewardsRow.innerHTML = '';
+        MILESTONES.forEach(m => {
+          // Use claimed status from server (stored in Firebase per-user)
+          const claimed = m.claimed || claimedRewards.has(m.id);
+          const badge = document.createElement('div');
+          badge.className = 'reward-badge' + (claimed ? '' : ' locked');
+          badge.textContent = claimed ? `${m.reward}` : `${m.reward}`;
+          rewardsRow.appendChild(badge);
+        });
+      }
+
       // Mood keys (per-user) — react to task events in other tabs
       const MOOD_KEY = `avatar_mood_v1_${USER_ID}`;
       const GLOBAL_MOOD_KEY = 'avatar_mood_v1';
@@ -148,6 +330,8 @@ Updated : November 2025
         progressFill.style.width = percent + '%';
         progressBg.setAttribute('aria-valuenow', String(percent));
         pointsText.textContent = `${progressInLevel} / ${pointsPerLevel} points (Total: ${points})`;
+        // Update milestone UI whenever points change
+        try { if (typeof renderMilestones === 'function') renderMilestones(); } catch (e) { /* ignore */ }
       }
 
       window.addPoints = function (n) {
@@ -180,6 +364,9 @@ Updated : November 2025
         }).catch(err => console.warn('Persist points failed', err));
       };
 
+      // initialize: fetch milestones and rewards from server, then render
+      syncClaimedRewardsFromServer();
+
      
 
 
@@ -205,6 +392,14 @@ Updated : November 2025
           }
         }
       });
+
+      // show login banner immediately for anonymous user
+      try {
+        if (USER_ID === 'anon') {
+          const banner = document.getElementById('rewards-login-banner');
+          if (banner) banner.style.display = '';
+        }
+      } catch(_) {}
 
       // initialize (UI will also be refreshed if server returns value above)
       updateUI();
