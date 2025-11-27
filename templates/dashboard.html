@@ -1,19 +1,4 @@
-{#
-============================================================
-Template: dashboard.html
-Purpose : Authenticated user hub presenting progress metrics, charts,
-          achievements, and quick actions. Extends base.html.
-
-Content :
-  - Summary statistic cards (weight, calories, streaks, goals).
-  - Weight trend visualization with timeframe selector.
-  - Achievements grid and recent activity feed.
-  - Quick action shortcuts (log weight/workout, set goals).
-
-Author  : will-doney
-Updated : November 2025
-============================================================
-#}
+{# dashboard.html - User dashboard with stats, charts, and activity feed #}
 {% extends 'base.html' %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -79,18 +64,100 @@ Updated : November 2025
     </p>
   </div>
 
+  <!-- Motivational Messages Banner -->
+  {% if motivational_messages and motivational_messages|length > 0 %}
+  <div class="motivational-banner">
+    {% for message in motivational_messages %}
+      <div class="motivation-card">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Avatar & Level / Points / Tasks Section -->
+  <div class="dashboard-row">
+    <!-- Avatar Section -->
+    <div class="dashboard-card avatar-display-card">
+      <div class="card-inner">
+        <div class="avatar-mini-container">
+          <img id="dashboard-avatar" 
+               src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
+               alt="Your Avatar" 
+               class="avatar-mini" width="120" height="120">
+          <div class="level-badge-mini">Lv {{ avatar_level }}</div>
+        </div>
+        <h3 style="margin: 15px 0 8px 0; font-size: 1.1rem;">Your Avatar</h3>
+        <div class="progress-mini">
+          <div class="progress-bar-mini">
+            <div class="progress-fill-mini" style="width: {{ avatar_progress }}%"></div>
+          </div>
+          <small style="color: #6b7280;">{{ avatar_points }} / {{ (avatar_level * 100) }} points</small>
+        </div>
+        <a href="{{ url_for('other.myavatar') }}" style="display: inline-block; margin-top: 10px; color: #667eea; text-decoration: none; font-weight: 600;">
+          Customize →
+        </a>
+      </div>
+    </div>
+
+    <!-- Daily Tasks Section -->
+    <div class="dashboard-card tasks-overview-card">
+      <h3 style="margin-top: 0;">📋 Daily Tasks</h3>
+      <div class="tasks-stats">
+        <div class="task-stat">
+          <span class="task-number completed">{{ tasks_completed }}</span>
+          <small>Completed</small>
+        </div>
+        <div class="task-stat">
+          <span class="task-number total">{{ tasks_total }}</span>
+          <small>Total</small>
+        </div>
+        {% if tasks_total > 0 %}
+          <div class="task-stat">
+            <span class="task-number percentage">{{ ((tasks_completed / tasks_total) * 100)|round(0)|int }}%</span>
+            <small>Progress</small>
+          </div>
+        {% endif %}
+      </div>
+      <div class="task-progress-bar">
+        <div class="task-progress-fill" style="width: {% if tasks_total > 0 %}{{ ((tasks_completed / tasks_total) * 100) }}{% else %}0{% endif %}%"></div>
+      </div>
+      <a href="{{ url_for('tasks.tasks') }}" style="display: inline-block; margin-top: 12px; color: #667eea; text-decoration: none; font-weight: 600;">
+        View All Tasks →
+      </a>
+    </div>
+
+    <!-- Progress Summary Section -->
+    <div class="dashboard-card progress-summary-card">
+      <h3 style="margin-top: 0;">📊 Progress Summary</h3>
+      <div class="progress-item">
+        <span class="progress-label">Weight Lost</span>
+        <span class="progress-value">{{ weight_lost }} {{ weight_lost_unit }}</span>
+      </div>
+      <div class="progress-item">
+        <span class="progress-label">Goal Progress</span>
+        <span class="progress-value">{{ goal_progress|round(0)|int }}%</span>
+      </div>
+      <div class="progress-item">
+        <span class="progress-label">Workout Streak</span>
+        <span class="progress-value">{{ workout_streak }} 🔥</span>
+      </div>
+      <div class="progress-item">
+        <span class="progress-label">Points Earned</span>
+        <span class="progress-value">{{ avatar_points }} ⭐</span>
+      </div>
+    </div>
+  </div>
+
   <div class="stats-grid">
-    <!-- Current Weight Card -->
     <div class="stat-card primary">
       <div class="stat-icon">📊</div>
       <div class="stat-content">
         <h3>Current Weight</h3>
         <div class="stat-value">
           {% if current_weight %}
-            {{ current_weight }} lbs
-            {% if weight_change is defined and weight_change != None %}
-              <span class="change-indicator {% if weight_change > 0 %}positive{% else %}negative{% endif %}">
-                {% if weight_change > 0 %}+{% endif %}{{ "%.1f"|format(weight_change) }} lbs
+            {{ current_weight }} {{ current_weight_unit }}
+            {% if weight_lost is defined and weight_lost > 0 %}
+              <span class="change-indicator weight-lost" title="Weight lost">
+                -{{ weight_lost }} {{ weight_lost_unit }}
               </span>
             {% endif %}
           {% else %}
@@ -107,8 +174,8 @@ Updated : November 2025
       </div>
     </div>
 
-    <!-- Calories Burned Card -->
     <div class="stat-card success">
+      <div class="stat-icon">🔥</div>
       <div class="stat-content">
         <h3>Calories Burned</h3>
         <div class="stat-value">
@@ -120,11 +187,11 @@ Updated : November 2025
           {% else %}
             Total calories burned
           {% endif %}
+          <br><small style="margin-top: 0.5rem; display: block;"><a href="{{ url_for('dashboard.log_calories') }}" style="color: inherit;">+ Log calories</a></small>
         </div>
       </div>
     </div>
 
-    <!-- Workout Streak Card -->
     <div class="stat-card warning">
       <div class="stat-icon">💪</div>
       <div class="stat-content">
@@ -138,21 +205,21 @@ Updated : November 2025
           {% else %}
             Start your streak today!
           {% endif %}
+          <br><small style="margin-top: 0.5rem; display: block;"><a href="{{ url_for('dashboard.log_workout') }}" style="color: inherit;">+ Log workout</a></small>
         </div>
       </div>
     </div>
 
-    <!-- Goal Progress Card -->
     <div class="stat-card info">
       <div class="stat-icon">🎯</div>
       <div class="stat-content">
         <h3>Goal Progress</h3>
         <div class="stat-value">
-          {{ goal_progress|default(0) }}%
+          {{ goal_progress|default(0)|round(0)|int }}%
         </div>
         <div class="progress-bar">
           {% if goal_progress %}
-            <div class="progress-fill progress-{{ goal_progress }}"></div>
+            <div class="progress-fill progress-{{ (goal_progress|round(0)|int) }}"></div>
           {% else %}
             <div class="progress-fill progress-0"></div>
           {% endif %}
@@ -162,7 +229,7 @@ Updated : November 2025
             Goal achieved! 🎉
           {% else %}
             {% if goal_remaining %}
-              {{ goal_remaining }} lbs to go
+              {{ goal_remaining }} {{ current_weight_unit }} to go
             {% else %}
               Set a goal to get started!
             {% endif %}
@@ -172,14 +239,12 @@ Updated : November 2025
     </div>
   </div>
 
-  <!-- Dynamic Content Grid -->
   <div class="content-grid">
-    <!-- Weight Progress Chart -->
     <div class="chart-card">
       <div class="card-header">
         <h3>Weight Progress</h3>
         <div class="time-filter">
-          <form method="GET" action="{{ url_for('dashboard') }}" class="timeframe-form">
+          <form method="GET" action="{{ url_for('dashboard.dashboard') }}" class="timeframe-form">
             <select name="timeframe" aria-label="Select timeframe" onchange="this.form.submit()">
               <option value="7d" {% if selected_timeframe == '7d' %}selected{% endif %}>Last 7 Days</option>
               <option value="30d" {% if selected_timeframe == '30d' or not selected_timeframe %}selected{% endif %}>Last 30 Days</option>
@@ -195,16 +260,17 @@ Updated : November 2025
           <div class="chart-bars">
             {% for entry in weight_data %}
               {% if max_weight and max_weight > 0 %}
-                {% set bar_height_class = "bar-height-" ~ ((entry.weight / max_weight * 100)|round|int) %}
+                {% set bar_height_percent = ((entry.weight / max_weight * 100)|round|int) %}
               {% else %}
-                {% set bar_height_class = "bar-height-50" %}
+                {% set bar_height_percent = 50 %}
               {% endif %}
-              <div class="bar {{ bar_height_class }} {% if loop.last %}current{% endif %}" 
-                   data-weight="{{ entry.weight }} lbs">
+              <div class="bar" style="height: {{ bar_height_percent }}%" 
+                   {% if loop.last %}data-current="true"{% endif %}"
+                   data-weight="{{ entry.weight }} {{ current_weight_unit }}" 
+                   title="{{ entry.weight }} {{ current_weight_unit }}">
                 <div class="bar-date">
                   {% if entry.date_formatted %}
                     {{ entry.date_formatted }}
-
                   {% else %}
                     Day {{ loop.index }}
                   {% endif %}
@@ -215,13 +281,12 @@ Updated : November 2025
         {% else %}
           <div class="no-data-message">
             <p>No weight data available yet.</p>
-            <span class="btn-primary">Add Your First Weight Entry</span>
+            <a href="{{ url_for('dashboard.log_weight') }}" class="btn-primary">Add Your First Weight Entry</a>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Achievements Section -->
     <div class="achievements-card">
       <div class="card-header">
         <h3>Achievements</h3>
@@ -232,7 +297,7 @@ Updated : November 2025
       <div class="badges-grid">
         {% if badges and badges|length > 0 %}
           {% for badge in badges %}
-            <div class="badge {% if badge.unlocked %}unlocked{% else %}locked{% endif %}">
+            <div class="badge {% if badge.unlocked %}unlocked{% else %}locked{% endif %}" title="{{ badge.progress }}">
               <div class="badge-icon">{{ badge.icon|default('🏆') }}</div>
               <span>{{ badge.name|default('Achievement') }}</span>
               {% if badge.unlocked %}
@@ -249,13 +314,12 @@ Updated : November 2025
         {% else %}
           <div class="no-badges">
             <p>Complete activities to earn badges!</p>
-            <span class="btn-secondary">Start Working Out</span>
+            <a href="{{ url_for('dashboard.log_workout') }}" class="btn-secondary">Start Working Out</a>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- Recent Activity -->
     <div class="activity-card">
       <div class="card-header">
         <h3>Recent Activity</h3>
@@ -284,9 +348,8 @@ Updated : November 2025
     </div>
   </div>
 
-  <!-- Profile Update Action -->
   <div class="profile-update-section">
-    <a href="{{ url_for('update_profile') }}" class="profile-update-btn">
+    <a href="{{ url_for('dashboard.update_profile') }}" class="profile-update-btn">
       <span class="update-icon">👤</span>
       <span class="update-text">
         <strong>Update Your Profile</strong>
@@ -299,19 +362,92 @@ Updated : November 2025
 {% endblock %}
 
 {% block scripts %}
-<!-- Dashboard dynamic scripts: fetch Firebase-backed tasks and inject into page -->
 <script>
+// Real-time dashboard updates
+(function () {
+  const REFRESH_INTERVAL = 30000; // Refresh every 30 seconds
+  
+  // Fetch and sync avatar points/level
+  function syncAvatarPoints() {
+    fetch('/api/avatar/points', { method: 'GET', headers: { 'Accept': 'application/json' } })
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data.points === 'number') {
+          const points = Number(data.points) || 0;
+          const pointsPerLevel = 100;
+          const level = Math.floor(points / pointsPerLevel) + 1;
+          const progress = ((points % pointsPerLevel) / pointsPerLevel) * 100;
+          
+          // Update avatar display
+          const levelBadge = document.querySelector('.level-badge-mini');
+          if (levelBadge) levelBadge.textContent = `Lv ${level}`;
+          
+          const progressFill = document.querySelector('.progress-fill-mini');
+          if (progressFill) progressFill.style.width = progress + '%';
+          
+          const pointsText = document.querySelector('.progress-mini small');
+          if (pointsText) pointsText.textContent = `${points} / ${level * 100} points`;
+        }
+      })
+      .catch(err => console.debug('Avatar sync error:', err));
+  }
+  
+  // Fetch and update task counts in real-time
+  function syncTaskCounts() {
+    fetch('{{ url_for("tasks.api_tasks") }}', { method: 'GET', headers: { 'Accept': 'application/json' } })
+      .then(res => res.json())
+      .then(tasks => {
+        if (!Array.isArray(tasks)) return;
+        
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.completed).length;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        // Update task stats
+        const completedEl = document.querySelector('.task-number.completed');
+        if (completedEl) completedEl.textContent = completed;
+        
+        const totalEl = document.querySelector('.task-number.total');
+        if (totalEl) totalEl.textContent = total;
+        
+        const percentageEl = document.querySelector('.task-number.percentage');
+        if (percentageEl) percentageEl.textContent = percentage + '%';
+        
+        // Update progress bar
+        const progressFill = document.querySelector('.task-progress-fill');
+        if (progressFill) progressFill.style.width = percentage + '%';
+      })
+      .catch(err => console.debug('Task sync error:', err));
+  }
+  
+  // Initial sync on page load
+  syncAvatarPoints();
+  syncTaskCounts();
+  
+  // Set up periodic refresh
+  setInterval(() => {
+    syncAvatarPoints();
+    syncTaskCounts();
+  }, REFRESH_INTERVAL);
+  
+  // Listen for storage events from other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key && e.key.includes('avatar_points')) {
+      syncAvatarPoints();
+    }
+  });
+})();
+
+// Fetch and display tasks in achievements section
 document.addEventListener('DOMContentLoaded', function () {
-  // Fetch tasks from the Flask API which reads Firestore
-  fetch('{{ url_for("api_tasks") if (url_for is defined) else "/api/tasks" }}')
+  fetch('{{ url_for("tasks.api_tasks") }}')
     .then(res => res.json())
     .then(tasks => {
       if (!Array.isArray(tasks) || tasks.length === 0) return;
-      // Create a small tasks list and append to the Achievements card
       const badgesGrid = document.querySelector('.badges-grid');
       if (!badgesGrid) return;
 
-      // Insert tasks at top
+      // Build and inject task list into dashboard
       const tasksContainer = document.createElement('div');
       tasksContainer.className = 'tasks-list';
       const title = document.createElement('h4');
@@ -330,7 +466,6 @@ document.addEventListener('DOMContentLoaded', function () {
       badgesGrid.insertBefore(tasksContainer, badgesGrid.firstChild);
     })
     .catch(err => {
-      // silent fail - don't break the dashboard
       console.debug('Could not load tasks:', err);
     });
 });

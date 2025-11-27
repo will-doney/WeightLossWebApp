@@ -1,246 +1,350 @@
-{#
-============================================================
-Template: tasks.html
-Purpose : Daily task management using existing CSS classes only.
-          Simple add/remove/complete functionality without timestamps or difficulty.
-
-Author  : will-doney
-Updated : November 2025 - Simplified with existing styles
-============================================================
-#}
+{# tasks.html - Daily task management with completion tracking and points system #}
 {% extends 'base.html' %}
 {% block content %}
-  <!-- Notification Banner Container -->
-  <div id="notificationBanner" class="notification-banner hidden">
-    <div class="banner-content">
-      <span id="bannerMessage"></span>
-      <button id="bannerClose" class="banner-close" onclick="hideBanner()">&times;</button>
-    </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+<div id="notificationBanner" class="notification-banner hidden">
+  <div class="banner-content">
+    <img id="bannerAvatar" class="banner-avatar" src="" alt="Avatar" style="display: none;">
+    <span id="bannerMessage"></span>
+    <button id="bannerClose" class="banner-close" onclick="hideBanner()">&times;</button>
   </div>
+</div>
 
-  <!-- Flash message data for JavaScript -->
-  <script id="flash-data" type="application/json">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        [
-        {% for category, message in messages %}
-          {"message": {{ message|tojson }}, "category": {{ category|tojson }}}
-          {%- if not loop.last -%},{%- endif -%}
-        {% endfor %}
-        ]
-      {% else %}
-        []
-      {% endif %}
-    {% endwith %}
-  </script>
-
-  <h2 class="section-title">Daily Tasks</h2>
-  
-  <!-- Add New Task Form -->
-  <div class="card">
-    <h3>Add New Task</h3>
-    <form method="POST" action="{{ url_for('add_task') }}" class="add-task-form">
-      <div class="form-group">
-        <label for="task_name">Task Name:</label>
-        <input type="text" id="task_name" name="task_name" required 
-               placeholder="Enter task name" class="form-control">
-      </div>
-      
-      <div class="form-group">
-        <label for="task_description">Description (optional):</label>
-        <textarea id="task_description" name="task_description" 
-                  placeholder="Enter task description" rows="2" class="form-control"></textarea>
-      </div>
-      
-      <button type="submit">Add Task</button>
-    </form>
-  </div>
-
-  <!-- Tasks Progress -->
-  {% if tasks and tasks|length > 0 %}
-    {% set completed_count = tasks|selectattr('completed')|list|length %}
-    {% set total_count = tasks|length %}
-    <p class="progress-info">Progress: {{ completed_count }}/{{ total_count }} tasks completed</p>
-  {% endif %}
-
-  <!-- Tasks Grid -->
-  <div class="grid">
-    {% if tasks and tasks|length > 0 %}
-      {% for task in tasks %}
-        <div class="card {{ 'completed-task' if task.completed else '' }}">
-          <div class="task-header">
-            <div class="task-checkbox">
-              <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" class="task-form">
-                <input type="checkbox" id="task_{{ task.id }}" 
-                       {{ 'checked' if task.completed else '' }}
-                       data-task-name="{{ task.name|escape }}"
-                       data-was-completed="{{ task.completed|lower }}"
-                       onchange="toggleTask(this)"
-                       title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}">
-                <label for="task_{{ task.id }}">Toggle completion</label>
-              </form>
-            </div>
-            
-            <div class="task-info">
-              <h3 class="task-name">
-                {{ task.name }}
-              </h3>
-              {% if task.description %}
-                <p class="task-description">{{ task.description }}</p>
-              {% endif %}
-            </div>
-            
-            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" 
-                  onsubmit="return confirm('Delete this task?')" class="task-form">
-              <button type="submit" class="btn-delete">×</button>
-            </form>
-          </div>
-        </div>
+<script id="flash-data" type="application/json">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      [
+      {% for category, message in messages %}
+        {"message": {{ message|tojson }}, "category": {{ category|tojson }}}
+        {%- if not loop.last -%},{%- endif -%}
       {% endfor %}
+      ]
     {% else %}
-      <div class="card no-tasks">
-        <h3>No tasks yet!</h3>
-        <p class="muted">Add your first task above to get started.</p>
-      </div>
+      []
     {% endif %}
+  {% endwith %}
+</script>
+
+<h1 class="page-title">Daily Tasks</h1>
+
+<div class="card">
+  <h3 class="add-task-heading">Add Custom Task</h3>
+  <form method="POST" action="{{ url_for('tasks.add_task') }}" class="add-task-form" onsubmit="return onAddTask(this)">
+    <div class="form-group">
+      <label for="task_name" class="task-label">Task Name:</label>
+      <input type="text" id="task_name" name="task_name" required 
+             placeholder="Enter task name" class="form-control task-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="task_description" class="task-label">Description (optional):</label>
+      <textarea id="task_description" name="task_description" 
+                placeholder="Enter task description" rows="2" class="form-control task-input"></textarea>
+    </div>
+    
+    <button type="submit" class="add-task-btn">Add Task</button>
+  </form>
+</div>
+
+{% if suggested_tasks and suggested_tasks|length > 0 %}
+<div class="card suggested-tasks-card">
+  <div class="suggested-header">
+    <div class="suggested-header-left">
+      <h3 class="suggested-title">💡 Suggested For You</h3>
+      <p class="suggested-subtitle">Based on your fitness profile</p>
+    </div>
+    <button class="btn-refresh-suggestions" onclick="refreshSuggestions()" title="Refresh suggestions">
+      Refresh
+    </button>
   </div>
+  
+  <div class="suggested-tasks-list">
+    {% for task in suggested_tasks %}
+      <div class="suggested-task-item">
+        <div class="suggested-task-info">
+          <strong class="suggested-task-name">{{ task.name }}</strong>
+          <span class="suggested-task-description">{{ task.description }}</span>
+        </div>
+        <button class="btn-add-suggestion" 
+                onclick="addSuggestedTask('{{ task.name|escape }}', '{{ task.description|escape }}')"
+                title="Add to my tasks">
+          + Add
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if tasks and tasks|length > 0 %}
+  {% set completed_count = tasks|selectattr('completed')|list|length %}
+  {% set total_count = tasks|length %}
+  <p class="progress-info">Progress: {{ completed_count }}/{{ total_count }} tasks completed</p>
+{% endif %}
+
+<div class="tasks-list">
+  {% if tasks and tasks|length > 0 %}
+    {% for task in tasks %}
+      <div class="card task-card {{ 'completed-task' if task.completed else '' }}">
+        <div class="task-header">
+          <form method="POST" action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" class="task-form task-checkbox-form">
+            <input type="checkbox" id="task_{{ task.id }}" 
+                   {{ 'checked' if task.completed else '' }}
+                   data-task-name="{{ task.name|escape }}"
+                   data-was-completed="{{ task.completed|lower }}"
+                   onchange="toggleTask(this)"
+                   title="Mark task as {{ 'incomplete' if task.completed else 'complete' }}"
+                   class="task-checkbox-input">
+          </form>
+          
+          <span class="task-name">{{ task.name }}</span>
+          
+          {% if task.description %}
+            <span class="task-description">{{ task.description }}</span>
+          {% endif %}
+          
+          <button class="btn-edit" onclick="editTask('{{ task.id }}', '{{ task.name|escape }}', '{{ task.description|escape if task.description else '' }}')">✏️</button>
+          
+          <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" 
+            onsubmit="return onDeleteTask(this)" data-was-completed="{{ 'true' if task.completed else 'false' }}" class="task-form task-delete-form">
+            <button type="submit" class="btn-delete">×</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="card no-tasks">
+      <h3>No tasks yet!</h3>
+      <p class="muted">Add your first task above to get started.</p>
+    </div>
+  {% endif %}
+</div>
 
 <style>
-
-.card {
-  background-color: #4a4a4a;
-  border: 1px solid #666;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 15px;
-  color: black;
+/* Add Task Form Styles */
+.add-task-heading {
+  color: black !important;
 }
 
-.card h3 {
-  color: black;
-  margin-top: 0;
+.task-label {
+  color: black !important;
 }
 
-
-.completed-task {
-  background-color: #5a6b5a;
-  border-color: #6b7a6b;
+.task-input {
+  background-color: #f0f0f0;
+  color: black !important;
 }
 
-.form-group {
-  margin-bottom: 15px;
+.add-task-btn {
+  background-color: black;
+  color: white;
+  padding: 15px 40px;
+  font-size: 18px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
+.add-task-btn:hover {
+  background-color: #333;
+}
+
+/* Suggested Tasks Styles */
+.suggested-tasks-card {
+  background: linear-gradient( #667eea);
+  color: white;
+  margin-bottom: 20px;
+}
+
+.suggested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.suggested-header-left {
+  flex-grow: 1;
+}
+
+.suggested-title {
+  color: white !important;
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+}
+
+.suggested-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.btn-refresh-suggestions {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: black;
+  border-radius: 8px;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.form-control {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #666;
-  border-radius: 5px;
-  font-size: 14px;
+.btn-refresh-suggestions:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.suggested-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggested-task-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: background 0.2s;
+}
+
+.suggested-task-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.suggested-task-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.suggested-task-name {
+  color: white;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.suggested-task-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.btn-add-suggestion {
   background-color: white;
-  color: black;
+  color: #667eea;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+.btn-add-suggestion:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+/* Task Card Styles */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-card {
+  margin: 0;
+}
+
+.task-card.completed-task {
+  background-color: #28a745;
 }
 
 .task-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
-.task-info {
-  flex: 1;
+.task-checkbox-form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.task-checkbox-input {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  margin: 0;
 }
 
 .task-name {
+  color: black !important;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 1;
+  min-width: 150px;
   margin: 0;
-  font-size: 1.1em;
-  color: black;
-}
-
-.completed-task .task-name {
-  text-decoration: line-through;
-  opacity: 0.7;
-  color: #666;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .task-description {
-  margin: 5px 0 0 0;
-  color: black;
+  color: black !important;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  flex-grow: 1;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.completed-task .task-description {
-  opacity: 0.7;
+.task-delete-form {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+  color: black;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
 }
 
 .btn-delete {
-  background: #dc3545;
+  background-color: #dc3545;
   color: white;
   border: none;
-  padding: 5px 8px;
-  border-radius: 3px;
+  padding: 5px 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 20px;
+  border-radius: 4px;
+  line-height: 1;
 }
 
 .btn-delete:hover {
-  background: #c82333;
-}
-
-.task-form {
-  margin: 0;
-}
-
-.task-checkbox {
-  margin-right: 10px;
-}
-
-.task-checkbox label {
-  font-size: 0;
-  visibility: hidden;
-}
-
-.add-task-form .form-group {
-  margin-bottom: 15px;
-}
-
-.add-task-form button {
-  margin-top: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.add-task-form button:hover {
-  background-color: #0056b3;
-}
-
-.no-tasks {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.progress-info {
-  margin: 20px 0;
-  font-weight: 600;
-  color: #555;
+  background-color: #c82333;
 }
 
 /* Banner Notification Styles */
@@ -249,41 +353,21 @@ Updated : November 2025 - Simplified with existing styles
   top: 0;
   left: 0;
   right: 0;
-  background-color: #28a745;
   color: white;
   padding: 15px 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 9999;
-  font-weight: 600;
   transform: translateY(-100%);
   transition: transform 0.3s ease-out;
   text-align: center;
 }
 
-.notification-banner.show {
-  transform: translateY(0);
-}
-
-.notification-banner.hidden {
-  display: none;
-}
-
-.notification-banner.success {
-  background-color: #28a745;
-}
-
-.notification-banner.warning {
-  background-color: #ffc107;
-  color: black;
-}
-
-.notification-banner.error {
-  background-color: #dc3545;
-}
-
-.notification-banner.info {
-  background-color: #17a2b8;
-}
+.notification-banner.show { transform: translateY(0); }
+.notification-banner.hidden { display: none; }
+.notification-banner.success { background-color: #28a745; }
+.notification-banner.warning { background-color: #ffc107; color: black; }
+.notification-banner.error { background-color: #dc3545; }
+.notification-banner.info { background-color: #17a2b8; }
 
 .banner-content {
   display: flex;
@@ -302,39 +386,40 @@ Updated : November 2025 - Simplified with existing styles
   padding: 0;
   margin-left: 20px;
   opacity: 0.7;
-  transition: opacity 0.2s ease;
 }
 
-.banner-close:hover {
-  opacity: 1;
-}
+.banner-close:hover { opacity: 1; }
 
-/* Adjust body padding when banner is shown */
-body.banner-active {
-  padding-top: 60px;
-  transition: padding-top 0.3s ease-out;
-}
-
-/* Clean up any extra styles */
-.task-checkbox input[type="checkbox"] {
-  margin-right: 10px;
+.banner-avatar {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 </style>
 
 <script>
-// Banner notification system
-function showBanner(message, type = 'success', duration = 4000) {
+// Banner notification system for user feedback
+function showBanner(message, type = 'success', duration = 4000, avatarMood = null) {
   const banner = document.getElementById('notificationBanner');
   const bannerMessage = document.getElementById('bannerMessage');
+  const bannerAvatar = document.getElementById('bannerAvatar');
   
-  // Set message and type
   bannerMessage.textContent = message;
   banner.className = `notification-banner ${type} show`;
   
-  // Add body padding
+  // Show avatar image if mood is specified
+  if (avatarMood) {
+    bannerAvatar.src = `/static/avatars/avatar_${avatarMood}.png`;
+    bannerAvatar.style.display = 'block';
+  } else {
+    bannerAvatar.style.display = 'none';
+  }
+  
   document.body.classList.add('banner-active');
   
-  // Auto-hide after duration
+  // Auto-hide banner after duration
   clearTimeout(window.bannerTimeout);
   window.bannerTimeout = setTimeout(() => {
     hideBanner();
@@ -346,52 +431,119 @@ function hideBanner() {
   banner.classList.remove('show');
   document.body.classList.remove('banner-active');
   
-  // Hide completely after transition
   setTimeout(() => {
     banner.classList.add('hidden');
   }, 300);
 }
 
+function onDeleteTask(form) {
+  return confirm('Delete this task?');
+}
+
+// Edit task with prompt dialogs
+function editTask(taskId, taskName, taskDescription) {
+  const newName = prompt('Edit task name:', taskName);
+  if (newName === null) return;
+  
+  const newDescription = prompt('Edit task description:', taskDescription);
+  if (newDescription === null) return;
+  
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = `/edit_task/${taskId}`;
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'hidden';
+  nameInput.name = 'task_name';
+  nameInput.value = newName;
+  form.appendChild(nameInput);
+  
+  const descInput = document.createElement('input');
+  descInput.type = 'hidden';
+  descInput.name = 'task_description';
+  descInput.value = newDescription;
+  form.appendChild(descInput);
+  
+  document.body.appendChild(form);
+  form.submit();
+}
+
+// Toggle task completion and update avatar points in localStorage
 function toggleTask(checkbox) {
-  // Get task data from attributes
-  const taskName = checkbox.getAttribute('data-task-name');
   const wasCompleted = checkbox.getAttribute('data-was-completed') === 'true';
+  const USER_ID = '{{ session.get("user_id", "anon") }}';
+  const STORAGE_KEY = `avatar_points_v1_${USER_ID}`;
+  const MOOD_KEY = `avatar_mood_v1_${USER_ID}`;
   
-  // Handle points in localStorage
-  if (!wasCompleted) {
-    // Task being completed - add points
-    try {
-      const STORAGE_KEY = 'avatar_points_v1';
-      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
-      localStorage.setItem(STORAGE_KEY, String(current + 10));
-    } catch (e) {
-      // ignore localStorage errors (e.g., privacy mode)
-    }
-  } else {
-    // Task being reopened - subtract points
-    try {
-      const STORAGE_KEY = 'avatar_points_v1';
-      const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
-      localStorage.setItem(STORAGE_KEY, String(Math.max(0, current - 10)));
-    } catch (e) {
-      // ignore localStorage errors (e.g., privacy mode)
-    }
+  // Migrate from global key to per-user key
+  const GLOBAL_KEY = 'avatar_points_v1';
+  if (!localStorage.getItem(STORAGE_KEY) && localStorage.getItem(GLOBAL_KEY)) {
+    try { localStorage.setItem(STORAGE_KEY, localStorage.getItem(GLOBAL_KEY)); } catch(e) {}
   }
+
+  try {
+    const current = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+    if (!wasCompleted) {
+      localStorage.setItem(STORAGE_KEY, String(current + 10));
+      localStorage.setItem(MOOD_KEY, 'fit');
+    } else {
+      localStorage.setItem(STORAGE_KEY, String(Math.max(0, current - 10)));
+      localStorage.setItem(MOOD_KEY, 'sad');
+    }
+  } catch (e) {}
   
-  // Submit the form to update the server (server will show banner)
   checkbox.form.submit();
 }
 
-// Show flash messages as banners on page load
+function onAddTask(form) {
+  const USER_ID = '{{ session.get("user_id", "anon") }}';
+  const MOOD_KEY = `avatar_mood_v1_${USER_ID}`;
+  try { localStorage.setItem(MOOD_KEY, 'neutral'); } catch (e) {}
+  return true;
+}
+
+function addSuggestedTask(taskName, taskDescription) {
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '{{ url_for("tasks.add_task") }}';
+  
+  const nameInput = document.createElement('input');
+  nameInput.type = 'hidden';
+  nameInput.name = 'task_name';
+  nameInput.value = taskName;
+  form.appendChild(nameInput);
+  
+  const descInput = document.createElement('input');
+  descInput.type = 'hidden';
+  descInput.name = 'task_description';
+  descInput.value = taskDescription;
+  form.appendChild(descInput);
+  
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function refreshSuggestions() {
+  window.location.reload();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Flash messages are handled via server-side data attributes
   const flashData = document.getElementById('flash-data');
   if (flashData) {
     const messages = JSON.parse(flashData.textContent || '[]');
     messages.forEach((msg, index) => {
-      setTimeout(() => {
-        showBanner(msg.message, msg.category, 4000);
-      }, 100 * (index + 1));
+      // Determine avatar mood based on message content
+      let avatarMood = null;
+      if (msg.message.includes('completed!')) {
+        avatarMood = 'fit';
+      } else if (msg.message.includes('deleted')) {
+        avatarMood = 'sad';
+      } else if (msg.message.includes('reopened!')) {
+        avatarMood = 'sad';
+      } else if (msg.message.includes('added')) {
+        avatarMood = 'happy';
+      }
+      setTimeout(() => showBanner(msg.message, msg.category, 4000, avatarMood), 100 * (index + 1));
     });
   }
 });

@@ -1,0 +1,270 @@
+{# log_workout.html - Log workout sessions #}
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+<div class="log-container">
+  <div class="log-header">
+    <h1 class="log-title">💪 Log Workout</h1>
+    <p class="log-subtitle">Track your exercise and build your streak</p>
+  </div>
+
+  <div class="log-form-container">
+    <form method="POST" action="{{ url_for('dashboard.log_workout') }}" class="log-form">
+      
+      <div class="form-section">
+        <h3 class="section-title">Workout Details</h3>
+        
+        <div class="form-group">
+          <label for="workout_type">Workout Type</label>
+          <select id="workout_type" name="workout_type" required>
+            <option value="">Select a workout...</option>
+            <option value="Running">🏃 Running</option>
+            <option value="Cycling">🚴 Cycling</option>
+            <option value="Swimming">🏊 Swimming</option>
+            <option value="Weight Training">🏋️ Weight Training</option>
+            <option value="Yoga">🧘 Yoga</option>
+            <option value="Walking">🚶 Walking</option>
+            <option value="HIIT">⚡ HIIT</option>
+            <option value="Cardio">❤️ Cardio</option>
+            <option value="Sports">⚽ Sports</option>
+            <option value="Other">🎯 Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="duration">Duration (minutes)</label>
+          <input type="number" id="duration" name="duration" 
+                 min="1" max="480" required
+                 placeholder="e.g., 30">
+          <small class="hint">How long did you exercise?</small>
+        </div>
+
+        <div class="form-group">
+          <label for="calories">Calories Burned</label>
+          <input type="number" id="calories" name="calories" 
+                 step="1" min="0" max="2000" required
+                 placeholder="e.g., 300">
+          <small class="hint">Estimated calories burned during workout</small>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">✅ Log Workout</button>
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="info-section">
+    <h3>💡 Calorie Burn Estimates</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <th style="text-align: left; padding: 8px;">Activity</th>
+        <th style="text-align: center; padding: 8px;">30 min</th>
+        <th style="text-align: center; padding: 8px;">1 hour</th>
+      </tr>
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <td style="padding: 8px;">🏃 Running (6 mph)</td>
+        <td style="text-align: center; padding: 8px;">300</td>
+        <td style="text-align: center; padding: 8px;">600</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <td style="padding: 8px;">🚴 Cycling (moderate)</td>
+        <td style="text-align: center; padding: 8px;">250</td>
+        <td style="text-align: center; padding: 8px;">500</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <td style="padding: 8px;">🏋️ Weight Training</td>
+        <td style="text-align: center; padding: 8px;">200</td>
+        <td style="text-align: center; padding: 8px;">400</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <td style="padding: 8px;">🏊 Swimming</td>
+        <td style="text-align: center; padding: 8px;">280</td>
+        <td style="text-align: center; padding: 8px;">560</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #bfdbfe;">
+        <td style="padding: 8px;">🚶 Walking (3 mph)</td>
+        <td style="text-align: center; padding: 8px;">150</td>
+        <td style="text-align: center; padding: 8px;">300</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px;">🧘 Yoga</td>
+        <td style="text-align: center; padding: 8px;">120</td>
+        <td style="text-align: center; padding: 8px;">240</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<style>
+.log-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.log-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.log-title {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 2rem;
+}
+
+.log-subtitle {
+  color: #666;
+  font-size: 16px;
+}
+
+.log-form-container {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.log-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.section-title {
+  color: #333;
+  font-size: 18px;
+  margin: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.info-section {
+  background: #f0f9ff;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #3b82f6;
+}
+
+.info-section h3 {
+  margin-top: 0;
+  color: #1e40af;
+}
+
+.info-section table {
+  color: #1e40af;
+}
+
+@media (max-width: 600px) {
+  .log-container {
+    padding: 10px;
+  }
+
+  .log-form-container {
+    padding: 20px;
+  }
+
+  .log-title {
+    font-size: 1.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .info-section table {
+    font-size: 0.8rem;
+  }
+}
+</style>
+{% endblock %}
