@@ -32,7 +32,7 @@
           
           {% if session.user_id %}
             <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">Settings</a>
-            <a href="#" class="nav-link" id="logoutBtn">Logout ({{ session.email }})</a>
+            <a href="#" class="nav-link" id="logoutBtn">Logout ({{ session.display_name if session.display_name is defined else session.email }})</a>
           {% else %}
             <a href="/signup" class="nav-link {% if request.path == '/signup' %}active{% endif %}">Signup</a>
             <a href="/login" class="nav-link {% if request.path == '/login' %}active{% endif %}">Login</a>

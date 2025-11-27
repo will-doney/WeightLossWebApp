@@ -30,14 +30,14 @@
       <div class="panel-content">
         <div class="form-group">
           <label for="displayName">Display Name</label>
-          <input type="text" id="displayName" name="displayName" placeholder="Enter your name">
+          <input type="text" id="displayName" name="displayName" placeholder="Enter your name" value="{{ session.display_name if session.display_name is defined else '' }}">
           <small class="hint">How you'll be identified in the app</small>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Your email" disabled>
+            <input type="email" id="email" name="email" placeholder="Your email" disabled value="{{ session.email if session.email is defined else '' }}">
             <small class="hint">Your registered email address (cannot be changed here)</small>
           </div>
 
@@ -61,51 +61,6 @@
             <option value="36-50">36-50</option>
             <option value="51-65">51-65</option>
             <option value="65+">65+</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- HEALTH GOALS -->
-    <div class="settings-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">🎯 Health Goals</h2>
-      </div>
-      <div class="panel-content">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="targetWeight">Target Weight</label>
-            <input type="number" id="targetWeight" name="targetWeight" step="0.1" placeholder="e.g., 70">
-            <small class="hint">Your weight loss goal</small>
-          </div>
-
-          <div class="form-group">
-            <label for="targetDeadline">Target Deadline</label>
-            <input type="date" id="targetDeadline" name="targetDeadline">
-            <small class="hint">When do you want to reach your goal?</small>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="weeklyGoal">Weekly Weight Loss Goal</label>
-          <select id="weeklyGoal" name="weeklyGoal">
-            <option value="">Not set</option>
-            <option value="0.25">0.25 kg/week (Gradual)</option>
-            <option value="0.5">0.5 kg/week (Moderate)</option>
-            <option value="0.75">0.75 kg/week (Aggressive)</option>
-            <option value="1.0">1.0 kg/week (Very Aggressive)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="activityLevel">Activity Level</label>
-          <select id="activityLevel" name="activityLevel">
-            <option value="">Not specified</option>
-            <option value="sedentary">Sedentary (Little to no exercise)</option>
-            <option value="lightly_active">Lightly Active (1-3 days/week)</option>
-            <option value="moderately_active">Moderately Active (3-5 days/week)</option>
-            <option value="very_active">Very Active (6-7 days/week)</option>
-            <option value="extremely_active">Extremely Active (Physical job)</option>
           </select>
         </div>
       </div>
@@ -144,7 +99,7 @@
       <div class="panel-content">
         <div class="form-group">
           <label>
-            <input type="checkbox" id="notifyEnabled" name="notifyEnabled" checked>
+            <input type="checkbox" id="notifyEnabled" name="notifyEnabled" checked onchange="handleNotificationToggle(this.checked)">
             <span class="checkbox-label">Enable Notifications</span>
           </label>
           <small class="hint">Receive reminders and updates</small>
@@ -170,48 +125,6 @@
           <label for="reminderMessage">Custom Reminder Message</label>
           <textarea id="reminderMessage" name="reminderMessage" rows="3" placeholder="Add a personal motivation message..."></textarea>
           <small class="hint">Leave empty for default messages</small>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="dndMode" name="dndMode">
-            <span class="checkbox-label">Do Not Disturb (8 PM - 8 AM)</span>
-          </label>
-          <small class="hint">Disable notifications during sleep hours</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- AVATAR PREFERENCES -->
-    <div class="settings-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">😊 Avatar Preferences</h2>
-      </div>
-      <div class="panel-content">
-        <div class="form-group">
-          <label for="avatarMood">Default Avatar Mood</label>
-          <select id="avatarMood" name="avatarMood">
-            <option value="happy">😊 Happy</option>
-            <option value="sad">😢 Sad</option>
-            <option value="fit">🏃 Fit</option>
-          </select>
-          <small class="hint">Your avatar's default expression</small>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="animateAvatar" name="animateAvatar" checked>
-            <span class="checkbox-label">Animate Avatar</span>
-          </label>
-          <small class="hint">Show avatar animations and reactions</small>
-        </div>
-
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="celebrateGoals" name="celebrateGoals" checked>
-            <span class="checkbox-label">Celebrate Milestones</span>
-          </label>
-          <small class="hint">Avatar celebrates when you achieve goals</small>
         </div>
       </div>
     </div>
@@ -283,13 +196,11 @@
           <p class="hint">These actions cannot be undone.</p>
           
           <div class="button-group danger">
-            <button type="button" class="btn btn-danger" onclick="deleteAccount()">
-              🗑️ Delete Account
-            </button>
+            <!-- Delete account removed per request -->
+            <small class="hint warning" style="color: #dc2626; margin-top: 0.5rem;">
+              Account deletion has been disabled here. Contact support if you need account removal.
+            </small>
           </div>
-          <small class="hint warning" style="color: #dc2626; margin-top: 0.5rem;">
-            This will permanently delete your account and all associated data.
-          </small>
         </div>
       </div>
     </div>
@@ -331,6 +242,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+        <button type="button" class="btn btn-warning" onclick="(async()=>{ try{ await window.sendResetEmail(document.getElementById('email')?.value); closePasswordModal(); }catch(e){ alert('❌ '+(e.message||e)); } })()">📧 Send Reset Email</button>
         <button type="button" class="btn btn-primary" onclick="changePassword()">Change Password</button>
       </div>
     </div>
@@ -343,6 +255,13 @@
     return document.getElementById(id);
   }
 
+  // Handle notification enable/disable with user prompt
+  function handleNotificationToggle(isEnabled) {
+    if (isEnabled) {
+      alert('🔔 Notifications Enabled!\n\nYou will now receive reminders at your chosen time. You can adjust the reminder time and frequency below.');
+    }
+  }
+
   // Load all settings from localStorage and database
   function loadSettings() {
     const get = k => localStorage.getItem(k);
@@ -351,12 +270,6 @@
     if (getEl('displayName')) getEl('displayName').value = get('displayName') || '';
     if (getEl('units')) getEl('units').value = get('units') || 'metric';
     if (getEl('ageRange')) getEl('ageRange').value = get('ageRange') || '';
-    
-    // Health goals
-    if (getEl('targetWeight')) getEl('targetWeight').value = get('targetWeight') || '';
-    if (getEl('targetDeadline')) getEl('targetDeadline').value = get('targetDeadline') || '';
-    if (getEl('weeklyGoal')) getEl('weeklyGoal').value = get('weeklyGoal') || '';
-    if (getEl('activityLevel')) getEl('activityLevel').value = get('activityLevel') || '';
     
     // Appearance
     if (getEl('themeSelect')) getEl('themeSelect').value = get('theme') || 'light';
@@ -367,12 +280,6 @@
     if (getEl('reminderTime')) getEl('reminderTime').value = get('reminderTime') || '09:00';
     if (getEl('reminderFrequency')) getEl('reminderFrequency').value = get('reminderFrequency') || 'daily';
     if (getEl('reminderMessage')) getEl('reminderMessage').value = get('reminderMessage') || '';
-    if (getEl('dndMode')) getEl('dndMode').checked = get('dndMode') === '1';
-    
-    // Avatar preferences
-    if (getEl('avatarMood')) getEl('avatarMood').value = get('avatarMood') || 'happy';
-    if (getEl('animateAvatar')) getEl('animateAvatar').checked = get('animateAvatar') !== '0';
-    if (getEl('celebrateGoals')) getEl('celebrateGoals').checked = get('celebrateGoals') !== '0';
     
     // Privacy & data
     if (getEl('privateProfile')) getEl('privateProfile').checked = get('privateProfile') === '1';
@@ -385,15 +292,10 @@
     const set = (k, v) => localStorage.setItem(k, v);
     
     // Personal details
-    if (getEl('displayName')) set('displayName', getEl('displayName').value.trim());
+    const displayName = getEl('displayName')?.value.trim() || '';
+    if (displayName) set('displayName', displayName);
     if (getEl('units')) set('units', getEl('units').value);
     if (getEl('ageRange')) set('ageRange', getEl('ageRange').value);
-    
-    // Health goals
-    if (getEl('targetWeight')) set('targetWeight', getEl('targetWeight').value);
-    if (getEl('targetDeadline')) set('targetDeadline', getEl('targetDeadline').value);
-    if (getEl('weeklyGoal')) set('weeklyGoal', getEl('weeklyGoal').value);
-    if (getEl('activityLevel')) set('activityLevel', getEl('activityLevel').value);
     
     // Appearance
     if (getEl('themeSelect')) {
@@ -408,17 +310,22 @@
     if (getEl('reminderTime')) set('reminderTime', getEl('reminderTime').value);
     if (getEl('reminderFrequency')) set('reminderFrequency', getEl('reminderFrequency').value);
     if (getEl('reminderMessage')) set('reminderMessage', getEl('reminderMessage').value);
-    if (getEl('dndMode')) set('dndMode', getEl('dndMode').checked ? '1' : '0');
-    
-    // Avatar preferences
-    if (getEl('avatarMood')) set('avatarMood', getEl('avatarMood').value);
-    if (getEl('animateAvatar')) set('animateAvatar', getEl('animateAvatar').checked ? '1' : '0');
-    if (getEl('celebrateGoals')) set('celebrateGoals', getEl('celebrateGoals').checked ? '1' : '0');
     
     // Privacy & data
     if (getEl('privateProfile')) set('privateProfile', getEl('privateProfile').checked ? '1' : '0');
     if (getEl('shareProgress')) set('shareProgress', getEl('shareProgress').checked ? '1' : '0');
     if (getEl('dataBackup')) set('dataBackup', getEl('dataBackup').checked ? '1' : '0');
+    
+    // Save display name to server (and session)
+    if (displayName) {
+      fetch('/api/account/save_display_name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: displayName })
+      }).then(resp => {
+        if (!resp.ok) console.warn('Failed to save display name to server');
+      }).catch(err => console.warn('Error saving display name:', err));
+    }
     
     alert('✅ All settings saved successfully!');
   }
@@ -450,29 +357,66 @@
     getEl('confirmPassword').value = '';
   }
 
+  // Password change is now handled with Firebase client SDK (see module script below)
   function changePassword() {
+    // This function is a compatibility wrapper for the modal button.
+    // The real implementation uses the Firebase module imported below.
     const current = getEl('currentPassword').value;
     const newPwd = getEl('newPassword').value;
     const confirm = getEl('confirmPassword').value;
-    
+
     if (!current || !newPwd || !confirm) {
       alert('❌ Please fill in all password fields.');
       return;
     }
-    
+
     if (newPwd !== confirm) {
       alert('❌ New passwords do not match.');
       return;
     }
-    
+
     if (newPwd.length < 8) {
       alert('❌ Password must be at least 8 characters long.');
       return;
     }
-    
-    // In production, this would call a secure backend API
-    alert('✅ Password change would be sent to server.\n\nNote: This is a demo. Implement backend API for actual password changes.');
-    closePasswordModal();
+
+    // First try server-side change (requires session + server endpoint)
+    (async () => {
+      try {
+        const email = document.getElementById('email')?.value || '';
+        const resp = await fetch('/api/account/change_password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, current_password: current, new_password: newPwd })
+        });
+
+        if (resp.ok) {
+          alert('✅ Password updated successfully (server-side).');
+          closePasswordModal();
+          return;
+        }
+
+        // If server returned an error, try client-side fallback
+        const data = await resp.json().catch(() => ({}));
+        console.warn('Server change_password failed:', data);
+      } catch (err) {
+        console.warn('Server change_password call error:', err);
+      }
+
+      // Fallback: try client-side Firebase auth handler if available
+      if (window.handleChangePassword) {
+        try {
+          await window.handleChangePassword(current, newPwd);
+          closePasswordModal();
+          return;
+        } catch (err) {
+          alert('❌ ' + (err && err.message ? err.message : 'Password change failed'));
+          return;
+        }
+      }
+
+      alert('⚠️ Password change could not be completed.');
+    })();
   }
 
   function downloadData() {
@@ -521,22 +465,7 @@
   }
 
   function deleteAccount() {
-    if (!confirm('⚠️ Are you sure you want to DELETE your account? This is permanent!')) {
-      return;
-    }
-    
-    if (!confirm('⚠️ This will delete all your data. Type "DELETE" to confirm.')) {
-      return;
-    }
-    
-    const confirmed = prompt('Type DELETE to confirm account deletion:');
-    if (confirmed !== 'DELETE') {
-      alert('Account deletion cancelled.');
-      return;
-    }
-    
-    alert('✅ Account deletion request submitted.\n\nNote: In production, this would contact the server to delete your account and all associated data.');
-    // In production: window.location.href = '/delete_account';
+    alert('Account deletion has been removed from the settings page.');
   }
 
   // Theme change event listener
@@ -564,6 +493,73 @@
       }
     });
   });
+</script>
+
+<script type="module">
+  // Firebase password management (client-side)
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+  import {
+    getAuth,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updatePassword,
+    sendPasswordResetEmail
+  } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+
+  const firebaseConfigModule = {
+    apiKey: "AIzaSyBn3O0A7K9OEJzFZEFdz4qC6b-PHeAfuD4",
+    authDomain: "weightgame-fitness.firebaseapp.com",
+    projectId: "weightgame-fitness",
+    storageBucket: "weightgame-fitness.firebasestorage.app",
+    messagingSenderId: "906461675569",
+    appId: "1:906461675569:web:f5a71dc47819831aadd510"
+  };
+
+  const app = initializeApp(firebaseConfigModule);
+  const auth = getAuth(app);
+
+  // Reauthenticate the user and update the password securely
+  async function handleChangePassword(currentPassword, newPassword) {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No authenticated user found. Please sign in and try again.');
+    }
+
+    const email = user.email || document.getElementById('email')?.value;
+    if (!email) throw new Error('Email not available for reauthentication.');
+
+    const credential = EmailAuthProvider.credential(email, currentPassword);
+    try {
+      await reauthenticateWithCredential(user, credential);
+    } catch (err) {
+      throw new Error('Reauthentication failed. Please check your current password.');
+    }
+
+    try {
+      await updatePassword(user, newPassword);
+      alert('✅ Password updated successfully.');
+    } catch (err) {
+      console.error('updatePassword error', err);
+      throw new Error('Failed to update password: ' + (err.message || err));
+    }
+  }
+
+  // Send a password reset email to the user's email
+  async function sendResetEmail(email) {
+    const to = email || document.getElementById('email')?.value;
+    if (!to) throw new Error('Email address is required to send reset instructions.');
+    try {
+      await sendPasswordResetEmail(auth, to);
+      alert('✅ Password reset email sent. Check your inbox.');
+    } catch (err) {
+      console.error('sendPasswordResetEmail error', err);
+      throw new Error('Failed to send reset email: ' + (err.message || err));
+    }
+  }
+
+  // Expose to global scope for compatibility with existing onclick handlers
+  window.handleChangePassword = handleChangePassword;
+  window.sendResetEmail = sendResetEmail;
 </script>
 {% endblock %}
 
