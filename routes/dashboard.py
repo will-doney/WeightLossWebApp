@@ -29,9 +29,152 @@ def format_timesince(dt):
     else:
         return "Just now"
 
+
+def generate_motivational_messages(user_name, avatar_points, weight_lost, goal_progress, 
+                                   workout_streak, tasks_completed, tasks_total):
+    """Generate personalized motivational messages based on user progress."""
+    messages = []
+    
+    # Welcome message
+    if user_name:
+        messages.append(f"Welcome back, {user_name}! 👋")
+    
+    # Avatar points message
+    if avatar_points >= 500:
+        messages.append(f"You're on fire! 🔥 {avatar_points} points!")
+    elif avatar_points >= 200:
+        messages.append(f"Great progress! {avatar_points} points earned! 💪")
+    elif avatar_points >= 50:
+        messages.append(f"Keep going! You've earned {avatar_points} points! ⭐")
+    
+    # Weight loss message
+    if weight_lost >= 10:
+        messages.append(f"Amazing! You've lost {weight_lost} units! 🎉")
+    elif weight_lost >= 5:
+        messages.append(f"Excellent progress! {weight_lost} units down! ✨")
+    elif weight_lost > 0:
+        messages.append(f"You're making progress! {weight_lost} units down! 👍")
+    
+    # Goal progress message
+    if goal_progress >= 75:
+        messages.append(f"Almost there! {goal_progress:.0f}% to your goal! 🚀")
+    elif goal_progress >= 50:
+        messages.append(f"You're halfway there! {goal_progress:.0f}% complete! 🎯")
+    elif goal_progress >= 25:
+        messages.append(f"Great start! {goal_progress:.0f}% of your goal reached! 📈")
+    
+    # Workout streak message
+    if workout_streak >= 30:
+        messages.append(f"Incredible! {workout_streak} day workout streak! 🏆")
+    elif workout_streak >= 7:
+        messages.append(f"Amazing! {workout_streak} day streak going! 💪")
+    elif workout_streak >= 3:
+        messages.append(f"Nice! {workout_streak} day streak! Keep it up! 🔥")
+    elif workout_streak > 0:
+        messages.append(f"You've got a {workout_streak} day streak! 💯")
+    
+    # Task completion message
+    if tasks_total > 0:
+        completion_rate = (tasks_completed / tasks_total) * 100
+        if completion_rate >= 90:
+            messages.append(f"Tasks crushed! {completion_rate:.0f}% complete! 🎊")
+        elif completion_rate >= 75:
+            messages.append(f"Excellent task completion: {completion_rate:.0f}%! 📋")
+        elif completion_rate >= 50:
+            messages.append(f"Good work on tasks: {completion_rate:.0f}% done! ✅")
+        elif tasks_completed > 0:
+            messages.append(f"Keep completing tasks! {tasks_completed}/{tasks_total} done. 🚀")
+    
+    # Default motivational messages if low activity
+    if not messages or len(messages) < 2:
+        default_messages = [
+            "Let's crush those fitness goals! 💪",
+            "Every step counts! 🚶",
+            "You've got this! 🎯",
+            "Keep pushing forward! 🚀",
+            "Your future self will thank you! 🌟"
+        ]
+        messages.extend(default_messages[:(3 - len(messages))])
+    
+    return messages[:3]  # Return top 3 messages
+
+
+def calculate_workout_streak(db, user_id):
+    """Calculate the current workout streak (consecutive days with workouts)."""
+    try:
+        workouts = db.collection('workouts')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
+            .stream()
+        
+        workout_dates = set()
+        for workout in workouts:
+            data = workout.to_dict()
+            if 'date' in data:
+                workout_dates.add(data['date'].date())
+        
+        if not workout_dates:
+            return 0
+        
+        # Sort dates in reverse
+        sorted_dates = sorted(workout_dates, reverse=True)
+        today = datetime.utcnow().date()
+        
+        # Check if most recent workout is within last 2 days
+        if (today - sorted_dates[0]).days > 1:
+            return 0  # Streak broken if no workout today or yesterday
+        
+        streak = 1
+        for i in range(len(sorted_dates) - 1):
+            if (sorted_dates[i] - sorted_dates[i + 1]).days == 1:
+                streak += 1
+            else:
+                break
+        
+        return streak
+    except Exception as e:
+        print(f"Error calculating workout streak: {e}")
+        return 0
+
+
+def calculate_goal_progress(db, user_id, current_weight):
+    """Calculate progress towards weight loss goal as percentage."""
+    try:
+        # Get latest profile with goal info
+        profiles = db.collection('profile_entries')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
+            .order_by('timestamp', direction=firestore.Query.DESCENDING)\
+            .limit(1)\
+            .stream()
+        
+        profile_list = list(profiles)
+        if not profile_list:
+            return 0, 0, None
+        
+        profile = profile_list[0].to_dict()
+        initial_weight = profile.get('current_weight')
+        target_weight = profile.get('target_weight')
+        
+        if not initial_weight or not target_weight or initial_weight <= target_weight:
+            return 0, 0, None
+        
+        total_to_lose = initial_weight - target_weight
+        already_lost = initial_weight - current_weight
+        
+        if total_to_lose <= 0:
+            return 0, 0, None
+        
+        progress_percent = (already_lost / total_to_lose) * 100
+        progress_percent = min(100, max(0, progress_percent))  # Clamp 0-100
+        
+        return round(progress_percent, 1), total_to_lose - already_lost, target_weight
+    except Exception as e:
+        print(f"Error calculating goal progress: {e}")
+        return 0, 0, None
+
+
 @dashboard_bp.route('/dashboard')
 def dashboard():
-    # Display user dashboard with weight tracking, stats, and activity feed.
+    # Display user dashboard with weight tracking, stats, activity feed, avatar, tasks, and points.
     from app import get_db
     db = get_db()
     
@@ -46,20 +189,29 @@ def dashboard():
         return render_template('dashboard.html',
             user_name='User',
             current_weight=None,
-            weight_change=0,
+            current_weight_unit='kg',
+            weight_lost=0,
+            weight_lost_unit='kg',
             last_updated="No data",
             calories_burned=0,
             daily_calorie_goal=2000,
             workout_streak=0,
             goal_progress=0,
             goal_remaining=0,
+            target_weight=None,
             selected_timeframe='30d',
             weight_data=[],
             max_weight=1,
             badges=[],
             unlocked_badges=0,
             total_badges=0,
-            recent_activities=[]
+            recent_activities=[],
+            avatar_points=0,
+            avatar_level=1,
+            avatar_progress=0,
+            tasks_completed=0,
+            tasks_total=0,
+            motivational_messages=[]
         )
     
     # Fetch user's weight entries for chart
@@ -68,6 +220,8 @@ def dashboard():
         .stream()
     
     weight_data = []
+    initial_weight = None
+    
     for entry in weight_entries:
         data = entry.to_dict()
         weight_data.append({
@@ -78,10 +232,51 @@ def dashboard():
     
     weight_data.sort(key=lambda x: x['date'])
     
+    # Get initial weight (first recorded weight)
+    if weight_data:
+        initial_weight = weight_data[0]['weight']
+    
+    # Get latest profile for unit preference
+    unit_preference = 'kg'  # default
+    try:
+        profiles = db.collection('profile_entries')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
+            .order_by('timestamp', direction=firestore.Query.DESCENDING)\
+            .limit(1)\
+            .stream()
+        
+        profile_list = list(profiles)
+        if profile_list:
+            profile = profile_list[0].to_dict()
+            # Store unit preference (we'll default to kg from update_profile)
+            unit_preference = profile.get('unit_preference', 'kg')
+    except Exception as e:
+        print(f"Error fetching profile: {e}")
+    
+    # Fetch calories logged
+    total_calories = 0
+    try:
+        calorie_logs = db.collection('calorie_logs')\
+            .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
+            .stream()
+        total_calories = sum(log.to_dict().get('calories', 0) for log in calorie_logs)
+    except Exception:
+        pass
+    
+    # Also sum from workouts for backwards compatibility
     workouts = db.collection('workouts')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
-    total_calories = sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
+    total_calories += sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
+    
+    current_weight = weight_data[-1]['weight'] if weight_data else None
+    weight_lost = (initial_weight - current_weight) if (initial_weight and current_weight) else 0
+    
+    # Calculate goal progress
+    goal_progress, goal_remaining, target_weight = calculate_goal_progress(db, user_id, current_weight) if current_weight else (0, 0, None)
+    
+    # Calculate workout streak
+    workout_streak = calculate_workout_streak(db, user_id)
     
     # Build recent activity feed from weight and workout logs
     recent_activities = []
@@ -97,7 +292,7 @@ def dashboard():
         recent_activities.append({
             'icon': '⚖️',
             'title': 'Logged Weight',
-            'description': f"{data['weight']} lbs",
+            'description': f"{data['weight']} {unit_preference}",
             'time': format_timesince(data['date'])
         })
     
@@ -124,23 +319,105 @@ def dashboard():
     else:
         user_name = user_email or 'User'
 
+    # Generate basic achievement badges
+    badges = []
+    unlocked_count = 0
+    achievement_definitions = [
+        {'name': 'First Steps', 'icon': '👟', 'requirement': 'weight_logged', 'value': 1},
+        {'name': 'On a Roll', 'icon': '💪', 'requirement': 'weight_lost', 'value': 5},
+        {'name': '10% There', 'icon': '🎯', 'requirement': 'goal_progress', 'value': 10},
+        {'name': '25% Victory', 'icon': '🏅', 'requirement': 'goal_progress', 'value': 25},
+        {'name': 'Half Way!', 'icon': '🔥', 'requirement': 'goal_progress', 'value': 50},
+        {'name': 'Goal Crushed!', 'icon': '🏆', 'requirement': 'goal_progress', 'value': 100},
+    ]
+    
+    for badge_def in achievement_definitions:
+        unlocked = False
+        progress = "Locked"
+        
+        if badge_def['requirement'] == 'weight_logged':
+            unlocked = len(weight_data) >= badge_def['value']
+            progress = f"{len(weight_data)}/{badge_def['value']} weights"
+        elif badge_def['requirement'] == 'weight_lost':
+            unlocked = weight_lost >= badge_def['value']
+            progress = f"{weight_lost:.1f}/{badge_def['value']} {unit_preference}"
+        elif badge_def['requirement'] == 'goal_progress':
+            unlocked = goal_progress >= badge_def['value']
+            progress = f"{goal_progress:.0f}%"
+        
+        badges.append({
+            'name': badge_def['name'],
+            'icon': badge_def['icon'],
+            'unlocked': unlocked,
+            'progress': progress,
+            'date': 'Recently' if unlocked else None
+        })
+        
+        if unlocked:
+            unlocked_count += 1
+
+    # Fetch avatar points and calculate level
+    avatar_points = 0
+    avatar_level = 1
+    avatar_progress = 0
+    try:
+        avatar_doc = db.collection('avatars').document(user_id).get()
+        if avatar_doc.exists:
+            avatar_data = avatar_doc.to_dict()
+            avatar_points = int(avatar_data.get('points', 0) or 0)
+            points_per_level = 100
+            avatar_level = (avatar_points // points_per_level) + 1
+            avatar_progress = (avatar_points % points_per_level) / points_per_level * 100
+    except Exception as e:
+        print(f"Error fetching avatar: {e}")
+
+    # Fetch user's daily tasks
+    tasks_completed = 0
+    tasks_total = 0
+    try:
+        tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
+        task_list = []
+        for task_doc in tasks_ref.stream():
+            task_data = task_doc.to_dict()
+            task_list.append(task_data)
+            tasks_total += 1
+            if task_data.get('completed', False):
+                tasks_completed += 1
+    except Exception as e:
+        print(f"Error fetching tasks: {e}")
+
+    # Generate motivational messages
+    motivational_messages = generate_motivational_messages(
+        user_name, avatar_points, weight_lost, goal_progress, 
+        workout_streak, tasks_completed, tasks_total
+    )
+
     return render_template('dashboard.html',
         user_name=user_name,
-        current_weight=weight_data[-1]['weight'] if weight_data else None,
-        weight_change=0,
-        last_updated="Recently",
+        current_weight=current_weight,
+        current_weight_unit=unit_preference,
+        weight_lost=round(weight_lost, 1),
+        weight_lost_unit=unit_preference,
+        last_updated="Recently" if weight_data else "No data",
         calories_burned=total_calories,
         daily_calorie_goal=2000,
-        workout_streak=0,
-        goal_progress=0,
-        goal_remaining=0,
+        workout_streak=workout_streak,
+        goal_progress=goal_progress,
+        goal_remaining=round(goal_remaining, 1) if goal_remaining else 0,
+        target_weight=target_weight,
         selected_timeframe='30d',
         weight_data=weight_data[-7:],
         max_weight=max([w['weight'] for w in weight_data]) if weight_data else 1,
-        badges=[],
-        unlocked_badges=0,
-        total_badges=0,
-        recent_activities=recent_activities[:5]
+        badges=badges,
+        unlocked_badges=unlocked_count,
+        total_badges=len(badges),
+        recent_activities=recent_activities[:5],
+        avatar_points=avatar_points,
+        avatar_level=avatar_level,
+        avatar_progress=avatar_progress,
+        tasks_completed=tasks_completed,
+        tasks_total=tasks_total,
+        motivational_messages=motivational_messages
     )
 
 @dashboard_bp.route('/log_weight', methods=['GET', 'POST'])
@@ -175,6 +452,45 @@ def log_weight():
             flash('Please enter a valid weight number.', 'error')
     
     return render_template('log_weight.html')
+
+@dashboard_bp.route('/log_calories', methods=['GET', 'POST'])
+def log_calories():
+    # Log daily calories burned or eaten.
+    from app import get_db
+    db = get_db()
+    
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not db:
+        flash('Database connection unavailable. Please try again later.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            calories = float(request.form['calories'])
+            calorie_type = request.form.get('calorie_type', 'burned').strip()
+            notes = request.form.get('notes', '').strip()
+            
+            if calories < 0:
+                flash('Please enter a valid calorie amount.', 'error')
+                return render_template('log_calories.html')
+
+            calorie_entry = {
+                'user_id': session['user_id'],
+                'calories': calories,
+                'calorie_type': calorie_type,  # 'burned' or 'consumed'
+                'notes': notes,
+                'date': datetime.utcnow()
+            }
+
+            db.collection('calorie_logs').add(calorie_entry)
+            flash('Calories logged successfully!', 'success')
+            return redirect(url_for('dashboard.dashboard'))
+        except ValueError:
+            flash('Please enter a valid calorie number.', 'error')
+    
+    return render_template('log_calories.html')
 
 @dashboard_bp.route('/log_workout', methods=['GET', 'POST'])
 def log_workout():
