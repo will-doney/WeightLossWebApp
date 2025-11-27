@@ -10,7 +10,7 @@
   </div>
 
   <div class="profile-form-container">
-    <form method="POST" action="{{ url_for('update_profile') }}" class="profile-form">
+    <form method="POST" action="{{ url_for('dashboard.update_profile') }}" class="profile-form">
       
       <div class="form-section">
         <h3 class="section-title">📊 Basic Information</h3>
@@ -115,7 +115,7 @@
 
       <div class="form-actions">
         <button type="submit" class="btn-primary">💾 Save Profile</button>
-        <a href="{{ url_for('dashboard') }}" class="btn-secondary">Cancel</a>
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn-secondary">Cancel</a>
       </div>
     </form>
   </div>
