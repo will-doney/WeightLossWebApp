@@ -313,11 +313,14 @@ def dashboard():
     
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
-    user_email = session.get('email') or session.get('user_id') or ''
-    if user_email and '@' in user_email:
-        user_name = user_email.split('@')[0]
-    else:
-        user_name = user_email or 'User'
+    # Get user name from display_name in session, or fallback to email
+    user_name = session.get('display_name')
+    if not user_name:
+        user_email = session.get('email') or session.get('user_id') or ''
+        if user_email and '@' in user_email:
+            user_name = user_email.split('@')[0]
+        else:
+            user_name = user_email or 'User'
 
     # Generate basic achievement badges
     badges = []
