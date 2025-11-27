@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+<style> header.site-header, footer.site-footer { display: none !important; } </style>
+
+<div class="onboard-page">
+  <h1 class="onboard-question">Let's get the goal you're going to crush!</h1>
+
+  <form method="post" class="onboard-form" id="goalWeightForm">
+    <div class="unit-toggle">
+      <button type="button" class="unit-btn active" data-unit="kg">kg</button>
+      <button type="button" class="unit-btn" data-unit="lb">lb</button>
+    </div>
+
+    <div id="goalWeightInput" class="unit-inputs">
+      <input type="number" name="goal_weight_value" class="text-input" placeholder="Goal weight" min="10" max="500" step="0.1" required />
+    </div>
+
+    <div class="form-actions">
+      <input type="hidden" name="goal_weight_unit" id="goal_weight_unit" value="kg" />
+      <button class="soft-btn" type="submit">Next</button>
+    </div>
+  </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const unitBtns = document.querySelectorAll('#goalWeightForm .unit-btn');
+  const hiddenUnit = document.getElementById('goal_weight_unit');
+
+  unitBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      unitBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      hiddenUnit.value = btn.dataset.unit;
+    });
+  });
+});
+</script>
+
+</div>
+{% endblock %}

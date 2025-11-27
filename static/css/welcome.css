@@ -1,0 +1,160 @@
+/* ---------------- welcome.css (page1 + page2) ---------------- */
+
+:root {
+  --baby-blue: #eaf6ff;
+  --deep-blue: #0b2540;
+  --accent-yellow: #ffd76b;
+  --accent-yellow-2: #f7c146;
+}
+
+/* wrapper */
+.welcome-wrapper { min-height: calc(100vh - 0px); display: flex; flex-direction: column; align-items: stretch; justify-content: center; background: var(--baby-blue); }
+
+/* PAGE common */
+.page { width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; box-sizing: border-box; padding: 28px 18px; }
+
+/* ---------------- PAGE 1 (intro) ---------------- */
+.page-intro { gap: 18px; padding-top: 40px; padding-bottom: 40px; }
+
+.intro-top-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--deep-blue);
+  margin: 6px 0 10px 0;
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+.intro-center { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+.intro-avatar {
+  width: 260px;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(11,37,64,0.08);
+  object-fit: cover;
+  transform-origin: center center;
+  animation: intro-pop 420ms cubic-bezier(.2,.9,.2,1) 60ms both;
+}
+
+.intro-subtitle {
+  font-size: 1.25rem;
+  color: rgba(6,18,36,0.85);
+  font-weight: 600;
+}
+
+/* flash-out (fast, punchy) */
+.flash-out {
+  animation: flashOut 520ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+@keyframes flashOut {
+  0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  40% { filter: brightness(2); transform: scale(1.04); }
+  100% { opacity: 0; transform: scale(0.85) translateY(-8px); filter: brightness(3); }
+}
+
+/* small pop animation for intro avatar/title entrance */
+@keyframes intro-pop {
+  from { opacity: 0; transform: scale(0.86); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ---------------- PAGE 2 (main welcome) ---------------- */
+.page-main { position: relative; padding-top: 36px; padding-bottom: 72px; }
+
+/* top-right logo inside page2 */
+.page2-top-logo {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--deep-blue);
+  opacity: 0.9;
+}
+
+/* center content constraints */
+.page2-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* svg rectangle wrapper */
+.rect-svg-wrap { width: 100%; display: flex; justify-content: center; pointer-events: none; margin-top: 10px; }
+.rect-svg { max-width: 90%; height: auto; }
+
+/* spark stroke initial state handled via HTML (stroke-dashoffset). Mask style for subtle effect */
+.rect-svg rect { vector-effect: non-scaling-stroke; }
+
+/* center text over the rectangle */
+.center-content { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 560px; max-width: 92vw; pointer-events: none; }
+
+/* welcome heading */
+.welcome-heading {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--deep-blue);
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+/* icons circle: icons are absolute children positioned in CSS grid area */
+.icons-circle { position: relative; width: 560px; height: 180px; display: block; }
+
+/* each icon (SVG file loaded via <img>) */
+.icons-circle .icon {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  opacity: 0;
+  transform: translate(0,0) scale(0.6) rotate(0deg);
+  transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
+  filter: drop-shadow(0 6px 14px rgba(6,18,36,0.08));
+}
+
+/* target positions (circle around center) */
+.icons-circle .icon:nth-child(1) { left: calc(50% + 116px); top: calc(50% - 48px); } /* right-top */
+.icons-circle .icon:nth-child(2) { left: calc(50% + 174px); top: calc(50% - 6px); }  /* right */
+.icons-circle .icon:nth-child(3) { left: calc(50% + 116px); top: calc(50% + 36px); }  /* right-bottom */
+.icons-circle .icon:nth-child(4) { left: calc(50% - 162px); top: calc(50% + 36px); }  /* left-bottom */
+.icons-circle .icon:nth-child(5) { left: calc(50% - 124px); top: calc(50% - 6px); }   /* left */
+
+/* .icon-pop adds visible state after JS trigger */
+.icons-circle .icon.icon-pop {
+  opacity: 1;
+  transform: translate(0,0) scale(1) rotate(-6deg);
+}
+
+/* quote + actions */
+.welcome-quote { font-size: 1rem; color: rgba(6,18,36,0.9); margin-top: 24px; max-width: 720px; text-align: center; opacity: 0; }
+.page2-actions { margin-top: 14px; display: flex; gap: 14px; opacity: 0; }
+
+/* yellow rounded buttons */
+.btn-yellow {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  color: #0b1720;
+  box-shadow: 0 12px 34px rgba(11,37,64,0.06);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.btn-yellow.primary { background: linear-gradient(180deg, var(--accent-yellow), var(--accent-yellow-2)); border: 1px solid rgba(0,0,0,0.04); }
+.btn-yellow.secondary { background: linear-gradient(180deg,#fff7dd,#fff0b8); border: 1px solid rgba(0,0,0,0.03); }
+.btn-yellow:hover { transform: translateY(-4px); box-shadow: 0 18px 46px rgba(11,37,64,0.08); }
+
+/* quick visible states (used by JS class toggles) */
+.fade-in-quick { animation: fadeInQuick 300ms ease forwards; }
+@keyframes fadeInQuick { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.hidden { opacity: 0; pointer-events: none; }
+.visible { opacity: 1; pointer-events: auto; }
+
+/* responsiveness */
+@media (max-width: 680px) {
+  .intro-avatar { width: 200px; }
+  .intro-top-title { font-size: 2.2rem; }
+  .welcome-heading { font-size: 1.25rem; }
+  .icons-circle { width: 92vw; height: 160px; }
+  .icons-circle .icon { width: 40px; height: 40px; }
+  .rect-svg { max-width: 94%; }
+}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+<style> header.site-header, footer.site-footer { display: none !important; } </style>
+
+<div class="onboard-page">
+  <h1 class="onboard-question">What's your sex?</h1>
+
+  <form method="post" class="onboard-form">
+    <div class="btn-grid">
+      <button class="big-btn" name="sex" value="female">Female</button>
+      <button class="big-btn" name="sex" value="male">Male</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+<style> header.site-header, footer.site-footer { display: none !important; } </style>
+
+<div class="onboard-page">
+  <h1 class="onboard-question">When is your birthday?</h1>
+
+  <form method="post" class="onboard-form">
+    <!-- native date input: works well on mobile and desktops -->
+    <input type="date" name="birthday" class="text-input" required />
+    <div class="form-actions">
+      <button class="soft-btn" type="submit">Next</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

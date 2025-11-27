@@ -1,0 +1,105 @@
+/* onboarding.css - centralized styles for onboarding (large buttons, soft dark-blue) */
+
+:root{
+  --bg: #eaf6ff;
+  --accent: #1e3a8a;
+  --soft: #0b2540;
+  --yellow: #ffd76b;
+  --btn-shadow: 0 14px 36px rgba(11,37,64,0.08);
+}
+
+body { background: var(--bg); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+
+.onboard-page {
+  min-height: calc(100vh - 0px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 36px 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.onboard-question {
+  margin: 0 0 18px 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--soft);
+}
+
+.name-highlight { color: var(--accent); }
+
+.onboard-form { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+
+/* big main buttons grid */
+.btn-grid { display: flex; gap: 14px; justify-content: center; width: 100%; flex-wrap: wrap; }
+
+.big-btn {
+  min-width: 180px;
+  padding: 16px 28px;
+  border-radius: 14px;
+  border: none;
+  font-size: 1.02rem;
+  font-weight: 800;
+  background: linear-gradient(180deg,var(--yellow),#f7c146);
+  color: #07121a;
+  cursor: pointer;
+  box-shadow: var(--btn-shadow);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+
+.big-btn:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(11,37,64,0.11); }
+
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(6,18,36,0.08);
+  box-shadow: 0 8px 20px rgba(11,37,64,0.03) inset;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.small-input {
+  width: 90px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(6,18,36,0.08);
+  font-size: 1rem;
+}
+
+.form-actions { margin-top: 8px; width: 100%; display:flex; justify-content:center; }
+
+.soft-btn {
+  background: linear-gradient(180deg,#0b2540,#112b52);
+  color: #fff;
+  padding: 12px 26px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 36px rgba(11,37,64,0.08);
+}
+
+/* toggles */
+.unit-toggle { display:flex; gap:8px; margin-bottom:8px; }
+.unit-btn {
+  background: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(6,18,36,0.06);
+  cursor: pointer;
+  font-weight: 700;
+}
+.unit-btn.active { background: linear-gradient(180deg,#e6f0ff,#d5eaff); border-color: rgba(37,99,235,0.14); }
+
+/* hidden helper */
+.hidden { display:none !important; }
+
+/* small helpers */
+@media (max-width: 560px){
+  .big-btn { min-width: 120px; padding: 14px 18px; font-size: 0.98rem; }
+  .onboard-question { font-size: 1.25rem; }
+}
