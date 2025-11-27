@@ -25,7 +25,9 @@
       <div class="container navbar">
         <h1 class="brand"><a href="/">WeightGame</a></h1>
         <nav>
+          {% if session.user_id %}
           <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+          {% endif %}
           <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
           <a href="/tasks" class="nav-link {% if request.path == '/tasks' %}active{% endif %}">Tasks</a>
           <a href="/myavatar" class="nav-link {% if request.path == '/myavatar' %}active{% endif %}">Avatar</a>

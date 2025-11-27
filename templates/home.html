@@ -1,9 +1,8 @@
 {# home.html - Landing page with login/signup buttons #}
 {% extends 'base.html' %}
 {% block content %}
-<<<<<<< HEAD
 
-<!-- Minimalist Welcome Sequence (replace the content block with this) -->
+<!-- Minimalist Welcome Sequence -->
 <style>
   /* Hide global header/footer only for this intro page */
   header.site-header { display: none !important; }
@@ -27,33 +26,6 @@
         <!-- spark overlay stroke (animated) -->
         <rect class="spark" x="10" y="10" width="400" height="130" rx="12" ry="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1200" stroke-dashoffset="1200" />
       </svg>
-=======
-  <div class="text-center">
-    <h1 class="page-title">Welcome to WeightGame</h1>
-    <p class="lead">This project helps users stay consistent with healthy habits through gamified daily challenges, progress tracking, and motivation features.</p>
-  </div>
-  
-  <div class="home-container">
-        <div class="home-header">
-            <h1>🎯 WeightGame</h1>
-            <p>Track your fitness journey and achieve your goals!</p>
-        </div>
-        
-        <div class="home-buttons">
-            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
-            <a href="{{ url_for('auth.signup') }}" class="btn-secondary">Sign Up</a>
-        </div>
-        
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for message in messages %}
-                        <div class="flash-message">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
->>>>>>> origin/main
     </div>
 
     <!-- welcome text placed visually centered inside the rectangle -->
@@ -76,8 +48,8 @@
 
     <!-- yellow buttons (large, rounded) -->
     <div id="welcome-actions" class="welcome-actions hidden">
-      <a href="{{ url_for('signup') }}" class="action-btn primary">Get Started</a>
-      <a href="{{ url_for('login') }}" class="action-btn secondary">I already have an account</a>
+      <a href="{{ url_for('onboarding.goal') }}" class="action-btn primary">Get Started</a>
+      <a href="{{ url_for('auth.login') }}" class="action-btn secondary">I already have an account</a>
     </div>
 
   </div>
@@ -123,5 +95,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 {% endblock %}
-
-
