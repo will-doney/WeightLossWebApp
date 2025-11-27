@@ -476,3 +476,274 @@ nav a.active, nav a:hover {
 }
 
 
+/* === Welcome Page Animation Styles === */
+
+.welcome-sequence {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.intro-avatar {
+    width: 180px;
+    height: auto;
+    border-radius: 20px;
+    animation: popIn 1s ease;
+}
+
+.intro-subtitle {
+    margin-top: 12px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    animation: fadeIn 1.3s ease;
+}
+
+/* Hidden class (for future reveal) */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Fade out animation */
+.fade-out {
+    animation: fadeOut 1s ease forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.92); }
+}
+
+/* Final title reveal */
+.final-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin-top: 30px;
+    color: #2563eb;
+    opacity: 0;
+}
+
+.fade-in {
+    animation: fadeIn 1.2s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Avatar pop animation */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Buttons */
+.welcome-buttons {
+    margin-top: 25px;
+}
+
+/* Use existing team buttons: .btn-primary & .btn-secondary */
+
+/* === WELCOME PAGE STYLES === */
+
+.welcome-container {
+    text-align: center;
+    padding-top: 60px;
+    padding-bottom: 80px;
+}
+
+/* TOP TITLE */
+.intro-title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin-bottom: 25px;
+    animation: quickPop 0.8s ease;
+}
+
+/* CENTER BLOCK */
+.intro-block {
+    display: flex;
+    justify-content: center;
+}
+
+.intro-avatar {
+    width: 220px;
+    height: auto;
+    border-radius: 20px;
+    animation: quickPop 1s ease;
+}
+
+/* FINAL TITLE */
+.final-title {
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: #2563eb;
+    opacity: 0;
+    margin-top: 20px;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* === FAST EFFECTS === */
+
+/* Flash disappear */
+.flash-out {
+    animation: flashOut 0.6s ease forwards;
+}
+
+@keyframes flashOut {
+    0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+    40% { filter: brightness(2); transform: scale(1.03); }
+    100% { opacity: 0; transform: scale(0.85); filter: brightness(3); }
+}
+
+/* Fast fade-in (no slow motion) */
+.fade-in-fast {
+    animation: fadeInFast 0.5s ease forwards;
+}
+
+@keyframes fadeInFast {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Quick pop effect for entering */
+@keyframes quickPop {
+    0% { opacity: 0; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Buttons */
+.welcome-buttons {
+    margin-top: 25px;
+}
+
+/* ---------------- Minimalist Welcome styles (append at end) ---------------- */
+
+.minimal-welcome { position: relative; min-height: calc(100vh - 0px); display: flex; align-items: center; justify-content: center; padding: 48px 20px; box-sizing: border-box; }
+
+/* top-right small logo/title */
+.logo-top-right {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  opacity: 0.85;
+  letter-spacing: 0.3px;
+}
+
+/* center wrap constrains layout */
+.center-wrap { max-width: 760px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+/* svg rectangle wrapper */
+.svg-wrap { width: 100%; display: flex; justify-content: center; pointer-events: none; }
+
+/* the visible welcome text positioned on top of the rectangle */
+.welcome-center { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: 420px; max-width: 90vw; }
+
+/* main heading */
+.welcome-main {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0b2540;
+  letter-spacing: 0.2px;
+}
+
+/* icons ring: initially hidden behind; icons will pop and be visible */
+.icons-ring { position: relative; width: 420px; height: 150px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+
+/* individual icons */
+.icons-ring .icon {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  opacity: 0;
+  transform: scale(0.6) translate(0,0);
+  filter: drop-shadow(0 4px 8px rgba(12,34,56,0.08));
+}
+
+/* set target positions around the rectangle (circle-like) */
+.icons-ring .icon:nth-child(1) { /* top-right */ transform: translate(58px,-46px) scale(0.6); }
+.icons-ring .icon:nth-child(2) { /* right */ transform: translate(96px,0px) scale(0.6); }
+.icons-ring .icon:nth-child(3) { /* bottom-right */ transform: translate(58px,46px) scale(0.6); }
+.icons-ring .icon:nth-child(4) { /* bottom-left */ transform: translate(-58px,46px) scale(0.6); }
+.icons-ring .icon:nth-child(5) { /* left */ transform: translate(-96px,0px) scale(0.6); }
+
+/* quote (hidden initially) */
+.welcome-quote {
+  margin: 0;
+  margin-top: 12px;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 500;
+  max-width: 560px;
+  text-align: center;
+  opacity: 0;
+}
+
+/* action buttons area */
+.welcome-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* yellow rounded buttons */
+.action-btn {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 14px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(34,50,80,0.06);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.action-btn.primary {
+  background: linear-gradient(180deg, #ffd76b, #f7c146);
+  color: #0b1720;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(180deg, #fff7dd, #fff0b8);
+  color: #0b1720;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+/* hover states */
+.action-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(34,50,80,0.08); }
+
+/* hidden utility */
+.hidden { opacity: 0; pointer-events: none; }
+
+/* quick fade-in used by quote and buttons */
+.fade-in-quick {
+  animation: fadeInQuick 320ms ease forwards;
+}
+@keyframes fadeInQuick { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* draw-spark (yellow stroke) initial values handled inline; keep fast */
+.draw-rect rect { stroke-opacity: 0.06; }
+.draw-rect .spark { stroke-opacity: 1; filter: drop-shadow(0 4px 8px rgba(255,214,107,0.18)); }
+
+/* responsive tweaks */
+@media (max-width: 560px) {
+  .welcome-main { font-size: 1.25rem; }
+  .icons-ring .icon { width: 28px; height: 28px; font-size: 16px; }
+  .action-btn { padding: 12px 22px; font-size: 0.98rem; border-radius: 12px; }
+  .logo-top-right { right: 14px; top: 18px; font-size: 0.9rem; }
+}

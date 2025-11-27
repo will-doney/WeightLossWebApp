@@ -851,3 +851,114 @@ if __name__ == '__main__':
     # Run Flask development server
     # NOTE: For production, use a WSGI server like Gunicorn or uWSGI
     app.run(host='0.0.0.0', port=port, debug=True)
+
+# ---------------- Onboarding routes (add to app.py) ----------------
+from flask import session
+
+def _init_onboard():
+    if 'onboarding' not in session:
+        session['onboarding'] = {}
+
+@app.route('/onboard/goal', methods=['GET','POST'])
+def onboard_goal():
+    _init_onboard()
+    if request.method == 'POST':
+        choice = request.form.get('goal')
+        session['onboarding']['goal'] = choice
+        session.modified = True
+        return redirect(url_for('onboard_sex'))
+    return render_template('onboarding/goal.html')
+
+@app.route('/onboard/sex', methods=['GET','POST'])
+def onboard_sex():
+    _init_onboard()
+    if request.method == 'POST':
+        sex = request.form.get('sex')
+        session['onboarding']['sex'] = sex
+        session.modified = True
+        return redirect(url_for('onboard_name'))
+    return render_template('onboarding/sex.html')
+
+@app.route('/onboard/name', methods=['GET','POST'])
+def onboard_name():
+    _init_onboard()
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        session['onboarding']['name'] = name
+        session.modified = True
+        return redirect(url_for('onboard_nice'))
+    return render_template('onboarding/name.html')
+
+@app.route('/onboard/nice', methods=['GET','POST'])
+def onboard_nice():
+    _init_onboard()
+    name = session['onboarding'].get('name', '')
+    if request.method == 'POST':
+        return redirect(url_for('onboard_birthday'))
+    return render_template('onboarding/nice.html', name=name)
+
+@app.route('/onboard/birthday', methods=['GET','POST'])
+def onboard_birthday():
+    _init_onboard()
+    if request.method == 'POST':
+        birthday = request.form.get('birthday')
+        session['onboarding']['birthday'] = birthday
+        session.modified = True
+        return redirect(url_for('onboard_height'))
+    return render_template('onboarding/birthdayy.html')
+
+@app.route('/onboard/height', methods=['GET','POST'])
+def onboard_height():
+    _init_onboard()
+    if request.method == 'POST':
+        unit = request.form.get('height_unit')
+        if unit == 'cm':
+            cm = request.form.get('height_cm')
+            session['onboarding']['height'] = {'value': cm, 'unit': 'cm'}
+        else:
+            ft = request.form.get('height_ft')
+            inch = request.form.get('height_in')
+            session['onboarding']['height'] = {'value': f"{ft}'{inch}\"", 'unit': 'ftin', 'ft': ft, 'in': inch}
+        session.modified = True
+        return redirect(url_for('onboard_weight'))
+    return render_template('onboarding/height.html')
+
+@app.route('/onboard/weight', methods=['GET','POST'])
+def onboard_weight():
+    _init_onboard()
+    if request.method == 'POST':
+        unit = request.form.get('weight_unit')
+        weight = request.form.get('weight_value')
+        session['onboarding']['weight'] = {'value': weight, 'unit': unit}
+        session.modified = True
+        return redirect(url_for('onboard_goal_weight'))
+    return render_template('onboarding/weight.html')
+
+@app.route('/onboard/goal_weight', methods=['GET','POST'])
+def onboard_goal_weight():
+    _init_onboard()
+    if request.method == 'POST':
+        unit = request.form.get('goal_weight_unit')
+        goal = request.form.get('goal_weight_value')
+        session['onboarding']['goal_weight'] = {'value': goal, 'unit': unit}
+        session.modified = True
+        return redirect(url_for('onboard_plan_ready'))
+    return render_template('onboarding/setgoal.html')
+
+@app.route('/onboard/plan_ready', methods=['GET','POST'])
+def onboard_plan_ready():
+    _init_onboard()
+    if request.method == 'POST':
+        # On pressing Let's Go, redirect to signup page (signup.html route)
+        return redirect(url_for('signup'))
+    return render_template('onboarding/planready.html')
+
+@app.route('/welcome')
+def welcome():
+    # Entry animation page (avatar intro)
+    return render_template('welcome.html')
+
+@app.route('/homeintro')
+def homeintro():
+    # Main animated intro page (spark rectangle + icons + buttons)
+    return render_template('homeintro.html')

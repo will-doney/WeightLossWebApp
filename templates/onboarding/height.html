@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+<style> header.site-header, footer.site-footer { display: none !important; } </style>
+
+<div class="onboard-page">
+  <h1 class="onboard-question">How tall are you?</h1>
+
+  <form method="post" class="onboard-form" id="heightForm">
+    <div class="unit-toggle">
+      <button type="button" class="unit-btn active" data-unit="cm">cm</button>
+      <button type="button" class="unit-btn" data-unit="ftin">ft / in</button>
+    </div>
+
+    <div id="cmInput" class="unit-inputs">
+      <input type="number" name="height_cm" class="text-input" placeholder="Height (cm)" min="50" max="300" />
+    </div>
+
+    <div id="ftinInput" class="unit-inputs hidden">
+      <input type="number" name="height_ft" class="small-input" placeholder="ft" min="1" max="8" />
+      <input type="number" name="height_in" class="small-input" placeholder="in" min="0" max="11" />
+    </div>
+
+    <div class="form-actions">
+      <input type="hidden" name="height_unit" id="height_unit" value="cm" />
+      <button class="soft-btn" type="submit">Next</button>
+    </div>
+  </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cmInput = document.getElementById('cmInput');
+  const ftinInput = document.getElementById('ftinInput');
+  const unitBtns = document.querySelectorAll('.unit-btn');
+  const hiddenUnit = document.getElementById('height_unit');
+
+  unitBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      unitBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const unit = btn.dataset.unit;
+      hiddenUnit.value = unit;
+      if (unit === 'cm') {
+        cmInput.classList.remove('hidden');
+        ftinInput.classList.add('hidden');
+      } else {
+        cmInput.classList.add('hidden');
+        ftinInput.classList.remove('hidden');
+      }
+    });
+  });
+});
+</script>
+
+</div>
+{% endblock %}

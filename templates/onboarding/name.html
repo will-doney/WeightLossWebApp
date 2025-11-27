@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+<style> header.site-header, footer.site-footer { display: none !important; } </style>
+
+<div class="onboard-page">
+  <h1 class="onboard-question">Pick the name that suits you the best</h1>
+
+  <form method="post" class="onboard-form">
+    <input type="text" name="name" class="text-input" placeholder="Enter your name" required maxlength="30" />
+    <div class="form-actions">
+      <button class="soft-btn" type="submit">Next</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
