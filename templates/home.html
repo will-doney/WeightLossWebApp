@@ -1,30 +1,97 @@
 {# home.html - Landing page with login/signup buttons #}
 {% extends 'base.html' %}
 {% block content %}
-  <div class="text-center">
-    <h1 class="page-title">Welcome to WeightGame</h1>
-    <p class="lead">This project helps users stay consistent with healthy habits through gamified daily challenges, progress tracking, and motivation features.</p>
-  </div>
-  
-  <div class="home-container">
-        <div class="home-header">
-            <h1>🎯 WeightGame</h1>
-            <p>Track your fitness journey and achieve your goals!</p>
-        </div>
-        
-        <div class="home-buttons">
-            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
-            <a href="{{ url_for('auth.signup') }}" class="btn-secondary">Sign Up</a>
-        </div>
-        
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for message in messages %}
-                        <div class="flash-message">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+
+<!-- Minimalist Welcome Sequence -->
+<style>
+  /* Hide global header/footer only for this intro page */
+  header.site-header { display: none !important; }
+  footer.site-footer { display: none !important; }
+  /* ensure background matches minimal pastel blue */
+  body { background: #eaf6ff !important; }
+</style>
+
+<div class="minimal-welcome">
+
+  <!-- small logo-ish title at top-right (subtle) -->
+  <div class="logo-top-right">WeightGame</div>
+
+  <!-- center area -->
+  <div class="center-wrap">
+
+    <!-- SVG rectangle: will be "drawn" -->
+    <div class="svg-wrap" aria-hidden="true">
+      <svg class="draw-rect" width="420" height="150" viewBox="0 0 420 150" preserveAspectRatio="xMidYMid meet">
+        <rect x="10" y="10" width="400" height="130" rx="12" ry="12" fill="none" stroke="#cfeeff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- spark overlay stroke (animated) -->
+        <rect class="spark" x="10" y="10" width="400" height="130" rx="12" ry="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1200" stroke-dashoffset="1200" />
+      </svg>
     </div>
+
+    <!-- welcome text placed visually centered inside the rectangle -->
+    <div class="welcome-center">
+      <h2 id="welcome-main" class="welcome-main">Welcome to WeightGame</h2>
+      <div id="icons-ring" class="icons-ring" aria-hidden="true">
+        <!-- Use small SVG icons (inline) or emojis as fallback -->
+        <div class="icon">🏃‍♀️</div>
+        <div class="icon">🥤</div>
+        <div class="icon">🍎</div>
+        <div class="icon">🏋️</div>
+        <div class="icon">🩺</div>
+      </div>
+    </div>
+
+    <!-- quote appears after icons -->
+    <p id="welcome-quote" class="welcome-quote hidden">
+      Small changes into big changes. Here it starts!
+    </p>
+
+    <!-- yellow buttons (large, rounded) -->
+    <div id="welcome-actions" class="welcome-actions hidden">
+      <a href="{{ url_for('onboarding.goal') }}" class="action-btn primary">Get Started</a>
+      <a href="{{ url_for('auth.login') }}" class="action-btn secondary">I already have an account</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* Minimalist animation sequence (fast, snappy) */
+document.addEventListener('DOMContentLoaded', () => {
+  const spark = document.querySelector('.spark');
+  const icons = document.querySelectorAll('.icons-ring .icon');
+  const quote = document.getElementById('welcome-quote');
+  const actions = document.getElementById('welcome-actions');
+
+  // 1) play stroke draw (spark) quickly
+  setTimeout(() => {
+    // animate stroke-dashoffset to 0
+    spark.style.transition = 'stroke-dashoffset 520ms cubic-bezier(.2,.9,.2,1)';
+    spark.style.strokeDashoffset = '0';
+  }, 300); // small delay so pop-in doesn't feel immediate
+
+  // 2) icons pop out in a quick sequence and move into ring positions
+  setTimeout(() => {
+    icons.forEach((el, idx) => {
+      // staggered pop; positions handled by CSS transforms
+      el.style.transition = `transform 360ms cubic-bezier(.2,.9,.2,1) ${idx * 60}ms, opacity 260ms ease ${idx * 60}ms`;
+      el.style.opacity = '1';
+      el.style.transform = `translate(${el.dataset.tx || '0px'}, ${el.dataset.ty || '0px'}) scale(1) rotate(${(idx - 2) * 8}deg)`;
+    });
+  }, 480);
+
+  // 3) show quote shortly after icons
+  setTimeout(() => {
+    quote.classList.remove('hidden');
+    quote.classList.add('fade-in-quick');
+  }, 980);
+
+  // 4) reveal buttons
+  setTimeout(() => {
+    actions.classList.remove('hidden');
+    actions.classList.add('fade-in-quick');
+  }, 1220);
+});
+</script>
+
 {% endblock %}

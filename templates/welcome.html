@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- load page-specific CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/welcome.css') }}">
+
+<div class="welcome-wrapper">
+
+  <!-- PAGE 1 - Intro (avatar + big title above) -->
+  <section id="page1" class="page page-intro">
+    <h1 class="intro-top-title">WeightGame</h1>
+
+    <div class="intro-center">
+      <img src="{{ url_for('static', filename='avatars/avatar_logo.png') }}" alt="Avatar" class="intro-avatar">
+      <div class="intro-subtitle">Welcome to WeightGame</div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 - Main welcome (hidden until page1 finishes) -->
+  <section id="page2" class="page page-main hidden">
+    <!-- small logo-like title at top-right (this is inside page content) -->
+    <div class="page2-top-logo">WeightGame</div>
+
+    <div class="page2-center">
+      <!-- SVG rectangle (base stroke + spark overlay that draws) -->
+      <div class="rect-svg-wrap" aria-hidden="true">
+        <svg class="rect-svg" width="560" height="180" viewBox="0 0 560 180" preserveAspectRatio="xMidYMid meet">
+          <rect x="8" y="8" width="544" height="164" rx="14" ry="14" fill="none" stroke="#e2f1ff" stroke-width="2"/>
+          <rect class="spark" x="8" y="8" width="544" height="164" rx="14" ry="14" fill="none" stroke="#ffd76b" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2200" stroke-dashoffset="2200"/>
+        </svg>
+      </div>
+
+      <!-- center text and icons -->
+      <div class="center-content">
+        <h2 class="welcome-heading">Welcome to WeightGame</h2>
+
+        <!-- icons use SVG files stored in static/icons/ -->
+        <div id="icons-circle" class="icons-circle" aria-hidden="true">
+          <img class="icon" src="{{ url_for('static', filename='icons/shoe.svg') }}" alt="shoe">
+          <img class="icon" src="{{ url_for('static', filename='icons/bottle.svg') }}" alt="bottle">
+          <img class="icon" src="{{ url_for('static', filename='icons/apple.svg') }}" alt="apple">
+          <img class="icon" src="{{ url_for('static', filename='icons/dumbbell.svg') }}" alt="dumbbell">
+          <img class="icon" src="{{ url_for('static', filename='icons/heart.svg') }}" alt="heart">
+        </div>
+      </div>
+
+      <!-- quote and actions (appear after icons) -->
+      <p id="welcome-quote" class="welcome-quote hidden">Small changes into big changes. Here it starts!</p>
+
+      <div id="page2-actions" class="page2-actions hidden">
+        <a href="{{ url_for('signup') }}" class="btn-yellow primary">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn-yellow secondary">I already have an account</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* Sequence control:
+   1) Keep header/footer hidden while page1 shows
+   2) After short intro, flash out page1
+   3) Reveal page2, animate spark draw, then icons pop around, then quote and buttons
+   4) Re-enable site header/footer after page2 visible
+*/
+
+document.addEventListener('DOMContentLoaded', () => {
+  const page1 = document.getElementById('page1');
+  const page2 = document.getElementById('page2');
+  const spark = document.querySelector('.rect-svg .spark');
+  const icons = Array.from(document.querySelectorAll('#icons-circle .icon'));
+  const quote = document.getElementById('welcome-quote');
+  const actions = document.getElementById('page2-actions');
+
+  // Hide global header/footer at load (safer)
+  const siteHeader = document.querySelector('header.site-header');
+  const siteFooter = document.querySelector('footer.site-footer');
+  if (siteHeader) siteHeader.style.display = 'none';
+  if (siteFooter) siteFooter.style.display = 'none';
+
+  // Timing values (ms) - tweak if you want slightly faster/slower
+  const introStay = 1600;        // how long page1 stays visible
+  const flashDuration = 550;     // flash-out duration
+  const sparkDelay = 200;        // delay before spark draw
+  const sparkDrawTime = 520;     // how long spark draws
+  const iconsDelay = 140;        // delay between spark completion and icon pop sequence
+  const iconsStagger = 70;       // stagger per icon
+  const quoteDelay = 260;        // after icons
+  const actionsDelay = 300;      // after quote
+
+  // 1) after introStay, flash-out page1
+  setTimeout(() => {
+    page1.classList.add('flash-out'); // CSS animation
+  }, introStay);
+
+  // 2) after flash (page1 gone) -> reveal page2
+  setTimeout(() => {
+    page1.style.display = 'none';
+    page2.classList.remove('hidden');
+    page2.classList.add('visible'); // optional
+
+    // animate spark draw
+    setTimeout(() => {
+      spark.style.transition = `stroke-dashoffset ${sparkDrawTime}ms cubic-bezier(.2,.9,.2,1)`;
+      spark.style.strokeDashoffset = '0';
+    }, sparkDelay);
+
+    // icons pop sequence (after spark finishes)
+    setTimeout(() => {
+      icons.forEach((ic, i) => {
+        // staggered show
+        setTimeout(() => {
+          ic.classList.add('icon-pop');
+        }, i * iconsStagger);
+      });
+    }, sparkDrawTime + iconsDelay);
+
+    // show quote shortly after icons start
+    setTimeout(() => {
+      quote.classList.remove('hidden');
+      quote.classList.add('fade-in-quick');
+    }, sparkDrawTime + iconsDelay + icons.length * iconsStagger + quoteDelay);
+
+    // show actions
+    setTimeout(() => {
+      actions.classList.remove('hidden');
+      actions.classList.add('fade-in-quick');
+      // now re-enable header/footer (slightly after actions)
+      if (siteHeader) siteHeader.style.display = '';
+      if (siteFooter) siteFooter.style.display = '';
+    }, sparkDrawTime + iconsDelay + icons.length * iconsStagger + quoteDelay + actionsDelay);
+
+  }, introStay + flashDuration);
+
+});
+</script>
+
+{% endblock %}

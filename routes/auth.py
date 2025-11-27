@@ -13,6 +13,11 @@ auth_bp = Blueprint('auth', __name__)
 def login():
     # Handle user login with Firebase ID token verification.
     # Creates or updates user document in Firestore on successful login.
+    
+    # Redirect if already logged in
+    if session.get('user_id'):
+        return redirect(url_for('dashboard.dashboard'))
+    
     from app import get_db
     db = get_db()
     
@@ -39,7 +44,8 @@ def login():
                             'email': email,
                             'created_at': datetime.utcnow(),
                             'avatar': 'default.png',
-                            'is_active': True
+                            'is_active': True,
+                            'onboarding_completed': False
                         }
                         user_ref.set(user_data)
                         try:
@@ -69,6 +75,11 @@ def login():
 def signup():
     # Handle user registration with Firebase ID token.
     # Creates new user document in Firestore on successful signup.
+    
+    # Redirect if already logged in
+    if session.get('user_id'):
+        return redirect(url_for('dashboard.dashboard'))
+    
     from app import get_db
     db = get_db()
     
@@ -77,6 +88,7 @@ def signup():
         
         if id_token:
             try:
+                # Verify token and create new user session
                 decoded_token = auth.verify_id_token(id_token)
                 uid = decoded_token['uid']
                 email = decoded_token.get('email', '')
@@ -89,9 +101,12 @@ def signup():
                         'email': email,
                         'created_at': datetime.now(UTC),
                         'avatar': 'default.png',
-                        'is_active': True
+                        'is_active': True,
+                        'onboarding_completed': False
                     }
                     db.collection('users').document(uid).set(user_data)
+                
+                # Initialize avatar points
                 try:
                     avatar_ref = db.collection('avatars').document(uid)
                     if not avatar_ref.get().exists:
@@ -103,7 +118,8 @@ def signup():
                 except Exception as e:
                     print(f"Warning: could not create avatar doc for {uid} on signup: {e}")
                 
-                return jsonify({'success': True, 'redirect': url_for('dashboard.dashboard')})
+                # Redirect to onboarding for new users
+                return jsonify({'success': True, 'redirect': url_for('onboarding.goal')})
             except Exception as e:
                 print(f"Firebase Auth error: {e}")
                 return jsonify({'success': False, 'error': 'Registration failed'})

@@ -59,12 +59,14 @@ from routes.auth import auth_bp
 from routes.dashboard import dashboard_bp
 from routes.tasks import tasks_bp
 from routes.other import other_bp
+from routes.onboarding import onboarding_bp
 
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(tasks_bp)
 app.register_blueprint(other_bp)
+app.register_blueprint(onboarding_bp)
 
 print("✓ All route blueprints registered")
 
