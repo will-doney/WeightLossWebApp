@@ -1,177 +1,568 @@
-{# settings.html - User settings page with theme and account preferences (localStorage demo) #}
+{# settings.html - Comprehensive user settings page with all preferences #}
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="page-title">Settings</h1>
+<div class="settings-page">
+  <div class="settings-header">
+    <h1 class="settings-title">⚙️ Settings</h1>
+    <p class="settings-subtitle">Manage your account, preferences, and health goals</p>
+  </div>
 
-<style>
-  .panel{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:10px;padding:18px 18px;margin:14px 0}
-  .panel h2{margin:0 0 10px 0;font-size:18px;opacity:.9}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed #ffffff1a}
-  .row:last-child{border-bottom:none}
-  .label{opacity:.9}
-  .hint{opacity:.6;font-size:12px;margin-top:6px}
-  .field{min-width:220px}
-  .btns{display:flex;gap:10px;margin-top:14px}
-  .btn{padding:8px 14px;border-radius:8px;border:1px solid #ffffff22;background:#ffffff14;cursor:pointer}
-  .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
-  .inline{display:flex;align-items:center;gap:10px}
-  input[type="text"],input[type="password"],select{
-    background:#0f172a;border:1px solid #334155;color:#e5e7eb;border-radius:8px;padding:8px 10px;width:100%;
-  }
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media (max-width:720px){.two{grid-template-columns:1fr}}
-</style>
+  <!-- Alert Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-<div class="panel">
-  <h2>General</h2>
+  <div class="settings-container">
+    <!-- PERSONAL DETAILS & PREFERENCES -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">👤 Personal Details</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-group">
+          <label for="displayName">Display Name</label>
+          <input type="text" id="displayName" name="displayName" placeholder="Enter your name">
+          <small class="hint">How you'll be identified in the app</small>
+        </div>
 
-  <div class="row">
-    <div class="label">Theme</div>
-    <div class="field">
-      <select id="themeSelect" aria-label="Select theme">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-      <div class="hint">Choose the app appearance.</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Your email" disabled>
+            <small class="hint">Your registered email address (cannot be changed here)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="units">Preferred Units</label>
+            <select id="units" name="units">
+              <option value="metric">Metric (kg, cm)</option>
+              <option value="imperial">Imperial (lbs, inches)</option>
+            </select>
+            <small class="hint">Units for weight and height</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ageRange">Age Group</label>
+          <select id="ageRange" name="ageRange">
+            <option value="">Not specified</option>
+            <option value="13-17">13-17</option>
+            <option value="18-25">18-25</option>
+            <option value="26-35">26-35</option>
+            <option value="36-50">36-50</option>
+            <option value="51-65">51-65</option>
+            <option value="65+">65+</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEALTH GOALS -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🎯 Health Goals</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="targetWeight">Target Weight</label>
+            <input type="number" id="targetWeight" name="targetWeight" step="0.1" placeholder="e.g., 70">
+            <small class="hint">Your weight loss goal</small>
+          </div>
+
+          <div class="form-group">
+            <label for="targetDeadline">Target Deadline</label>
+            <input type="date" id="targetDeadline" name="targetDeadline">
+            <small class="hint">When do you want to reach your goal?</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="weeklyGoal">Weekly Weight Loss Goal</label>
+          <select id="weeklyGoal" name="weeklyGoal">
+            <option value="">Not set</option>
+            <option value="0.25">0.25 kg/week (Gradual)</option>
+            <option value="0.5">0.5 kg/week (Moderate)</option>
+            <option value="0.75">0.75 kg/week (Aggressive)</option>
+            <option value="1.0">1.0 kg/week (Very Aggressive)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="activityLevel">Activity Level</label>
+          <select id="activityLevel" name="activityLevel">
+            <option value="">Not specified</option>
+            <option value="sedentary">Sedentary (Little to no exercise)</option>
+            <option value="lightly_active">Lightly Active (1-3 days/week)</option>
+            <option value="moderately_active">Moderately Active (3-5 days/week)</option>
+            <option value="very_active">Very Active (6-7 days/week)</option>
+            <option value="extremely_active">Extremely Active (Physical job)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPEARANCE & THEME -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🎨 Appearance</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-group">
+          <label for="themeSelect">Theme</label>
+          <select id="themeSelect" name="theme">
+            <option value="light">☀️ Light Mode</option>
+            <option value="dark">🌙 Dark Mode</option>
+          </select>
+          <small class="hint">Choose your preferred app appearance</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="autoTheme" name="autoTheme">
+            <span class="checkbox-label">Auto Dark Mode (System Settings)</span>
+          </label>
+          <small class="hint">Automatically switch based on your device settings</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS & REMINDERS -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🔔 Notifications</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="notifyEnabled" name="notifyEnabled" checked>
+            <span class="checkbox-label">Enable Notifications</span>
+          </label>
+          <small class="hint">Receive reminders and updates</small>
+        </div>
+
+        <div class="form-group">
+          <label for="reminderTime">Daily Reminder Time</label>
+          <input type="time" id="reminderTime" name="reminderTime" value="09:00">
+          <small class="hint">What time should we remind you?</small>
+        </div>
+
+        <div class="form-group">
+          <label for="reminderFrequency">Reminder Frequency</label>
+          <select id="reminderFrequency" name="reminderFrequency">
+            <option value="daily">Daily</option>
+            <option value="3times">3 Times per Week</option>
+            <option value="weekly">Weekly</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reminderMessage">Custom Reminder Message</label>
+          <textarea id="reminderMessage" name="reminderMessage" rows="3" placeholder="Add a personal motivation message..."></textarea>
+          <small class="hint">Leave empty for default messages</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="dndMode" name="dndMode">
+            <span class="checkbox-label">Do Not Disturb (8 PM - 8 AM)</span>
+          </label>
+          <small class="hint">Disable notifications during sleep hours</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVATAR PREFERENCES -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">😊 Avatar Preferences</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-group">
+          <label for="avatarMood">Default Avatar Mood</label>
+          <select id="avatarMood" name="avatarMood">
+            <option value="happy">😊 Happy</option>
+            <option value="sad">😢 Sad</option>
+            <option value="fit">🏃 Fit</option>
+          </select>
+          <small class="hint">Your avatar's default expression</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="animateAvatar" name="animateAvatar" checked>
+            <span class="checkbox-label">Animate Avatar</span>
+          </label>
+          <small class="hint">Show avatar animations and reactions</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="celebrateGoals" name="celebrateGoals" checked>
+            <span class="checkbox-label">Celebrate Milestones</span>
+          </label>
+          <small class="hint">Avatar celebrates when you achieve goals</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACY & DATA -->
+    <div class="settings-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🔒 Privacy & Data</h2>
+      </div>
+      <div class="panel-content">
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="privateProfile" name="privateProfile">
+            <span class="checkbox-label">Private Profile</span>
+          </label>
+          <small class="hint">Hide your stats from other users (if social features are added)</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="shareProgress" name="shareProgress">
+            <span class="checkbox-label">Share Progress Reports</span>
+          </label>
+          <small class="hint">Allow analytics to improve your experience</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="dataBackup" name="dataBackup" checked>
+            <span class="checkbox-label">Automatic Backup</span>
+          </label>
+          <small class="hint">Keep your data safe with automatic backups</small>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="danger-zone">
+          <h3>⚠️ Data Management</h3>
+          <div class="button-group">
+            <button type="button" class="btn btn-secondary" onclick="downloadData()">
+              📥 Download My Data
+            </button>
+            <button type="button" class="btn btn-warning" onclick="resetAccountData()">
+              🔄 Reset All Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT MANAGEMENT -->
+    <div class="settings-panel danger-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🚨 Account Management</h2>
+      </div>
+      <div class="panel-content">
+        <div class="danger-zone">
+          <h3>Change Password</h3>
+          <p class="hint">For security, we recommend changing your password regularly.</p>
+          <button type="button" class="btn btn-secondary" onclick="openPasswordModal()">
+            🔐 Change Password
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="danger-zone">
+          <h3>⚠️ Danger Zone</h3>
+          <p class="hint">These actions cannot be undone.</p>
+          
+          <div class="button-group danger">
+            <button type="button" class="btn btn-danger" onclick="deleteAccount()">
+              🗑️ Delete Account
+            </button>
+          </div>
+          <small class="hint warning" style="color: #dc2626; margin-top: 0.5rem;">
+            This will permanently delete your account and all associated data.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAVE BUTTONS -->
+    <div class="settings-actions">
+      <button type="button" class="btn btn-primary" onclick="saveSettings()">
+        💾 Save All Settings
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="resetForm()">
+        🔄 Reset Form
+      </button>
+      <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
+        ← Back to Dashboard
+      </a>
     </div>
   </div>
 
-<div class="panel">
-  <h2>Account</h2>
-
-  <div class="row">
-    <div class="label">Display name</div>
-    <div class="field">
-      <input id="displayName" type="text" placeholder="Your name">
+  <!-- Password Change Modal -->
+  <div id="passwordModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button type="button" class="modal-close" onclick="closePasswordModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" placeholder="Enter your current password">
+        </div>
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" placeholder="Enter new password">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Confirm new password">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="changePassword()">Change Password</button>
+      </div>
     </div>
   </div>
-
-  <div class="row">
-    <div class="label">Change password</div>
-    <div class="field two">
-      <input id="pwdCurrent" type="password" placeholder="Current password">
-      <input id="pwdNew" type="password" placeholder="New password">
-      <input id="pwdConfirm" type="password" placeholder="Confirm new password">
-    </div>
-  </div>
-  <div class="hint">Password change is demo only (no server update yet).</div>
 </div>
-
-  <div class="btns">
-    <button class="btn primary" onclick="saveSettings()">Save changes</button>
-    <button class="btn" onclick="resetSettings()">Reset</button>
-  </div>
-</div>
-
-<p class="hint">More settings will be added in future updates.</p>
 
 <script>
+  // Helper function to get elements
   function getEl(id) {
     return document.getElementById(id);
   }
 
-  function loadSettings(){
+  // Load all settings from localStorage and database
+  function loadSettings() {
     const get = k => localStorage.getItem(k);
-    const themeSelect = getEl('themeSelect');
-    const displayName = getEl('displayName');
-    const optional = {
-      notifyToggle: getEl('notifyToggle'),
-      autoTheme: getEl('autoTheme'),
-      dndToggle: getEl('dndToggle'),
-      unitsSelect: getEl('unitsSelect'),
-      privacyMode: getEl('privacyMode')
-    };
+    
+    // Personal details
+    if (getEl('displayName')) getEl('displayName').value = get('displayName') || '';
+    if (getEl('units')) getEl('units').value = get('units') || 'metric';
+    if (getEl('ageRange')) getEl('ageRange').value = get('ageRange') || '';
+    
+    // Health goals
+    if (getEl('targetWeight')) getEl('targetWeight').value = get('targetWeight') || '';
+    if (getEl('targetDeadline')) getEl('targetDeadline').value = get('targetDeadline') || '';
+    if (getEl('weeklyGoal')) getEl('weeklyGoal').value = get('weeklyGoal') || '';
+    if (getEl('activityLevel')) getEl('activityLevel').value = get('activityLevel') || '';
+    
+    // Appearance
+    if (getEl('themeSelect')) getEl('themeSelect').value = get('theme') || 'light';
+    if (getEl('autoTheme')) getEl('autoTheme').checked = get('autoTheme') === '1';
+    
+    // Notifications
+    if (getEl('notifyEnabled')) getEl('notifyEnabled').checked = get('notifyEnabled') !== '0';
+    if (getEl('reminderTime')) getEl('reminderTime').value = get('reminderTime') || '09:00';
+    if (getEl('reminderFrequency')) getEl('reminderFrequency').value = get('reminderFrequency') || 'daily';
+    if (getEl('reminderMessage')) getEl('reminderMessage').value = get('reminderMessage') || '';
+    if (getEl('dndMode')) getEl('dndMode').checked = get('dndMode') === '1';
+    
+    // Avatar preferences
+    if (getEl('avatarMood')) getEl('avatarMood').value = get('avatarMood') || 'happy';
+    if (getEl('animateAvatar')) getEl('animateAvatar').checked = get('animateAvatar') !== '0';
+    if (getEl('celebrateGoals')) getEl('celebrateGoals').checked = get('celebrateGoals') !== '0';
+    
+    // Privacy & data
+    if (getEl('privateProfile')) getEl('privateProfile').checked = get('privateProfile') === '1';
+    if (getEl('shareProgress')) getEl('shareProgress').checked = get('shareProgress') === '1';
+    if (getEl('dataBackup')) getEl('dataBackup').checked = get('dataBackup') !== '0';
+  }
 
-    if (optional.notifyToggle) {
-      optional.notifyToggle.checked = get('notify') === '1';
+  // Save all settings to localStorage
+  function saveSettings() {
+    const set = (k, v) => localStorage.setItem(k, v);
+    
+    // Personal details
+    if (getEl('displayName')) set('displayName', getEl('displayName').value.trim());
+    if (getEl('units')) set('units', getEl('units').value);
+    if (getEl('ageRange')) set('ageRange', getEl('ageRange').value);
+    
+    // Health goals
+    if (getEl('targetWeight')) set('targetWeight', getEl('targetWeight').value);
+    if (getEl('targetDeadline')) set('targetDeadline', getEl('targetDeadline').value);
+    if (getEl('weeklyGoal')) set('weeklyGoal', getEl('weeklyGoal').value);
+    if (getEl('activityLevel')) set('activityLevel', getEl('activityLevel').value);
+    
+    // Appearance
+    if (getEl('themeSelect')) {
+      const theme = getEl('themeSelect').value;
+      set('theme', theme);
+      applyThemeClass(theme);
     }
-    if (themeSelect) {
-      themeSelect.value = get('theme') || 'light';
-    }
-    if (optional.autoTheme) {
-      optional.autoTheme.checked = get('autoTheme') === '1';
-    }
-    if (optional.dndToggle) {
-      optional.dndToggle.checked = get('dnd') === '1';
-    }
-    if (displayName) {
-      displayName.value = get('displayName') || '';
-    }
-    if (optional.unitsSelect) {
-      optional.unitsSelect.value = get('units') || 'metric';
-    }
-    if (optional.privacyMode) {
-      optional.privacyMode.checked = get('privacy') === '1';
+    if (getEl('autoTheme')) set('autoTheme', getEl('autoTheme').checked ? '1' : '0');
+    
+    // Notifications
+    if (getEl('notifyEnabled')) set('notifyEnabled', getEl('notifyEnabled').checked ? '1' : '0');
+    if (getEl('reminderTime')) set('reminderTime', getEl('reminderTime').value);
+    if (getEl('reminderFrequency')) set('reminderFrequency', getEl('reminderFrequency').value);
+    if (getEl('reminderMessage')) set('reminderMessage', getEl('reminderMessage').value);
+    if (getEl('dndMode')) set('dndMode', getEl('dndMode').checked ? '1' : '0');
+    
+    // Avatar preferences
+    if (getEl('avatarMood')) set('avatarMood', getEl('avatarMood').value);
+    if (getEl('animateAvatar')) set('animateAvatar', getEl('animateAvatar').checked ? '1' : '0');
+    if (getEl('celebrateGoals')) set('celebrateGoals', getEl('celebrateGoals').checked ? '1' : '0');
+    
+    // Privacy & data
+    if (getEl('privateProfile')) set('privateProfile', getEl('privateProfile').checked ? '1' : '0');
+    if (getEl('shareProgress')) set('shareProgress', getEl('shareProgress').checked ? '1' : '0');
+    if (getEl('dataBackup')) set('dataBackup', getEl('dataBackup').checked ? '1' : '0');
+    
+    alert('✅ All settings saved successfully!');
+  }
+
+  // Reset form to saved values
+  function resetForm() {
+    if (confirm('Reset all unsaved changes?')) {
+      loadSettings();
+      alert('Form reset to saved values.');
     }
   }
 
-  function saveSettings(){
-    const themeSelect = getEl('themeSelect');
-    const displayName = getEl('displayName');
-    const optional = {
-      notifyToggle: getEl('notifyToggle'),
-      autoTheme: getEl('autoTheme'),
-      dndToggle: getEl('dndToggle'),
-      unitsSelect: getEl('unitsSelect'),
-      privacyMode: getEl('privacyMode')
-    };
-
-    if (optional.notifyToggle) {
-      localStorage.setItem('notify', optional.notifyToggle.checked ? '1' : '0');
-    }
-    if (themeSelect) {
-      localStorage.setItem('theme', themeSelect.value);
-    }
-    if (optional.autoTheme) {
-      localStorage.setItem('autoTheme', optional.autoTheme.checked ? '1' : '0');
-    }
-    if (optional.dndToggle) {
-      localStorage.setItem('dnd', optional.dndToggle.checked ? '1' : '0');
-    }
-    if (displayName) {
-      localStorage.setItem('displayName', displayName.value.trim());
-    }
-    if (optional.unitsSelect) {
-      localStorage.setItem('units', optional.unitsSelect.value);
-    }
-    if (optional.privacyMode) {
-      localStorage.setItem('privacy', optional.privacyMode.checked ? '1' : '0');
-    }
-
-    alert('Settings saved.');
-  }
-
-  function resetSettings(){
-    ['notify','theme','autoTheme','dnd','displayName','units','privacy'].forEach(k=>localStorage.removeItem(k));
-    loadSettings();
-    alert('Settings reset to defaults.');
-  }
-
-  function applyTheme(theme) {
+  // Apply theme to body element
+  function applyThemeClass(theme) {
     const body = document.body;
-    if (theme === 'dark') {
-      body.style.backgroundColor = '#0f172a';
-      body.style.color = '#e5e7eb';
-    } else {
-      body.style.backgroundColor = '#f8fafc';
-      body.style.color = '#111827';
+    body.classList.remove('light-mode', 'dark-mode');
+    body.classList.add(theme === 'dark' ? 'dark-mode' : 'light-mode');
+  }
+
+  // Modal functions
+  function openPasswordModal() {
+    getEl('passwordModal').style.display = 'flex';
+  }
+
+  function closePasswordModal() {
+    getEl('passwordModal').style.display = 'none';
+    getEl('currentPassword').value = '';
+    getEl('newPassword').value = '';
+    getEl('confirmPassword').value = '';
+  }
+
+  function changePassword() {
+    const current = getEl('currentPassword').value;
+    const newPwd = getEl('newPassword').value;
+    const confirm = getEl('confirmPassword').value;
+    
+    if (!current || !newPwd || !confirm) {
+      alert('❌ Please fill in all password fields.');
+      return;
     }
+    
+    if (newPwd !== confirm) {
+      alert('❌ New passwords do not match.');
+      return;
+    }
+    
+    if (newPwd.length < 8) {
+      alert('❌ Password must be at least 8 characters long.');
+      return;
+    }
+    
+    // In production, this would call a secure backend API
+    alert('✅ Password change would be sent to server.\n\nNote: This is a demo. Implement backend API for actual password changes.');
+    closePasswordModal();
   }
 
-  const themeSelect = getEl('themeSelect');
-  if (themeSelect) {
-    themeSelect.addEventListener('change', (e) => {
-      const theme = e.target.value;
-      localStorage.setItem('theme', theme);
-      applyTheme(theme);
+  function downloadData() {
+    const settings = {};
+    const keys = ['displayName', 'units', 'ageRange', 'targetWeight', 'targetDeadline', 'weeklyGoal', 
+                  'activityLevel', 'theme', 'autoTheme', 'notifyEnabled', 'reminderTime', 
+                  'reminderFrequency', 'reminderMessage', 'dndMode', 'avatarMood', 
+                  'animateAvatar', 'celebrateGoals', 'privateProfile', 'shareProgress', 'dataBackup'];
+    
+    keys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        settings[key] = localStorage.getItem(key);
+      }
     });
+    
+    const dataStr = JSON.stringify(settings, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `weightloss-data-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    
+    alert('✅ Your data has been downloaded.');
   }
 
+  function resetAccountData() {
+    if (!confirm('⚠️ Are you sure? This will delete ALL your health data and cannot be undone.')) {
+      return;
+    }
+    
+    if (!confirm('⚠️ Really sure? This action is permanent!')) {
+      return;
+    }
+    
+    // In production, this would call a backend API to delete data
+    const keys = ['displayName', 'units', 'ageRange', 'targetWeight', 'targetDeadline', 'weeklyGoal', 
+                  'activityLevel', 'theme', 'autoTheme', 'notifyEnabled', 'reminderTime', 
+                  'reminderFrequency', 'reminderMessage', 'dndMode', 'avatarMood', 
+                  'animateAvatar', 'celebrateGoals', 'privateProfile', 'shareProgress', 'dataBackup'];
+    
+    keys.forEach(key => localStorage.removeItem(key));
+    
+    alert('✅ All data has been reset. Reloading...');
+    location.reload();
+  }
+
+  function deleteAccount() {
+    if (!confirm('⚠️ Are you sure you want to DELETE your account? This is permanent!')) {
+      return;
+    }
+    
+    if (!confirm('⚠️ This will delete all your data. Type "DELETE" to confirm.')) {
+      return;
+    }
+    
+    const confirmed = prompt('Type DELETE to confirm account deletion:');
+    if (confirmed !== 'DELETE') {
+      alert('Account deletion cancelled.');
+      return;
+    }
+    
+    alert('✅ Account deletion request submitted.\n\nNote: In production, this would contact the server to delete your account and all associated data.');
+    // In production: window.location.href = '/delete_account';
+  }
+
+  // Theme change event listener
   document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+    
+    const themeSelect = getEl('themeSelect');
+    if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+        const theme = e.target.value;
+        localStorage.setItem('theme', theme);
+        applyThemeClass(theme);
+      });
+    }
+    
+    // Apply saved theme
     const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
+    applyThemeClass(savedTheme);
+    
+    // Close modal on outside click
+    window.addEventListener('click', (e) => {
+      const modal = getEl('passwordModal');
+      if (e.target === modal) {
+        closePasswordModal();
+      }
+    });
   });
 </script>
 {% endblock %}
