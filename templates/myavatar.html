@@ -2,48 +2,117 @@
 {% extends 'base.html' %}
 
 {% block content %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/avatar-borders.css') }}">
   <h2 class="section-title">Avatar Page</h2>
-  <p class="muted">Choose your avatar mood below.</p>
+  <p class="muted">Level up to unlock new avatars. Borders show milestones.</p>
 
-  <div class="avatar-container">
-    <div class="avatar-wrapper">
-      <img 
-        id="avatar-image"
-        src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
-        alt="Avatar" 
-        class="avatar-image"
-        width="240" height="240"
-      />
-      <div id="level-badge" class="level-badge">Lv 1</div>
-    </div>
+  <!-- Main Grid Layout: Avatar Left, Unlockables Right -->
+  <div class="avatar-page-grid">
+    
+    <!-- Left Side: Current Avatar -->
+    <div class="avatar-section">
+      <h3>Your Avatar</h3>
+      <div class="avatar-container">
+        <div class="avatar-wrapper">
+          <img 
+            id="avatar-image"
+            src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
+            alt="Avatar" 
+            class="avatar-image"
+            width="240" height="240"
+          />
+          <div id="level-badge" class="level-badge">Lv 1</div>
+        </div>
 
-    <div class="progress-wrap" aria-hidden="false">
-      <div class="progress-bg" role="progressbar" aria-label="Avatar level progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div id="progress-fill" class="progress-fill"></div>
+        <div class="progress-wrap" aria-hidden="false">
+          <div class="progress-bg" role="progressbar" aria-label="Avatar level progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="points-text" class="points-text">0 / 100 points</div>
+        </div>
       </div>
-      <div id="points-text" class="points-text">0 / 100 points</div>
+
+      
+
+      <div class="points-actions">
+        <button onclick="addPoints(10)" class="btn">+10 pts</button>
+        <button onclick="addPoints(50)" class="btn">+50 pts</button>
+        <button onclick="resetPoints()" class="btn">Reset</button>
+      </div>
     </div>
+
+    <!-- Right Side: Unlockable Avatars -->
+    <div class="unlockables-section">
+      <h3>🔓 Unlock New Avatars</h3>
+      <div id="unlockables-container">
+        <!-- Unlockable avatars will be rendered here -->
+      </div>
+    </div>
+
   </div>
 
-  <div class="mood-buttons">
-    <button onclick="changeAvatar('happy')" class="btn">😊 Happy</button>
-    <button onclick="changeAvatar('sad')" class="btn">😢 Sad</button>
-    <button onclick="changeAvatar('fit')" class="btn">🏃 Fit</button>
-  </div>
-
-  <div class="points-actions">
-    <button onclick="addPoints(10)" class="btn">+10 pts</button>
-    <button onclick="addPoints(50)" class="btn">+50 pts</button>
-    <button onclick="resetPoints()" class="btn">Reset</button>
-  </div>
-
-  <!-- Milestones & Rewards Section -->
+  <!-- Bottom: Milestones & Rewards -->
   <div class="milestones-section">
     <h3>Milestones & Rewards</h3>
     <div id="milestones-container"></div>
   </div>
 
   <script>
+    // Unlockable avatars data
+    const UNLOCKABLE_AVATARS = [
+      { id: 'champion',   name: 'Champion Avatar',   emoji: '🏆', level: 5,  unlocked: false, description: 'Unlock at Level 5'  },
+      { id: 'legendary',  name: 'Legendary Avatar',  emoji: '🏅', level: 10, unlocked: false, description: 'Unlock at Level 10' },
+      { id: 'mythic',     name: 'Mythic Avatar',     emoji: '✨', level: 15, unlocked: false, description: 'Unlock at Level 15' },
+      { id: 'elite',      name: 'Elite Avatar',      emoji: '🛡️', level: 20, unlocked: false, description: 'Unlock at Level 20' },
+      { id: 'prime',      name: 'Prime Avatar',      emoji: '🔱', level: 25, unlocked: false, description: 'Unlock at Level 25' },
+      { id: 'ascendant',  name: 'Ascendant Avatar',  emoji: '🌟', level: 30, unlocked: false, description: 'Unlock at Level 30' }
+    ];
+
+    // Render unlockable avatars
+    function renderUnlockables() {
+      const container = document.getElementById('unlockables-container');
+      const currentLevel = computeLevel(parseInt(localStorage.getItem('avatar_points_v1_{{ session.get("user_id", "anon") }}') || '0', 10));
+      
+      const html = UNLOCKABLE_AVATARS.map(avatar => {
+        const isUnlocked = currentLevel >= avatar.level;
+        return `
+          <div class="unlockable-card ${isUnlocked ? 'unlocked' : 'locked'}">
+            <div class="unlockable-icon">${avatar.emoji}</div>
+            <div class="unlockable-info">
+              <h4>${avatar.name}</h4>
+              <p class="unlockable-desc">${avatar.description}</p>
+            </div>
+            ${isUnlocked 
+              ? `<span class="unlock-status unlocked-status">✓ Unlocked</span>` 
+              : `<span class="unlock-status locked-status">🔒 Lv ${avatar.level}</span>`
+            }
+          </div>
+        `;
+      }).join('');
+      
+      container.innerHTML = html;
+    }
+
+    // Helper to compute level from points
+    function computeLevel(points) {
+      return Math.floor(points / 100) + 1;
+    }
+    // Change avatar border
+    function changeBorder(border) {
+      const wrapper = document.querySelector('.avatar-wrapper');
+      if (!wrapper) return;
+      
+      // Remove all border classes
+      wrapper.classList.remove('border-bronze', 'border-silver', 'border-gold', 'border-platinum', 'border-diamond', 'border-none');
+      
+      // Add selected border
+      if (border && border !== 'none') {
+        wrapper.classList.add('border-' + border);
+      } else {
+        wrapper.classList.add('border-none');
+      }
+    }
+
     // Change avatar image based on mood selection
     function changeAvatar(mood) {
       if (!mood) mood = 'happy';
@@ -121,6 +190,9 @@
         progressFill.style.width = percent + '%';
         progressBg.setAttribute('aria-valuenow', String(percent));
         pointsText.textContent = `${progressInLevel} / ${pointsPerLevel} points (Total: ${points})`;
+        
+        // Update unlockables when level changes
+        renderUnlockables();
       }
 
       // Add points and persist to server
@@ -174,6 +246,9 @@
       });
 
       updateUI();
+      
+      // Initial render of unlockables
+      renderUnlockables();
     })();
 
     // ============================================================
@@ -190,11 +265,41 @@
             const milestones = data.milestones || [];
             const claimed = data.claimed || [];
             renderMilestones(milestones, claimed);
+            
+            // Auto-apply border based on highest claimed milestone from Firestore
+            updateBorderFromClaimed(claimed);
           })
           .catch(err => {
             console.error('Failed to load milestones:', err);
             milestonesContainer.innerHTML = '<p class="muted">Unable to load milestones</p>';
           });
+      }
+
+      // Update avatar border based on highest claimed milestone
+      function updateBorderFromClaimed(claimedIds) {
+        // Border mapping in order of priority (lowest to highest)
+        const borderPriority = [
+          { id: 'm50', border: 'bronze' },
+          { id: 'm100', border: 'silver' },
+          { id: 'm250', border: 'gold' },
+          { id: 'm500', border: 'platinum' },
+          { id: 'm1000', border: 'diamond' }
+        ];
+        
+        // Find highest tier claimed
+        let highestBorder = null;
+        for (const tier of borderPriority) {
+          if (claimedIds.includes(tier.id)) {
+            highestBorder = tier.border;
+          }
+        }
+        
+        // Apply the border (or none if nothing claimed)
+        if (highestBorder) {
+          changeBorder(highestBorder);
+        } else {
+          changeBorder('none');
+        }
       }
 
       // Render milestone cards
@@ -247,6 +352,20 @@
           .then(data => {
             if (data.ok) {
               alert('Reward claimed successfully! 🎉');
+              
+              // Auto-apply border based on milestone tier
+              const borderMap = {
+                'm50': 'bronze',    // First Steps
+                'm100': 'silver',   // On The Move
+                'm250': 'gold',     // Committed
+                'm500': 'platinum', // Halfway Hero
+                'm1000': 'diamond'  // Legend
+              };
+              
+              if (borderMap[rewardId]) {
+                changeBorder(borderMap[rewardId]);
+              }
+              
               loadMilestones(); // Refresh
             } else if (data.error === 'already_claimed') {
               alert('You already claimed this reward!');
