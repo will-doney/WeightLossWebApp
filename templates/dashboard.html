@@ -65,13 +65,17 @@
   </div>
 
   <!-- Motivational Messages Banner -->
-  {% if motivational_messages and motivational_messages|length > 0 %}
-  <div class="motivational-banner">
-    {% for message in motivational_messages %}
+ <<div class="motivational-banner">
+  {% for message in motivational_messages %}
+    {% if loop.first %}
+      <div class="motivation-card">
+        Welcome, {{ user_name }}! You've lost {{ weight_lost|round(1) }} {{ weight_lost_unit }}! 🎉
+      </div>
+    {% else %}
       <div class="motivation-card">{{ message }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
+    {% endif %}
+  {% endfor %}
+</div>
 
   <!-- Avatar & Level / Points / Tasks Section -->
   <div class="dashboard-row">
@@ -131,10 +135,6 @@
       <div class="progress-item">
         <span class="progress-label">Weight Lost</span>
         <span class="progress-value">{{ weight_lost }} {{ weight_lost_unit }}</span>
-      </div>
-      <div class="progress-item">
-        <span class="progress-label">Goal Progress</span>
-        <span class="progress-value">{{ goal_progress|round(0)|int }}%</span>
       </div>
       <div class="progress-item">
         <span class="progress-label">Workout Streak</span>
@@ -210,20 +210,7 @@
       </div>
     </div>
 
-    <div class="stat-card info">
-      <div class="stat-icon">🎯</div>
-      <div class="stat-content">
-        <h3>Goal Progress</h3>
-        <div class="stat-value">
-          {{ goal_progress|default(0)|round(0)|int }}%
-        </div>
-        <div class="progress-bar">
-          {% if goal_progress %}
-            <div class="progress-fill progress-{{ (goal_progress|round(0)|int) }}"></div>
-          {% else %}
-            <div class="progress-fill progress-0"></div>
-          {% endif %}
-        </div>
+
         <div class="stat-change">
           {% if goal_progress and goal_progress >= 100 %}
             Goal achieved! 🎉
