@@ -40,15 +40,6 @@
             <input type="email" id="email" name="email" placeholder="Your email" disabled value="{{ session.email if session.email is defined else '' }}">
             <small class="hint">Your registered email address (cannot be changed here)</small>
           </div>
-
-          <div class="form-group">
-            <label for="units">Preferred Units</label>
-            <select id="units" name="units">
-              <option value="metric">Metric (kg, cm)</option>
-              <option value="imperial">Imperial (lbs, inches)</option>
-            </select>
-            <small class="hint">Units for weight and height</small>
-          </div>
         </div>
 
         <div class="form-group">
@@ -268,7 +259,6 @@
     
     // Personal details
     if (getEl('displayName')) getEl('displayName').value = get('displayName') || '';
-    if (getEl('units')) getEl('units').value = get('units') || 'metric';
     if (getEl('ageRange')) getEl('ageRange').value = get('ageRange') || '';
     
     // Appearance
@@ -294,7 +284,6 @@
     // Personal details
     const displayName = getEl('displayName')?.value.trim() || '';
     if (displayName) set('displayName', displayName);
-    if (getEl('units')) set('units', getEl('units').value);
     if (getEl('ageRange')) set('ageRange', getEl('ageRange').value);
     
     // Appearance

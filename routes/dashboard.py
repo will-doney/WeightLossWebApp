@@ -3,7 +3,7 @@
 # Handles user dashboard, profile management, and activity tracking.
 # Provides weight logging, workout tracking, goals, and profile updates.
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from firebase_admin import firestore
 from datetime import datetime, UTC
 
@@ -31,7 +31,7 @@ def format_timesince(dt):
 
 
 def generate_motivational_messages(user_name, avatar_points, weight_lost, goal_progress, 
-                                   workout_streak, tasks_completed, tasks_total):
+                                   workout_streak, tasks_completed, tasks_total, avatar_milestones=None):
     """Generate personalized motivational messages based on user progress."""
     messages = []
     
@@ -47,43 +47,55 @@ def generate_motivational_messages(user_name, avatar_points, weight_lost, goal_p
     elif avatar_points >= 50:
         messages.append(f"Keep going! You've earned {avatar_points} points! ⭐")
     
-    # Weight loss message
+    # Weight loss message (without numbers)
     if weight_lost >= 10:
-        messages.append(f"Amazing! You've lost {weight_lost} units! 🎉")
+        messages.append(f"Amazing progress! Keep up the great work! 🎉")
     elif weight_lost >= 5:
-        messages.append(f"Excellent progress! {weight_lost} units down! ✨")
+        messages.append(f"Excellent progress! You're doing fantastic! ✨")
     elif weight_lost > 0:
-        messages.append(f"You're making progress! {weight_lost} units down! 👍")
+        messages.append(f"You're making great progress! Keep it up! 👍")
     
     # Goal progress message
     if goal_progress >= 75:
-        messages.append(f"Almost there! {goal_progress:.0f}% to your goal! 🚀")
+        messages.append(f"Almost there! You're crushing your goals! 🚀")
     elif goal_progress >= 50:
-        messages.append(f"You're halfway there! {goal_progress:.0f}% complete! 🎯")
+        messages.append(f"You're halfway there! Amazing work! 🎯")
     elif goal_progress >= 25:
-        messages.append(f"Great start! {goal_progress:.0f}% of your goal reached! 📈")
+        messages.append(f"Great start! You're on the right track! 📈")
     
     # Workout streak message
     if workout_streak >= 30:
-        messages.append(f"Incredible! {workout_streak} day workout streak! 🏆")
+        messages.append(f"Incredible workout consistency! 🏆")
     elif workout_streak >= 7:
-        messages.append(f"Amazing! {workout_streak} day streak going! 💪")
+        messages.append(f"Amazing workout streak! 💪")
     elif workout_streak >= 3:
-        messages.append(f"Nice! {workout_streak} day streak! Keep it up! 🔥")
+        messages.append(f"Nice streak! Keep it up! 🔥")
     elif workout_streak > 0:
-        messages.append(f"You've got a {workout_streak} day streak! 💯")
+        messages.append(f"You're building a great habit! 💯")
     
     # Task completion message
     if tasks_total > 0:
         completion_rate = (tasks_completed / tasks_total) * 100
         if completion_rate >= 90:
-            messages.append(f"Tasks crushed! {completion_rate:.0f}% complete! 🎊")
+            messages.append(f"Tasks crushed! Outstanding work! 🎊")
         elif completion_rate >= 75:
-            messages.append(f"Excellent task completion: {completion_rate:.0f}%! 📋")
+            messages.append(f"Excellent task completion! 📋")
         elif completion_rate >= 50:
-            messages.append(f"Good work on tasks: {completion_rate:.0f}% done! ✅")
+            messages.append(f"Good work on completing tasks! ✅")
         elif tasks_completed > 0:
-            messages.append(f"Keep completing tasks! {tasks_completed}/{tasks_total} done. 🚀")
+            messages.append(f"Keep completing those tasks! 🚀")
+    
+    # Avatar milestone messages
+    if avatar_milestones:
+        latest_unlocked = [m for m in avatar_milestones if m.get('unlocked')]
+        if latest_unlocked:
+            latest = latest_unlocked[0]
+            if latest['name'] == 'Legend':
+                messages.append(f"Legend status achieved! Ultimate milestone unlocked! 👑")
+            elif latest['name'] == 'Halfway Hero':
+                messages.append(f"Halfway hero! You're unstoppable! 🏅")
+            elif latest['name'] == 'Committed':
+                messages.append(f"Total commitment! You're dedicated! 🥇")
     
     # Default motivational messages if low activity
     if not messages or len(messages) < 2:
@@ -172,6 +184,101 @@ def calculate_goal_progress(db, user_id, current_weight):
         return 0, 0, None
 
 
+def get_avatar_milestones(db, user_id):
+    """Get user's avatar milestones with progress tracking."""
+    try:
+        # First get avatar points
+        avatar_doc = db.collection('avatars').document(user_id).get()
+        avatar_points = 0
+        if avatar_doc.exists:
+            avatar_data = avatar_doc.to_dict()
+            avatar_points = int(avatar_data.get('points', 0) or 0)
+        
+        # Define milestone thresholds and badges
+        milestone_definitions = [
+            {'name': 'First Steps', 'points_required': 50, 'badge': 'Bronze', 'icon': '🥉'},
+            {'name': 'On The Move', 'points_required': 100, 'badge': 'Silver', 'icon': '🥈'},
+            {'name': 'Committed', 'points_required': 250, 'badge': 'Gold', 'icon': '🥇'},
+            {'name': 'Halfway Hero', 'points_required': 500, 'badge': 'Platinum', 'icon': '🏅'},
+            {'name': 'Legend', 'points_required': 1000, 'badge': 'Diamond', 'icon': '👑'},
+        ]
+        
+        # Check which milestones are achieved
+        milestones = []
+        for milestone in milestone_definitions:
+            points_required = milestone['points_required']
+            unlocked = avatar_points >= points_required
+            progress_percent = min(100, (avatar_points / points_required) * 100) if points_required > 0 else 0
+            
+            milestones.append({
+                'name': milestone['name'],
+                'badge': milestone['badge'],
+                'icon': milestone['icon'],
+                'unlocked': unlocked,
+                'points_required': points_required,
+                'current_points': avatar_points,
+                'progress_percent': round(progress_percent, 1),
+                'progress_display': f"{avatar_points}/{points_required} pts",
+                'claimed': unlocked  # Assuming claimed when unlocked for now
+            })
+        
+        return milestones
+    except Exception as e:
+        print(f"Error fetching avatar milestones: {e}")
+        return []
+
+
+def get_dashboard_achievements(db, user_id, current_weight, initial_weight, target_weight, goal_progress, unit_preference='kg'):
+    """Get combined achievements from avatar milestones and weight goals."""
+    # Get avatar milestones
+    avatar_milestones = get_avatar_milestones(db, user_id)
+    
+    # Calculate weight lost
+    weight_lost = (initial_weight - current_weight) if (initial_weight and current_weight) else 0
+    
+    # Combine both achievement systems
+    combined_achievements = []
+    
+    # 1. Add avatar-based achievements (mapped to dashboard names)
+    milestone_map = {
+        'First Steps': {'name': 'First Steps', 'icon': '🥉'},
+        'On The Move': {'name': 'On The Move', 'icon': '🥈'},
+        'Committed': {'name': 'Committed', 'icon': '🥇'},
+        'Halfway Hero': {'name': 'Halfway Hero', 'icon': '🏅'},
+        'Legend': {'name': 'Legend', 'icon': '👑'},
+    }
+    
+    for avatar_milestone in avatar_milestones:
+        if avatar_milestone['name'] in milestone_map:
+            mapped = milestone_map[avatar_milestone['name']]
+            combined_achievements.append({
+                'name': mapped['name'],
+                'icon': mapped['icon'],
+                'unlocked': avatar_milestone['unlocked'],
+                'progress': avatar_milestone['progress_display'],
+                'date': 'Recently' if avatar_milestone['unlocked'] else None,
+                'type': 'avatar',
+                'source_milestone': avatar_milestone
+            })
+    
+    
+    
+
+     
+    
+    # Sort achievements: unlocked first, then by name
+    combined_achievements.sort(key=lambda x: (
+        not x['unlocked'],  # Unlocked first
+          # Alphabetical
+    ))
+    
+    # Calculate statistics
+    unlocked_count = len([a for a in combined_achievements if a['unlocked']])
+    total_count = len(combined_achievements)
+    
+    return combined_achievements, unlocked_count, total_count, avatar_milestones
+
+
 @dashboard_bp.route('/dashboard')
 def dashboard():
     # Display user dashboard with weight tracking, stats, activity feed, avatar, tasks, and points.
@@ -211,7 +318,8 @@ def dashboard():
             avatar_progress=0,
             tasks_completed=0,
             tasks_total=0,
-            motivational_messages=[]
+            motivational_messages=[],
+            avatar_milestones=[]
         )
     
     # Fetch user's weight entries for chart
@@ -292,7 +400,7 @@ def dashboard():
         recent_activities.append({
             'icon': '⚖️',
             'title': 'Logged Weight',
-            'description': f"{data['weight']} {unit_preference}",
+            'description': f"{data['weight']} kg",
             'time': format_timesince(data['date'])
         })
     
@@ -313,48 +421,14 @@ def dashboard():
     
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
-    user_email = session.get('email') or session.get('user_id') or ''
-    if user_email and '@' in user_email:
-        user_name = user_email.split('@')[0]
-    else:
-        user_name = user_email or 'User'
-
-    # Generate basic achievement badges
-    badges = []
-    unlocked_count = 0
-    achievement_definitions = [
-        {'name': 'First Steps', 'icon': '👟', 'requirement': 'weight_logged', 'value': 1},
-        {'name': 'On a Roll', 'icon': '💪', 'requirement': 'weight_lost', 'value': 5},
-        {'name': '10% There', 'icon': '🎯', 'requirement': 'goal_progress', 'value': 10},
-        {'name': '25% Victory', 'icon': '🏅', 'requirement': 'goal_progress', 'value': 25},
-        {'name': 'Half Way!', 'icon': '🔥', 'requirement': 'goal_progress', 'value': 50},
-        {'name': 'Goal Crushed!', 'icon': '🏆', 'requirement': 'goal_progress', 'value': 100},
-    ]
-    
-    for badge_def in achievement_definitions:
-        unlocked = False
-        progress = "Locked"
-        
-        if badge_def['requirement'] == 'weight_logged':
-            unlocked = len(weight_data) >= badge_def['value']
-            progress = f"{len(weight_data)}/{badge_def['value']} weights"
-        elif badge_def['requirement'] == 'weight_lost':
-            unlocked = weight_lost >= badge_def['value']
-            progress = f"{weight_lost:.1f}/{badge_def['value']} {unit_preference}"
-        elif badge_def['requirement'] == 'goal_progress':
-            unlocked = goal_progress >= badge_def['value']
-            progress = f"{goal_progress:.0f}%"
-        
-        badges.append({
-            'name': badge_def['name'],
-            'icon': badge_def['icon'],
-            'unlocked': unlocked,
-            'progress': progress,
-            'date': 'Recently' if unlocked else None
-        })
-        
-        if unlocked:
-            unlocked_count += 1
+    # Get user name from display_name in session, or fallback to email
+    user_name = session.get('display_name')
+    if not user_name:
+        user_email = session.get('email') or session.get('user_id') or ''
+        if user_email and '@' in user_email:
+            user_name = user_email.split('@')[0]
+        else:
+            user_name = user_email or 'User'
 
     # Fetch avatar points and calculate level
     avatar_points = 0
@@ -386,10 +460,15 @@ def dashboard():
     except Exception as e:
         print(f"Error fetching tasks: {e}")
 
+    # Get combined achievements (avatar milestones + weight goals)
+    badges, unlocked_count, total_count, avatar_milestones = get_dashboard_achievements(
+        db, user_id, current_weight, initial_weight, target_weight, goal_progress, unit_preference
+    )
+
     # Generate motivational messages
     motivational_messages = generate_motivational_messages(
         user_name, avatar_points, weight_lost, goal_progress, 
-        workout_streak, tasks_completed, tasks_total
+        workout_streak, tasks_completed, tasks_total, avatar_milestones
     )
 
     return render_template('dashboard.html',
@@ -410,14 +489,15 @@ def dashboard():
         max_weight=max([w['weight'] for w in weight_data]) if weight_data else 1,
         badges=badges,
         unlocked_badges=unlocked_count,
-        total_badges=len(badges),
+        total_badges=total_count,
         recent_activities=recent_activities[:5],
         avatar_points=avatar_points,
         avatar_level=avatar_level,
         avatar_progress=avatar_progress,
         tasks_completed=tasks_completed,
         tasks_total=tasks_total,
-        motivational_messages=motivational_messages
+        motivational_messages=motivational_messages,
+        avatar_milestones=avatar_milestones
     )
 
 @dashboard_bp.route('/log_weight', methods=['GET', 'POST'])
@@ -615,7 +695,8 @@ def update_profile():
                 'activity_level': activity_level,
                 'exercise_goals': exercise_goals,
                 'notes': notes,
-                'weight_to_lose': current_weight - target_weight
+                'weight_to_lose': current_weight - target_weight,
+                'unit_preference': 'kg'  # Always kg now
             }
             
             # Save profile snapshot to history

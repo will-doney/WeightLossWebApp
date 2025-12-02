@@ -1,0 +1,137 @@
+/* Avatar border styles - Enhanced visibility */
+.avatar-wrapper {
+  border-radius: 18px;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.avatar-wrapper.border-bronze {
+  border: 8px solid #cd7f32;
+  box-shadow: 0 0 20px rgba(205,127,50,0.6), inset 0 0 15px rgba(205,127,50,0.3);
+  background: linear-gradient(135deg, rgba(205,127,50,0.1), rgba(205,127,50,0.05));
+}
+.avatar-wrapper.border-bronze {
+  border: 8px solid #d9a06a; /* pastel bronze */
+  box-shadow: 0 0 24px rgba(217,160,106,0.55), inset 0 0 16px rgba(217,160,106,0.32);
+  background: linear-gradient(135deg, rgba(217,160,106,0.18), rgba(217,160,106,0.08));
+  animation: borderShimmer 2.8s ease-in-out infinite, glossSweep 4.5s linear infinite;
+}
+
+.avatar-wrapper.border-silver {
+  border: 8px solid #c0c0c0;
+  box-shadow: 0 0 20px rgba(192,192,192,0.6), inset 0 0 15px rgba(192,192,192,0.3);
+  background: linear-gradient(135deg, rgba(192,192,192,0.1), rgba(192,192,192,0.05));
+}
+.avatar-wrapper.border-silver {
+  border: 8px solid #d6d6d6; /* pastel silver */
+  box-shadow: 0 0 24px rgba(214,214,214,0.55), inset 0 0 16px rgba(214,214,214,0.32);
+  background: linear-gradient(135deg, rgba(214,214,214,0.18), rgba(214,214,214,0.08));
+  animation: borderShimmer 2.8s ease-in-out infinite, glossSweep 4.5s linear infinite;
+}
+
+.avatar-wrapper.border-gold {
+  border: 8px solid #ffd700;
+  box-shadow: 0 0 20px rgba(255,215,0,0.7), inset 0 0 15px rgba(255,215,0,0.4);
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.08));
+}
+.avatar-wrapper.border-gold {
+  border: 8px solid #ffe27a; /* pastel gold */
+  box-shadow: 0 0 26px rgba(255,226,122,0.62), inset 0 0 18px rgba(255,226,122,0.36);
+  background: linear-gradient(135deg, rgba(255,226,122,0.20), rgba(255,226,122,0.10));
+  animation: borderShimmer 2.6s ease-in-out infinite, glossSweep 4.2s linear infinite;
+}
+
+.avatar-wrapper.border-platinum {
+  border: 8px solid #c0251f;
+  box-shadow: 0 0 20px rgba(167, 107, 16, 0.7), inset 0 0 15px rgba(214, 11, 11, 0.4);
+  background: linear-gradient(135deg, rgba(187, 219, 5, 0.15), rgba(108, 209, 13, 0.08));
+}
+.avatar-wrapper.border-platinum {
+  border: 8px solid #88e6df; /* pastel teal/cyan */
+  box-shadow: 0 0 26px rgba(136,230,223,0.62), inset 0 0 18px rgba(136,230,223,0.36);
+  background: linear-gradient(135deg, rgba(136,230,223,0.20), rgba(136,230,223,0.10));
+  animation: borderShimmer 2.6s ease-in-out infinite, glossSweep 4.2s linear infinite;
+}
+
+.avatar-wrapper.border-diamond {
+  border: 8px solid #a020f0;
+  box-shadow: 0 0 25px rgba(160,32,240,0.8), inset 0 0 20px rgba(160,32,240,0.5);
+  background: linear-gradient(135deg, rgba(160,32,240,0.2), rgba(160,32,240,0.1));
+}
+.avatar-wrapper.border-diamond {
+  border: 8px solid #c7a6f6; /* pastel purple */
+  box-shadow: 0 0 28px rgba(199,166,246,0.66), inset 0 0 20px rgba(199,166,246,0.40);
+  background: linear-gradient(135deg, rgba(199,166,246,0.22), rgba(199,166,246,0.12));
+  animation: borderShimmer 2.4s ease-in-out infinite, glossSweep 4.0s linear infinite;
+}
+
+@keyframes borderShimmer {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(255,255,255,0.16), inset 0 0 10px rgba(255,255,255,0.08);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255,255,255,0.28), inset 0 0 18px rgba(255,255,255,0.14);
+  }
+}
+
+/* soft moving gloss sweep across the border */
+@keyframes glossSweep {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+  100% { filter: brightness(1); }
+}
+
+/* premium specular highlight rotating around the border ring */
+@keyframes sweepRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ensure wrapper can host overlay */
+.avatar-wrapper { position: relative; }
+
+/* apply rotating conic-gradient gloss on any active border variant */
+.avatar-wrapper.border-bronze::after,
+.avatar-wrapper.border-silver::after,
+.avatar-wrapper.border-gold::after,
+.avatar-wrapper.border-platinum::after,
+.avatar-wrapper.border-diamond::after {
+  content: "";
+  position: absolute;
+  inset: -4px; /* slightly larger to cover the border area */
+  border-radius: 16px;
+  pointer-events: none;
+  background: conic-gradient(from 0deg,
+    rgba(255,255,255,0.0) 0deg,
+    rgba(255,255,255,0.22) 35deg,
+    rgba(255,255,255,0.0) 70deg,
+    rgba(255,255,255,0.18) 110deg,
+    rgba(255,255,255,0.0) 180deg,
+    rgba(255,255,255,0.22) 220deg,
+    rgba(255,255,255,0.0) 260deg,
+    rgba(255,255,255,0.18) 300deg,
+    rgba(255,255,255,0.0) 360deg);
+  animation: sweepRotate 6s linear infinite;
+  /* mask so the gloss only shows on the ring area (border) */
+  -webkit-mask: radial-gradient(
+    circle,
+    rgba(0,0,0,0) calc(50% - 120px), /* inner hole size approx image */
+    rgba(0,0,0,1) calc(50% - 110px), /* start of ring */
+    rgba(0,0,0,1) calc(50% + 140px), /* end of ring */
+    rgba(0,0,0,0) calc(50% + 150px)
+  );
+  mask: radial-gradient(
+    circle,
+    rgba(0,0,0,0) calc(50% - 120px),
+    rgba(0,0,0,1) calc(50% - 110px),
+    rgba(0,0,0,1) calc(50% + 140px),
+    rgba(0,0,0,0) calc(50% + 150px)
+  );
+}
+
+.avatar-wrapper.border-none {
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 0;
+}
