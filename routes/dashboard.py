@@ -49,11 +49,11 @@ def generate_motivational_messages(user_name, avatar_points, weight_lost, goal_p
     
     # Weight loss message
     if weight_lost >= 10:
-        messages.append(f"Amazing! You've lost {weight_lost} kg! 🎉")
+        messages.append(f"Amazing! You've lost {weight_lost:.1f} kg! 🎉")
     elif weight_lost >= 5:
-        messages.append(f"Excellent progress! {weight_lost} kg down! ✨")
+        messages.append(f"Excellent progress! {weight_lost:.1f} kg down! ✨")
     elif weight_lost > 0:
-        messages.append(f"You're making progress! {weight_lost} kg down! 👍")
+        messages.append(f"You're making progress! {weight_lost:.1f} kg down! 👍")
     
     # Goal progress message
     if goal_progress >= 75:

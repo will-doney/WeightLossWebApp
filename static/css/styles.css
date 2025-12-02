@@ -2513,3 +2513,360 @@ body.dark-mode .settings-actions {
     width: 95%;
   }
 }
+
+/* ============================================================
+   Milestones & Rewards
+   ============================================================ */
+
+.milestones-section {
+  margin: 2rem 0;
+}
+
+.milestones-section h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #111827;
+}
+
+body.dark-mode .milestones-section h3 {
+  color: #f3f4f6;
+}
+
+#milestones-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.milestone {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.03);
+  transition: all 0.2s ease;
+}
+
+body.dark-mode .milestone {
+  background: #1e293b;
+  border-color: #374151;
+}
+
+.milestone:hover {
+  box-shadow: 0 4px 8px rgba(16,24,40,0.08);
+  transform: translateY(-2px);
+}
+
+body.dark-mode .milestone:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.milestone.claimed {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+body.dark-mode .milestone.claimed {
+  background: #064e3b;
+  border-color: #059669;
+}
+
+.milestone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.milestone-header h4 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+body.dark-mode .milestone-header h4 {
+  color: #f3f4f6;
+}
+
+.milestone-points {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  background: rgba(37,99,235,0.1);
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+}
+
+body.dark-mode .milestone-points {
+  color: #60a5fa;
+  background: rgba(96,165,250,0.15);
+}
+
+.milestone-progress {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .milestone-progress {
+  background: #374151;
+}
+
+.milestone-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+body.dark-mode .milestone-fill {
+  background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.milestone-reward {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reward-badge {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  background: #fbbf24;
+  color: #78350f;
+  display: inline-block;
+}
+
+body.dark-mode .reward-badge {
+  background: #fbbf24;
+  color: #451a03;
+}
+
+.reward-badge.locked {
+  background: #d1d5db;
+  color: #6b7280;
+}
+
+body.dark-mode .reward-badge.locked {
+  background: #4b5563;
+  color: #9ca3af;
+}
+
+.claim-btn {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.claim-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16,185,129,0.2);
+}
+
+.claim-btn:active {
+  transform: translateY(0);
+}
+
+body.dark-mode .claim-btn {
+  background: #10b981;
+}
+
+body.dark-mode .claim-btn:hover {
+  background: #059669;
+}
+
+.claimed-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10b981;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+body.dark-mode .claimed-label {
+  color: #34d399;
+}
+
+@media (max-width: 768px) {
+  .milestone {
+    padding: 1rem;
+  }
+
+  .milestone-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .milestone-reward {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .claim-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   Avatar Page Grid Layout
+   ============================================================ */
+
+.avatar-page-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 768px) {
+  .avatar-page-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Avatar Section (Left) */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.avatar-section h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+body.dark-mode .avatar-section h3 {
+  color: #f3f4f6;
+}
+
+/* Unlockables Section (Right) */
+.unlockables-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.unlockables-section h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+body.dark-mode .unlockables-section h3 {
+  color: #f3f4f6;
+}
+
+#unlockables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Unlockable Card */
+.unlockable-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+body.dark-mode .unlockable-card {
+  background: #1e293b;
+  border-color: #374151;
+}
+
+.unlockable-card.unlocked {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+body.dark-mode .unlockable-card.unlocked {
+  background: #064e3b;
+  border-color: #059669;
+}
+
+.unlockable-card.locked {
+  opacity: 0.6;
+}
+
+.unlockable-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.unlockable-info {
+  flex: 1;
+}
+
+.unlockable-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+body.dark-mode .unlockable-info h4 {
+  color: #f3f4f6;
+}
+
+.unlockable-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+body.dark-mode .unlockable-desc {
+  color: #9ca3af;
+}
+
+.unlock-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.unlocked-status {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.locked-status {
+  background: #d1d5db;
+  color: #6b7280;
+}
+
+body.dark-mode .locked-status {
+  background: #4b5563;
+  color: #9ca3af;
+}
