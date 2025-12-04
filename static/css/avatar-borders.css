@@ -1,0 +1,117 @@
+/* Avatar Border Styles with Shimmer & Gloss Effects */
+
+.avatar-wrapper {
+  border-radius: 18px;
+  padding: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* BRONZE (#D9A06A) - Pastel Bronze */
+.avatar-wrapper.border-bronze {
+  border: 8px solid #d9a06a;
+  box-shadow: 0 0 24px rgba(217,160,106,0.55), inset 0 0 16px rgba(217,160,106,0.32);
+  background: linear-gradient(135deg, rgba(217,160,106,0.18), rgba(217,160,106,0.08));
+  animation: borderShimmer 2.8s ease-in-out infinite, glossSweep 4.5s linear infinite;
+}
+
+/* SILVER (#D6D6D6) - Pastel Silver */
+.avatar-wrapper.border-silver {
+  border: 8px solid #d6d6d6;
+  box-shadow: 0 0 24px rgba(214,214,214,0.55), inset 0 0 16px rgba(214,214,214,0.32);
+  background: linear-gradient(135deg, rgba(214,214,214,0.18), rgba(214,214,214,0.08));
+  animation: borderShimmer 2.8s ease-in-out infinite, glossSweep 4.5s linear infinite;
+}
+
+/* GOLD (#FFE27A) - Pastel Gold */
+.avatar-wrapper.border-gold {
+  border: 8px solid #ffe27a;
+  box-shadow: 0 0 26px rgba(255,226,122,0.62), inset 0 0 18px rgba(255,226,122,0.36);
+  background: linear-gradient(135deg, rgba(255,226,122,0.20), rgba(255,226,122,0.10));
+  animation: borderShimmer 2.6s ease-in-out infinite, glossSweep 4.2s linear infinite;
+}
+
+/* PLATINUM (#88E6DF) - Pastel Cyan */
+.avatar-wrapper.border-platinum {
+  border: 8px solid #88e6df;
+  box-shadow: 0 0 26px rgba(136,230,223,0.62), inset 0 0 18px rgba(136,230,223,0.36);
+  background: linear-gradient(135deg, rgba(136,230,223,0.20), rgba(136,230,223,0.10));
+  animation: borderShimmer 2.6s ease-in-out infinite, glossSweep 4.2s linear infinite;
+}
+
+/* DIAMOND (#C7A6F6) - Pastel Purple */
+.avatar-wrapper.border-diamond {
+  border: 8px solid #c7a6f6;
+  box-shadow: 0 0 28px rgba(199,166,246,0.66), inset 0 0 20px rgba(199,166,246,0.40);
+  background: linear-gradient(135deg, rgba(199,166,246,0.22), rgba(199,166,246,0.12));
+  animation: borderShimmer 2.4s ease-in-out infinite, glossSweep 4.0s linear infinite;
+}
+
+/* NO BORDER */
+.avatar-wrapper.border-none {
+  border: none;
+  box-shadow: none;
+  background: none;
+  animation: none;
+}
+
+/* Shimmer animation for border glow */
+@keyframes borderShimmer {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(255,255,255,0.16), inset 0 0 10px rgba(255,255,255,0.08);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255,255,255,0.28), inset 0 0 18px rgba(255,255,255,0.14);
+  }
+}
+
+/* Gloss sweep brightness effect */
+@keyframes glossSweep {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+  100% { filter: brightness(1); }
+}
+
+/* Rotating specular highlight */
+@keyframes sweepRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Premium gloss overlay on active borders */
+.avatar-wrapper.border-bronze::after,
+.avatar-wrapper.border-silver::after,
+.avatar-wrapper.border-gold::after,
+.avatar-wrapper.border-platinum::after,
+.avatar-wrapper.border-diamond::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 16px;
+  pointer-events: none;
+  background: conic-gradient(from 0deg,
+    rgba(255,255,255,0.0) 0deg,
+    rgba(255,255,255,0.22) 35deg,
+    rgba(255,255,255,0.0) 70deg,
+    rgba(255,255,255,0.18) 110deg,
+    rgba(255,255,255,0.0) 180deg,
+    rgba(255,255,255,0.22) 220deg,
+    rgba(255,255,255,0.0) 260deg,
+    rgba(255,255,255,0.18) 300deg,
+    rgba(255,255,255,0.0) 360deg);
+  animation: sweepRotate 6s linear infinite;
+  -webkit-mask: radial-gradient(
+    circle,
+    rgba(0,0,0,0) calc(50% - 120px),
+    rgba(0,0,0,1) calc(50% - 110px),
+    rgba(0,0,0,1) calc(50% + 140px),
+    rgba(0,0,0,0) calc(50% + 150px)
+  );
+  mask: radial-gradient(
+    circle,
+    rgba(0,0,0,0) calc(50% - 120px),
+    rgba(0,0,0,1) calc(50% - 110px),
+    rgba(0,0,0,1) calc(50% + 140px),
+    rgba(0,0,0,0) calc(50% + 150px)
+  );
+}
