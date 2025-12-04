@@ -218,3 +218,10 @@ For issues or questions:
 ---
 
 **Built with ❤️ using Flask and Firebase**
+
+# Update backend
+$env:PATH += ";$env:LOCALAPPDATA\Google\Cloud SDK\google-cloud-sdk\bin"
+gcloud run deploy weightgame --source . --region us-central1
+
+# Update frontend (if static files changed)
+firebase deploy --only hosting

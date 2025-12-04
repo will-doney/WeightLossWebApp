@@ -8,10 +8,10 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def home():
-    # Display the landing page with login/signup options.
-    # Redirect if already logged in
-    if session.get('user_id'):
-        return redirect(url_for('dashboard.dashboard'))
+    # Display the home page for logged-in users.
+    # Redirect to login if not authenticated
+    if not session.get('user_id'):
+        return redirect(url_for('auth.login'))
     return render_template('home.html')
 
 @main_bp.app_errorhandler(404)
