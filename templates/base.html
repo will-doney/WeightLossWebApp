@@ -26,13 +26,14 @@
         <h1 class="brand"><a href="/">WeightGame</a></h1>
         <nav>
           {% if session.user_id %}
+            <a href="/home" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
             <a href="/dashboard" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a>
             <a href="/tasks" class="nav-link {% if request.path == '/tasks' %}active{% endif %}">Tasks</a>
             <a href="/myavatar" class="nav-link {% if request.path == '/myavatar' %}active{% endif %}">Avatar</a>
             <a href="/settings" class="nav-link {% if request.path == '/settings' %}active{% endif %}">Settings</a>
             <a href="#" class="nav-link" id="logoutBtn">Logout ({{ session.display_name if session.display_name is defined else session.email }})</a>
           {% else %}
-            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+            
             <a href="/login" class="nav-link {% if request.path == '/login' %}active{% endif %}">Login</a>
             <a href="/signup" class="nav-link {% if request.path == '/signup' %}active{% endif %}">Sign Up</a>
           {% endif %}

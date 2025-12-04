@@ -1,32 +1,629 @@
-{# home.html - Landing page with login/signup buttons #}
+{# home.html - Main landing page for logged-in users with all features #}
 {% extends 'base.html' %}
 {% block content %}
-  <div class="text-center">
-    <h1 class="page-title">Welcome to WeightGame</h1>
-    <p class="lead">This project helps users stay consistent with healthy habits through gamified daily challenges, progress tracking, and motivation features.</p>
-  </div>
-  
-  <div class="home-container">
-        <div class="home-header">
-            <h1>🎯 WeightGame</h1>
-            <p>Track your fitness journey and achieve your goals!</p>
-        </div>
-        
-        <div class="home-buttons">
-            <a href="{{ url_for('auth.login') }}" class="btn-primary">Login</a>
-            <a href="{{ url_for('auth.signup') }}" class="btn-secondary">Sign Up</a>
-        </div>
-        
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for message in messages %}
-                        <div class="flash-message">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+
+<!-- Welcome Header with User Greeting -->
+<div class="home-hero">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      {% if session.user_name %}
+        Welcome back, {{ session.user_name }}! 👋
+      {% else %}
+        Welcome to WeightGame! 🎯
+      {% endif %}
+    </h1>
+    <p class="hero-subtitle">Track your fitness journey, complete daily tasks, and level up your avatar!</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-number">{{ workout_streak|default(0) }}</span>
+        <span class="stat-label">Day Streak</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-number">{{ avatar_points|default(0) }}</span>
+        <span class="stat-label">Total Points</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-number">{{ tasks_completed|default(0) }}/{{ tasks_total|default(0) }}</span>
+        <span class="stat-label">Tasks Today</span>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="home-dashboard">
+  <!-- Left Column: Avatar & Quick Stats -->
+  <div class="home-left-column">
+    <!-- Avatar Card -->
+    <div class="home-card avatar-card">
+      <div class="card-header">
+        <h3>Your Avatar</h3>
+        <a href="{{ url_for('other.myavatar') }}" class="card-link">Customize →</a>
+      </div>
+      <div class="avatar-display">
+        <div class="avatar-wrapper-large">
+          <img id="home-avatar" 
+               src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
+               alt="Your Avatar" 
+               class="avatar-large">
+          <div class="level-badge-large">Lv {{ avatar_level|default(1) }}</div>
+        </div>
+        <div class="avatar-progress">
+          <div class="progress-bar-large">
+            <div class="progress-fill-large" style="width: {{ avatar_progress|default(0) }}%"></div>
+          </div>
+          <div class="progress-text">
+            <span>{{ avatar_points|default(0) }} / {{ (avatar_level|default(1) * 100) }} points</span>
+            <span class="next-level">Next level: {{ (avatar_level|default(1) * 100) - avatar_points|default(0) }} points</span>
+          </div>
+        </div>
+        <div class="avatar-mood">
+          <span class="mood-label">Current Mood:</span>
+          <div class="mood-selector">
+            <button class="mood-btn active" data-mood="happy">😊 Happy</button>
+            <button class="mood-btn" data-mood="fit">💪 Fit</button>
+            <button class="mood-btn" data-mood="sad">😔 Sad</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Card -->
+    <div class="home-card stats-card">
+      <div class="card-header">
+        <h3>Today's Progress</h3>
+        <span class="current-date">{{ current_date }}</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-details">
+            <span class="stat-value">{{ calories_burned|default(0) }}</span>
+            <span class="stat-label">Calories Burned</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">👣</div>
+          <div class="stat-details">
+            <span class="stat-value">{{ steps|default('0') }}</span>
+            <span class="stat-label">Steps</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">💧</div>
+          <div class="stat-details">
+            <span class="stat-value">{{ water_intake|default('0') }}L</span>
+            <span class="stat-label">Water</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-details">
+            <span class="stat-value">{{ exercise_minutes|default(0) }}m</span>
+            <span class="stat-label">Exercise</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center Column: Tasks & Motivation -->
+  <div class="home-center-column">
+    <!-- Tasks Card -->
+    <div class="home-card tasks-card">
+      <div class="card-header">
+        <h3>📋 Daily Tasks</h3>
+        <a href="{{ url_for('tasks.tasks') }}" class="card-link">View All →</a>
+      </div>
+      
+      <!-- Task Progress -->
+      <div class="tasks-progress">
+        <div class="progress-summary">
+          <div class="progress-circle">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle class="progress-bg" cx="40" cy="40" r="36"></circle>
+              <circle class="progress-circle-fill" 
+                      cx="40" cy="40" r="36" 
+                      stroke-dasharray="{{ (tasks_completed|default(0) / tasks_total|default(1) * 226) if tasks_total|default(0) > 0 else 0 }} 226"></circle>
+            </svg>
+            <div class="progress-percentage">
+              {% if tasks_total|default(0) > 0 %}
+                {{ ((tasks_completed|default(0) / tasks_total|default(1)) * 100)|round|int }}%
+              {% else %}
+                0%
+              {% endif %}
+            </div>
+          </div>
+          <div class="progress-details">
+            <div class="progress-count">
+              <span class="completed">{{ tasks_completed|default(0) }}</span>
+              <span>of</span>
+              <span class="total">{{ tasks_total|default(0) }}</span>
+              <span>tasks completed</span>
+            </div>
+            <div class="task-points">
+              <span>🎯 {{ (tasks_completed|default(0) * 10) }} points earned today</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="tasks-list">
+          {% if tasks and tasks|length > 0 %}
+            {% for task in tasks[:3] %}
+              <div class="task-item {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+                <div class="task-checkbox">
+                  <input type="checkbox" 
+                         id="task_{{ task.id }}"
+                         {% if task.completed %}checked{% endif %}
+                         onchange="toggleTaskHome('{{ task.id }}', this)">
+                  <label for="task_{{ task.id }}"></label>
+                </div>
+                <div class="task-content">
+                  <span class="task-name">{{ task.name }}</span>
+                  {% if task.description %}
+                    <span class="task-description">{{ task.description }}</span>
+                  {% endif %}
+                </div>
+                <span class="task-points-badge">+10</span>
+              </div>
+            {% endfor %}
+            
+            {% if tasks|length > 3 %}
+              <div class="more-tasks">
+                <a href="{{ url_for('tasks.tasks') }}">+{{ tasks|length - 3 }} more tasks</a>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="no-tasks">
+              <p>No tasks for today. Add some to get started!</p>
+              <a href="{{ url_for('tasks.tasks') }}" class="btn-add-task">Add Your First Task</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Motivation Card -->
+    <div class="home-card motivation-card">
+      <div class="card-header">
+        <h3>💬 Motivational Messages</h3>
+        <button class="refresh-btn" onclick="refreshMotivation()">🔄</button>
+      </div>
+      <div class="motivation-content">
+        <div class="avatar-message">
+          <img src="{{ url_for('static', filename='avatars/avatar_happy.png') }}" 
+               alt="Avatar" 
+               class="message-avatar">
+          <div class="message-bubble">
+            <p id="motivation-text">
+              {% if weight_lost and weight_lost > 0 %}
+                Amazing work! You've been making great progress! 🎉
+              {% else %}
+                Welcome to your fitness journey! Every small step counts! 💪
+              {% endif %}
+            </p>
+            <span class="message-time">Just now</span>
+          </div>
+        </div>
+        
+        <div class="motivation-tips">
+          <h4>Today's Tips</h4>
+          <ul>
+            <li>Drink at least 8 glasses of water today</li>
+            <li>Take a 10-minute walk after meals</li>
+            <li>Try a 5-minute stretching routine</li>
+            <li>Track your meals in the app</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Weight Progress & Achievements -->
+  <div class="home-right-column">
+    <!-- Weight Progress Card -->
+    <div class="home-card weight-card">
+      <div class="card-header">
+        <h3>📊 Weight Progress</h3>
+        <a href="{{ url_for('dashboard.log_weight') }}" class="card-link">Log Weight →</a>
+      </div>
+      
+      <div class="weight-summary">
+        <div class="weight-current">
+          <span class="weight-label">Current Weight</span>
+          <span class="weight-value">
+            {% if current_weight %}
+              {{ current_weight }} kg
+            {% else %}
+              Not set
+            {% endif %}
+          </span>
+        </div>
+        
+        {% if weight_lost and weight_lost > 0 %}
+          <div class="weight-loss">
+            <span class="loss-label">Total Lost</span>
+            <span class="loss-value">-{{ weight_lost }} kg</span>
+            <div class="loss-progress">
+              <div class="loss-fill" style="width: {{ (weight_lost / (current_weight + weight_lost)) * 100 if current_weight and weight_lost else 0 }}%"></div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Weight Chart (Simplified) -->
+      <div class="weight-chart">
+        {% if weight_data and weight_data|length > 0 %}
+          <div class="chart-bars-small">
+            {% for entry in weight_data[-7:] %}
+              <div class="chart-bar-small" 
+                   style="height: {{ (entry.weight / max_weight * 80) if max_weight and max_weight > 0 else 40 }}%"
+                   title="{{ entry.weight }} kg - {{ entry.date_formatted }}">
+                <div class="bar-label">{{ entry.weight|int }}</div>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="chart-labels">
+            {% for entry in weight_data[-7:] %}
+              <span class="chart-label">{{ entry.date_formatted|last }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="no-weight-data">
+            <p>No weight data yet</p>
+            <a href="{{ url_for('dashboard.log_weight') }}" class="btn-log-weight">Log First Weight</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Achievements Card -->
+    <div class="home-card achievements-card">
+      <div class="card-header">
+        <h3>🏆 Recent Achievements</h3>
+        <span class="badge-count">{{ unlocked_badges|default(0) }}/{{ total_badges|default(0) }}</span>
+      </div>
+      
+      <div class="achievements-list">
+        {% if badges and badges|length > 0 %}
+          {% for badge in badges[:4] %}
+            <div class="achievement-item {% if badge.unlocked %}unlocked{% else %}locked{% endif %}">
+              <div class="achievement-icon">
+                {% if badge.unlocked %}
+                  {{ badge.icon|default('🏅') }}
+                {% else %}
+                  🔒
+                {% endif %}
+              </div>
+              <div class="achievement-details">
+                <span class="achievement-name">{{ badge.name }}</span>
+                <span class="achievement-desc">
+                  {% if badge.unlocked %}
+                    Unlocked!
+                  {% else %}
+                    {{ badge.progress|default('Complete to unlock') }}
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="no-achievements">
+            <p>Complete tasks to earn achievements!</p>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="view-all-achievements">
+        <a href="{{ url_for('dashboard.dashboard') }}#achievements">View All Achievements →</a>
+      </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="home-card actions-card">
+      <h3>⚡ Quick Actions</h3>
+      <div class="actions-grid">
+        <a href="{{ url_for('dashboard.log_weight') }}" class="action-btn">
+          <span class="action-icon">⚖️</span>
+          <span>Log Weight</span>
+        </a>
+        <a href="{{ url_for('dashboard.log_workout') }}" class="action-btn">
+          <span class="action-icon">💪</span>
+          <span>Log Workout</span>
+        </a>
+        <a href="{{ url_for('dashboard.log_calories') }}" class="action-btn">
+          <span class="action-icon">🔥</span>
+          <span>Log Calories</span>
+        </a>
+        <a href="{{ url_for('tasks.tasks') }}" class="action-btn">
+          <span class="action-icon">📝</span>
+          <span>Add Task</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Section: Streak & Weekly Progress -->
+<div class="home-bottom-section">
+  <!-- Streak Card -->
+  <div class="home-card streak-card">
+    <div class="streak-header">
+      <h3>🔥 Current Streak</h3>
+      <div class="streak-count">
+        <span class="streak-number">{{ workout_streak|default(0) }}</span>
+        <span class="streak-label">days</span>
+      </div>
+    </div>
+    
+    <div class="streak-calendar">
+      {% for day in range(7) %}
+        <div class="streak-day {% if day < workout_streak|default(0) %}active{% endif %}">
+          <span class="day-name">{{ ['M', 'T', 'W', 'T', 'F', 'S', 'S'][day] }}</span>
+          <div class="day-circle {% if day < workout_streak|default(0) %}filled{% endif %}"></div>
+        </div>
+      {% endfor %}
+    </div>
+    
+    <div class="streak-motivation">
+      {% if workout_streak and workout_streak >= 7 %}
+        <p>🔥 You're on fire! Keep the streak going!</p>
+      {% elif workout_streak and workout_streak > 0 %}
+        <p>💪 {{ 7 - workout_streak }} more days to reach a full week!</p>
+      {% else %}
+        <p>🎯 Start your streak today! Log your first workout.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Weekly Progress Card -->
+  <div class="home-card weekly-card">
+    <div class="weekly-header">
+      <h3>📈 Weekly Progress</h3>
+      <span class="week-range">This Week</span>
+    </div>
+    
+    <div class="weekly-stats">
+      <div class="weekly-stat">
+        <span class="weekly-value">{{ weekly_tasks_completed|default(0) }}</span>
+        <span class="weekly-label">Tasks Done</span>
+      </div>
+      <div class="weekly-stat">
+        <span class="weekly-value">{{ weekly_points|default(0) }}</span>
+        <span class="weekly-label">Points Earned</span>
+      </div>
+      <div class="weekly-stat">
+        <span class="weekly-value">{{ weekly_workouts|default(0) }}</span>
+        <span class="weekly-label">Workouts</span>
+      </div>
+      <div class="weekly-stat">
+        <span class="weekly-value">{{ weekly_calories|default(0) }}</span>
+        <span class="weekly-label">Calories Burned</span>
+      </div>
+    </div>
+    
+    <div class="weekly-goal">
+      <div class="goal-header">
+        <span>Weekly Goal Progress</span>
+        <span>{{ weekly_goal_percentage|default(0) }}%</span>
+      </div>
+      <div class="goal-progress">
+        <div class="goal-fill" style="width: {{ weekly_goal_percentage|default(0) }}%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Real-time Updates Notification -->
+<div id="realtime-notification" class="realtime-notification hidden">
+  <div class="notification-content">
+    <span id="notification-text"></span>
+    <button class="notification-close" onclick="hideNotification()">×</button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Real-time updates for home page
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize real-time updates
+  initRealTimeUpdates();
+  
+  // Set up task checkboxes
+  setupTaskCheckboxes();
+  
+  // Set up mood selector
+  setupMoodSelector();
+});
+
+function initRealTimeUpdates() {
+  const REFRESH_INTERVAL = 30000; // 30 seconds
+  
+  function updateHomeStats() {
+    fetch('/api/home/stats', { 
+      method: 'GET', 
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          // Update streak
+          if (data.streak) {
+            const streakEl = document.querySelector('.streak-number');
+            if (streakEl) streakEl.textContent = data.streak;
+          }
+          
+          // Update points
+          if (data.points) {
+            const pointsEl = document.querySelector('.hero-stat:nth-child(2) .stat-number');
+            if (pointsEl) pointsEl.textContent = data.points;
+          }
+          
+          // Update tasks
+          if (data.tasks) {
+            const tasksEl = document.querySelector('.hero-stat:nth-child(3) .stat-number');
+            if (tasksEl) tasksEl.textContent = `${data.tasks.completed}/${data.tasks.total}`;
+          }
+        }
+      })
+      .catch(err => console.debug('Home stats update error:', err));
+  }
+  
+  // Initial update
+  updateHomeStats();
+  
+  // Periodic updates
+  setInterval(updateHomeStats, REFRESH_INTERVAL);
+}
+
+function setupTaskCheckboxes() {
+  document.querySelectorAll('.task-checkbox input').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const taskItem = this.closest('.task-item');
+      if (this.checked) {
+        taskItem.classList.add('completed');
+        showNotification('Task completed! +10 points!', 'success');
+        
+        // Update points in real-time
+        const pointsEl = document.querySelector('.hero-stat:nth-child(2) .stat-number');
+        if (pointsEl) {
+          const currentPoints = parseInt(pointsEl.textContent) || 0;
+          pointsEl.textContent = currentPoints + 10;
+        }
+      } else {
+        taskItem.classList.remove('completed');
+      }
+    });
+  });
+}
+
+function toggleTaskHome(taskId, checkbox) {
+  // This would normally make an API call to update the task
+  // For now, we'll just show the UI feedback
+  const taskItem = checkbox.closest('.task-item');
+  
+  if (checkbox.checked) {
+    taskItem.classList.add('completed');
+    showNotification('Task completed! +10 points!', 'success');
+    
+    // Update local points
+    const pointsEl = document.querySelector('.hero-stat:nth-child(2) .stat-number');
+    if (pointsEl) {
+      const currentPoints = parseInt(pointsEl.textContent) || 0;
+      pointsEl.textContent = currentPoints + 10;
+    }
+  } else {
+    taskItem.classList.remove('completed');
+    showNotification('Task re-opened', 'info');
+  }
+}
+
+function setupMoodSelector() {
+  document.querySelectorAll('.mood-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const mood = this.getAttribute('data-mood');
+      
+      // Update active state
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Update avatar image
+      const avatarImg = document.getElementById('home-avatar');
+      avatarImg.src = `/static/avatars/avatar_${mood}.png`;
+      
+      // Save mood preference
+      localStorage.setItem('avatar_mood', mood);
+      
+      // Show notification
+      showNotification(`Avatar mood set to ${mood}`, 'info');
+    });
+  });
+  
+  // Load saved mood
+  const savedMood = localStorage.getItem('avatar_mood') || 'happy';
+  const moodBtn = document.querySelector(`.mood-btn[data-mood="${savedMood}"]`);
+  if (moodBtn) {
+    moodBtn.classList.add('active');
+    const avatarImg = document.getElementById('home-avatar');
+    avatarImg.src = `/static/avatars/avatar_${savedMood}.png`;
+  }
+}
+
+function refreshMotivation() {
+  const motivationText = document.getElementById('motivation-text');
+  const messages = [
+    "You're doing amazing! Keep going! 💪",
+    "Every step counts toward your goals! 👣",
+    "Consistency is key! You've got this! 🔑",
+    "Your progress is inspiring! 🌟",
+    "Don't forget to hydrate! 💧",
+    "Great work today! Celebrate small wins! 🎉",
+    "Your future self will thank you! 🙏"
+  ];
+  
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  motivationText.textContent = randomMessage;
+  
+  // Update time
+  const timeElement = document.querySelector('.message-time');
+  if (timeElement) {
+    const now = new Date();
+    timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  showNotification('Motivation refreshed!', 'info');
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.getElementById('realtime-notification');
+  const text = document.getElementById('notification-text');
+  
+  text.textContent = message;
+  notification.className = `realtime-notification ${type} show`;
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      notification.classList.add('hidden');
+    }, 300);
+  }, 5000);
+}
+
+function hideNotification() {
+  const notification = document.getElementById('realtime-notification');
+  notification.classList.remove('show');
+  setTimeout(() => {
+    notification.classList.add('hidden');
+  }, 300);
+}
+
+// Listen for storage events (for cross-tab updates)
+window.addEventListener('storage', function(e) {
+  if (e.key === 'avatar_points') {
+    const pointsEl = document.querySelector('.hero-stat:nth-child(2) .stat-number');
+    if (pointsEl && e.newValue) {
+      pointsEl.textContent = e.newValue;
+    }
+  }
+  
+  if (e.key === 'avatar_mood') {
+    const moodBtn = document.querySelector(`.mood-btn[data-mood="${e.newValue}"]`);
+    if (moodBtn) {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+      moodBtn.classList.add('active');
+      
+      const avatarImg = document.getElementById('home-avatar');
+      avatarImg.src = `/static/avatars/avatar_${e.newValue}.png`;
+    }
+  }
+});
+</script>
 {% endblock %}
 
 
