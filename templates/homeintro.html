@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/welcome_homeintro.css') }}">
+
+<!-- Keep header/footer hidden while this intro runs -->
+<style>
+  header.site-header, footer.site-footer { display: none !important; }
+</style>
+
+<div class="wh-wrapper wh-homeintro">
+  <div class="wh-toplogo">WeightGame</div>
+
+  <div class="wh-home-center">
+    <!-- SVG rectangle: base + spark line -->
+    <div class="wh-rect-wrap">
+      <svg class="wh-rect-svg" viewBox="0 0 560 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="8" y="8" width="544" height="164" rx="14" ry="14" fill="none" stroke="#e2f1ff" stroke-width="2"/>
+        <rect class="wh-spark" x="8" y="8" width="544" height="164" rx="14" ry="14" fill="none" stroke="#ffd76b" stroke-width="2"
+              stroke-dasharray="2200" stroke-dashoffset="2200"/>
+      </svg>
+    </div>
+
+    <!-- Text centered over the rectangle -->
+    <div class="wh-center-content">
+      <h2 class="wh-welcome">Welcome to WeightGame</h2>
+
+      <div id="whIcons" class="wh-icons">
+        <img class="wh-icon" src="{{ url_for('static', filename='icons/shoe.svg') }}" alt="shoe">
+        <img class="wh-icon" src="{{ url_for('static', filename='icons/bottle.svg') }}" alt="bottle">
+        <img class="wh-icon" src="{{ url_for('static', filename='icons/apple.svg') }}" alt="apple">
+        <img class="wh-icon" src="{{ url_for('static', filename='icons/dumbbell.svg') }}" alt="dumbbell">
+        <img class="wh-icon" src="{{ url_for('static', filename='icons/heart.svg') }}" alt="heart">
+      </div>
+    </div>
+
+    <p id="whQuote" class="wh-quote hidden">Small changes into big changes. Here it starts!</p>
+
+    <div id="whActions" class="wh-actions hidden">
+      <a href="{{ url_for('onboard_goal') }}" class="wh-btn wh-btn-primary">Get Started</a>
+      <a href="{{ url_for('login') }}" class="wh-btn wh-btn-secondary">I already have an account</a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const spark = document.querySelector('.wh-spark');
+  const icons = Array.from(document.querySelectorAll('.wh-icon'));
+  const quote = document.getElementById('whQuote');
+  const actions = document.getElementById('whActions');
+
+  // timings (ms)
+  const sparkDelay = 200;
+  const sparkDraw = 520;
+  const iconsDelayAfterSpark = 120;
+  const iconStagger = 70;
+
+  // trigger spark draw
+  setTimeout(() => {
+    spark.style.transition = `stroke-dashoffset ${sparkDraw}ms cubic-bezier(.2,.9,.2,1)`;
+    spark.style.strokeDashoffset = '0';
+  }, sparkDelay);
+
+  // icons pop sequence after spark finishes
+  setTimeout(() => {
+    icons.forEach((ic, i) => {
+      setTimeout(() => {
+        ic.classList.add('wh-icon-pop');
+      }, i * iconStagger);
+    });
+  }, sparkDelay + sparkDraw + iconsDelayAfterSpark);
+
+  // quote and actions show shortly after icons
+  setTimeout(() => {
+    quote.classList.remove('hidden');
+    quote.classList.add('wh-fade-in');
+  }, sparkDelay + sparkDraw + iconsDelayAfterSpark + icons.length * iconStagger + 160);
+
+  setTimeout(() => {
+    actions.classList.remove('hidden');
+    actions.classList.add('wh-fade-in');
+    // optionally re-enable header/footer now (if you want - currently left hidden)
+    // document.querySelector('header.site-header').style.display = '';
+    // document.querySelector('footer.site-footer').style.display = '';
+  }, sparkDelay + sparkDraw + iconsDelayAfterSpark + icons.length * iconStagger + 320);
+});
+</script>
+
+{% endblock %}

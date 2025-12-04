@@ -1,0 +1,82 @@
+/* welcome_homeintro.css - both pages; baby-blue: #D4E8FF (choice B) */
+
+:root{
+  --baby-blue: #D4E8FF;
+  --deep-blue: #0b2540;
+  --accent-yellow: #ffd76b;
+  --accent-yellow-2: #f7c146;
+}
+
+/* shared wrapper */
+.wh-wrapper{ min-height: calc(100vh - 0px); display:flex; align-items:center; justify-content:center; background: var(--baby-blue); padding: 28px; box-sizing:border-box; }
+
+/* ---------- WELCOME (page 1) ---------- */
+.wh-welcome .wh-center{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+.wh-avatar{ width:260px; border-radius:18px; box-shadow: 0 20px 50px rgba(11,37,64,0.08); transform-origin:center; animation: wh-pop 420ms cubic-bezier(.2,.9,.2,1) both;}
+.wh-title{ font-size:3rem; margin:0; font-weight:900; color:var(--deep-blue); letter-spacing:0.2px; animation: wh-pop 360ms cubic-bezier(.2,.9,.2,1) both; }
+
+/* instant snap out: quick cut */
+.wh-snap-out{ animation: wh-snap 120ms linear forwards; }
+@keyframes wh-snap {
+  0% { opacity: 1; transform: scale(1) translateY(0); filter: none; }
+  100%{ opacity: 0; transform: scale(0.9) translateY(-8px); filter: brightness(2); }
+}
+
+/* small pop animation */
+@keyframes wh-pop { from{ opacity:0; transform: scale(.88); } to{ opacity:1; transform: scale(1); } }
+
+/* ---------- HOMEINTRO (page 2) ---------- */
+.wh-homeintro{ position:relative; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+.wh-toplogo{ position:absolute; top:20px; right:22px; font-weight:800; color:var(--deep-blue); font-size:0.98rem; opacity:0.95; }
+
+/* center area and rectangle */
+.wh-home-center{ display:flex; flex-direction:column; align-items:center; gap:12px; padding: 16px 0; }
+.wh-rect-wrap{ width:100%; display:flex; justify-content:center; pointer-events:none; margin-top:8px; }
+.wh-rect-svg{ width:560px; max-width:92vw; height:auto; }
+
+/* spark line initial state handled by inline attributes; visible base rect is subtle */
+.wh-spark{ stroke-dashoffset:2200; }
+
+/* center content overlay */
+.wh-center-content{ position:absolute; display:flex; flex-direction:column; align-items:center; gap:10px; width:560px; max-width:92vw; pointer-events:none; }
+
+.wh-welcome{ margin:0; font-size:1.6rem; font-weight:800; color:var(--deep-blue); text-align:center; }
+
+/* icons circle and icons */
+.wh-icons{ position:relative; width:560px; height:180px; }
+.wh-icon{ position:absolute; width:46px; height:46px; opacity:0; transform: scale(.6) translate(0,0) rotate(0deg); transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease; filter: drop-shadow(0 6px 14px rgba(6,18,36,0.08)); }
+
+/* positions around the rectangle */
+.wh-icon:nth-child(1){ left: calc(50% + 116px); top: calc(50% - 48px); } /* right-top */
+.wh-icon:nth-child(2){ left: calc(50% + 174px); top: calc(50% - 6px); }  /* right */
+.wh-icon:nth-child(3){ left: calc(50% + 116px); top: calc(50% + 36px); }  /* right-bottom */
+.wh-icon:nth-child(4){ left: calc(50% - 162px); top: calc(50% + 36px); }  /* left-bottom */
+.wh-icon:nth-child(5){ left: calc(50% - 124px); top: calc(50% - 6px); }   /* left */
+
+/* popped state */
+.wh-icon-pop{ opacity:1; transform: scale(1) translate(0,0) rotate(-6deg); }
+
+/* quote + actions */
+.wh-quote{ margin-top:24px; font-size:1rem; color: rgba(6,18,36,0.92); max-width:720px; text-align:center; opacity:0; }
+.wh-actions{ margin-top:18px; display:flex; gap:14px; opacity:0; }
+
+/* buttons */
+.wh-btn{ display:inline-block; padding:14px 30px; border-radius:14px; font-weight:800; text-decoration:none; color:#07121a; box-shadow: 0 12px 34px rgba(11,37,64,0.06); transition: transform 160ms ease, box-shadow 160ms ease; }
+.wh-btn-primary{ background: linear-gradient(180deg,var(--accent-yellow),var(--accent-yellow-2)); border:1px solid rgba(0,0,0,0.04); }
+.wh-btn-secondary{ background: linear-gradient(180deg,#fff7dd,#fff0b8); border: 1px solid rgba(0,0,0,0.03); }
+
+.wh-btn:hover{ transform: translateY(-4px); box-shadow: 0 18px 46px rgba(11,37,64,0.08); }
+
+/* reveal animations for quote/actions */
+.wh-fade-in{ animation: wh-fade 320ms ease forwards; }
+@keyframes wh-fade{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform: translateY(0);} }
+
+/* small responsive tweaks */
+@media (max-width:680px){
+  .wh-avatar{ width:200px; }
+  .wh-title{ font-size:2.2rem; }
+  .wh-welcome{ font-size:1.25rem; }
+  .wh-icon{ width:40px; height:40px; }
+  .wh-rect-svg{ max-width:94%; }
+}
