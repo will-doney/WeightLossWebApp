@@ -1,40 +1,30 @@
-{% extends 'base.html' %}
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/welcome_homeintro.css') }}">
+<link rel="stylesheet" href="welcomenewuser.css">
 
-<!-- Hide site header/footer while intro shows -->
-<style>
-  header.site-header, footer.site-footer { display: none !important; }
-</style>
+<div class="welcome-container">
 
-<div class="wh-wrapper wh-welcome">
-  <div class="wh-center">
-    <img src="{{ url_for('static', filename='avatars/avatar_logo.png') }}" alt="Avatar" class="wh-avatar" id="whAvatar">
-    <h1 class="wh-title" id="whTitle">WeightGame</h1>
-  </div>
+    <!-- INITIAL AVATAR + FIRST TITLE -->
+    <img src="avatar_logo.png" class="avatar" id="avatar">
+    <h1 class="main-title" id="mainTitle">WeightGame</h1>
+
+    <!-- PAGE 2 CONTENT -->
+    <h1 class="top-title" id="topTitle">WeightGame</h1>
+
+    <div class="welcome-text" id="welcomeText">Welcome to WeightGame</div>
+
+    <div class="subtitle" id="subtitle">
+        Small changes into Big changes.<br>Your future starts here!
+    </div>
+
+    <div class="page2-buttons hidden" id="page2Buttons">
+        <a href="{{ url_for('signup') }}" class="page2-btn">Get Started</a>
+        <a href="{{ url_for('login') }}" class="page2-btn secondary">I already have an account</a>
+    </div>
+
+    <!-- FLOATING DECORATIONS (only for page 2) -->
+    <div class="float-symbol" style="top: 20%; left: 15%;">⭐</div>
+    <div class="float-symbol" style="top: 70%; left: 80%;">✨</div>
+    <div class="float-symbol" style="top: 40%; left: 60%;">⚡</div>
+
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const avatar = document.getElementById('whAvatar');
-  const title = document.getElementById('whTitle');
-
-  // timings
-  const stay = 1800;      // how long to keep visible (ms)
-  const snapDuration = 100; // instant snap (ms)
-
-  // leave visible for `stay` ms, then instant snap-out and redirect
-  setTimeout(() => {
-    // apply snap-out CSS class
-    avatar.classList.add('wh-snap-out');
-    title.classList.add('wh-snap-out');
-
-    // after the snap duration, redirect to /homeintro
-    setTimeout(() => {
-      window.location.href = "{{ url_for('homeintro') }}";
-    }, snapDuration + 30);
-  }, stay);
-});
-</script>
-
-{% endblock %}
+<script src="script.js"></script>
