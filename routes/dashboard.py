@@ -322,30 +322,33 @@ def dashboard():
             avatar_milestones=[]
         )
     
-    # Fetch user's weight entries for chart
+    # ============================================================
+    # OPTIMIZED: Fetch all data in minimal queries, reuse results
+    # ============================================================
+    
+    # 1. Fetch weight entries ONCE
     weight_entries = db.collection('weight_entries')\
         .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
         .stream()
     
-    weight_data = []
-    initial_weight = None
+    weight_list = [entry.to_dict() for entry in weight_entries]
+    weight_list.sort(key=lambda x: x['date'])
     
-    for entry in weight_entries:
-        data = entry.to_dict()
-        weight_data.append({
-            'weight': data['weight'],
-            'date': data['date'],
-            'date_formatted': data['date'].strftime('%b %d')
-        })
+    weight_data = [{
+        'weight': data['weight'],
+        'date': data['date'],
+        'date_formatted': data['date'].strftime('%b %d')
+    } for data in weight_list]
     
-    weight_data.sort(key=lambda x: x['date'])
+    initial_weight = weight_data[0]['weight'] if weight_data else None
+    current_weight = weight_data[-1]['weight'] if weight_data else None
+    weight_lost = (initial_weight - current_weight) if (initial_weight and current_weight) else 0
     
-    # Get initial weight (first recorded weight)
-    if weight_data:
-        initial_weight = weight_data[0]['weight']
-    
-    # Get latest profile for unit preference
-    unit_preference = 'kg'  # default
+    # 2. Fetch profile ONCE
+    unit_preference = 'kg'
+    target_weight = None
+    goal_progress = 0
+    goal_remaining = 0
     try:
         profiles = db.collection('profile_entries')\
             .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
@@ -356,12 +359,49 @@ def dashboard():
         profile_list = list(profiles)
         if profile_list:
             profile = profile_list[0].to_dict()
-            # Store unit preference (we'll default to kg from update_profile)
             unit_preference = profile.get('unit_preference', 'kg')
+            target_weight = profile.get('target_weight')
+            profile_initial_weight = profile.get('current_weight')
+            
+            # Calculate goal progress inline
+            if profile_initial_weight and target_weight and profile_initial_weight > target_weight and current_weight:
+                total_to_lose = profile_initial_weight - target_weight
+                already_lost = profile_initial_weight - current_weight
+                goal_progress = min(100, max(0, (already_lost / total_to_lose) * 100))
+                goal_progress = round(goal_progress, 1)
+                goal_remaining = total_to_lose - already_lost
     except Exception as e:
         print(f"Error fetching profile: {e}")
     
-    # Fetch calories logged
+    # 3. Fetch workouts ONCE and reuse for calories, streak, and recent activities
+    workouts_ref = db.collection('workouts')\
+        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
+        .stream()
+    
+    workout_list = [w.to_dict() for w in workouts_ref]
+    
+    # Calculate calories from workouts
+    workout_calories = sum(w.get('calories_burned', 0) for w in workout_list)
+    
+    # Calculate workout streak from cached data
+    workout_dates = set()
+    for w in workout_list:
+        if 'date' in w:
+            workout_dates.add(w['date'].date())
+    
+    workout_streak = 0
+    if workout_dates:
+        sorted_dates = sorted(workout_dates, reverse=True)
+        today = datetime.utcnow().date()
+        if (today - sorted_dates[0]).days <= 1:
+            workout_streak = 1
+            for i in range(len(sorted_dates) - 1):
+                if (sorted_dates[i] - sorted_dates[i + 1]).days == 1:
+                    workout_streak += 1
+                else:
+                    break
+    
+    # 4. Fetch calorie logs
     total_calories = 0
     try:
         calorie_logs = db.collection('calorie_logs')\
@@ -370,33 +410,14 @@ def dashboard():
         total_calories = sum(log.to_dict().get('calories', 0) for log in calorie_logs)
     except Exception:
         pass
+    total_calories += workout_calories
     
-    # Also sum from workouts for backwards compatibility
-    workouts = db.collection('workouts')\
-        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
-        .stream()
-    total_calories += sum(workout.to_dict().get('calories_burned', 0) for workout in workouts)
-    
-    current_weight = weight_data[-1]['weight'] if weight_data else None
-    weight_lost = (initial_weight - current_weight) if (initial_weight and current_weight) else 0
-    
-    # Calculate goal progress
-    goal_progress, goal_remaining, target_weight = calculate_goal_progress(db, user_id, current_weight) if current_weight else (0, 0, None)
-    
-    # Calculate workout streak
-    workout_streak = calculate_workout_streak(db, user_id)
-    
-    # Build recent activity feed from weight and workout logs
+    # 5. Build recent activities from cached data (no new queries)
     recent_activities = []
     
-    recent_weights = db.collection('weight_entries')\
-        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
-        .stream()
-    
-    weight_list = [w.to_dict() for w in recent_weights]
-    weight_list.sort(key=lambda x: x['date'], reverse=True)
-    
-    for data in weight_list[:3]:
+    # Sort weight list for recent activities (already have the data)
+    weight_list_sorted = sorted(weight_list, key=lambda x: x['date'], reverse=True)
+    for data in weight_list_sorted[:3]:
         recent_activities.append({
             'icon': '⚖️',
             'title': 'Logged Weight',
@@ -404,14 +425,9 @@ def dashboard():
             'time': format_timesince(data['date'])
         })
     
-    recent_workouts = db.collection('workouts')\
-        .where(filter=firestore.FieldFilter('user_id', '==', user_id))\
-        .stream()
-    
-    workout_list = [w.to_dict() for w in recent_workouts]
-    workout_list.sort(key=lambda x: x['date'], reverse=True)
-    
-    for data in workout_list[:2]:
+    # Sort workouts for recent activities (already have the data)
+    workout_list_sorted = sorted(workout_list, key=lambda x: x['date'], reverse=True)
+    for data in workout_list_sorted[:2]:
         recent_activities.append({
             'icon': '🏃‍♂️',
             'title': data.get('workout_type', 'Workout').title(),
@@ -421,7 +437,7 @@ def dashboard():
     
     recent_activities.sort(key=lambda x: x['time'], reverse=True)
     
-    # Get user name from display_name in session, or fallback to email
+    # 6. Get user name
     user_name = session.get('display_name')
     if not user_name:
         user_email = session.get('email') or session.get('user_id') or ''
@@ -430,7 +446,7 @@ def dashboard():
         else:
             user_name = user_email or 'User'
 
-    # Fetch avatar points and calculate level
+    # 7. Fetch avatar ONCE and calculate level
     avatar_points = 0
     avatar_level = 1
     avatar_progress = 0
@@ -445,27 +461,63 @@ def dashboard():
     except Exception as e:
         print(f"Error fetching avatar: {e}")
 
-    # Fetch user's daily tasks
+    # 8. Fetch tasks
     tasks_completed = 0
     tasks_total = 0
     try:
         tasks_ref = db.collection('tasks').where(filter=firestore.FieldFilter('user_id', '==', user_id))
-        task_list = []
         for task_doc in tasks_ref.stream():
             task_data = task_doc.to_dict()
-            task_list.append(task_data)
             tasks_total += 1
             if task_data.get('completed', False):
                 tasks_completed += 1
     except Exception as e:
         print(f"Error fetching tasks: {e}")
 
-    # Get combined achievements (avatar milestones + weight goals)
-    badges, unlocked_count, total_count, avatar_milestones = get_dashboard_achievements(
-        db, user_id, current_weight, initial_weight, target_weight, goal_progress, unit_preference
-    )
+    # 9. Calculate avatar milestones from cached avatar_points (no new query)
+    milestone_definitions = [
+        {'name': 'First Steps', 'points_required': 50, 'badge': 'Bronze', 'icon': '🥉'},
+        {'name': 'On The Move', 'points_required': 100, 'badge': 'Silver', 'icon': '🥈'},
+        {'name': 'Committed', 'points_required': 250, 'badge': 'Gold', 'icon': '🥇'},
+        {'name': 'Halfway Hero', 'points_required': 500, 'badge': 'Platinum', 'icon': '🏅'},
+        {'name': 'Legend', 'points_required': 1000, 'badge': 'Diamond', 'icon': '👑'},
+    ]
+    
+    avatar_milestones = []
+    for milestone in milestone_definitions:
+        points_required = milestone['points_required']
+        unlocked = avatar_points >= points_required
+        progress_percent = min(100, (avatar_points / points_required) * 100) if points_required > 0 else 0
+        avatar_milestones.append({
+            'name': milestone['name'],
+            'badge': milestone['badge'],
+            'icon': milestone['icon'],
+            'unlocked': unlocked,
+            'points_required': points_required,
+            'current_points': avatar_points,
+            'progress_percent': round(progress_percent, 1),
+            'progress_display': f"{avatar_points}/{points_required} pts",
+            'claimed': unlocked
+        })
+    
+    # 10. Build badges from avatar milestones (no new query)
+    badges = []
+    for m in avatar_milestones:
+        badges.append({
+            'name': m['name'],
+            'icon': m['icon'],
+            'unlocked': m['unlocked'],
+            'progress': m['progress_display'],
+            'date': 'Recently' if m['unlocked'] else None,
+            'type': 'avatar',
+            'source_milestone': m
+        })
+    
+    badges.sort(key=lambda x: not x['unlocked'])
+    unlocked_count = len([b for b in badges if b['unlocked']])
+    total_count = len(badges)
 
-    # Generate motivational messages
+    # 11. Generate motivational messages
     motivational_messages = generate_motivational_messages(
         user_name, avatar_points, weight_lost, goal_progress, 
         workout_streak, tasks_completed, tasks_total, avatar_milestones
