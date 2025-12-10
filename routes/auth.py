@@ -16,7 +16,7 @@ def login():
     
     # Redirect if already logged in
     if session.get('user_id'):
-        return redirect(url_for('dashboard.dashboard'))
+        return redirect(url_for('main.home'))
     
     from app import get_db
     db = get_db()
@@ -60,7 +60,7 @@ def login():
                         except Exception as e:
                             print(f"Warning: could not create avatar doc for {uid}: {e}")
                 
-                return jsonify({'success': True, 'redirect': url_for('dashboard.dashboard')})
+                return jsonify({'success': True, 'redirect': url_for('main.home')})
             except Exception as e:
                 print(f"Firebase Auth error: {e}")
                 return jsonify({'success': False, 'error': 'Invalid authentication'})
@@ -78,7 +78,7 @@ def signup():
     
     # Redirect if already logged in
     if session.get('user_id'):
-        return redirect(url_for('dashboard.dashboard'))
+        return redirect(url_for('main.home'))
     
     from app import get_db
     db = get_db()
