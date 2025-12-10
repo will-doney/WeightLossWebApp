@@ -54,19 +54,24 @@ def get_db():
         init_firebase()  # Lazy initialization for Flask reloader compatibility
     return _db
 
+from routes.home import home_bp
 from routes.main import main_bp
 from routes.auth import auth_bp
 from routes.dashboard import dashboard_bp
 from routes.tasks import tasks_bp
 from routes.other import other_bp
 from routes.onboarding import onboarding_bp
+from routes.welcome import welcome_bp
 
+app.register_blueprint(home_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(tasks_bp)
 app.register_blueprint(other_bp)
 app.register_blueprint(onboarding_bp)
+app.register_blueprint(welcome_bp)
+
 
 print("✓ All route blueprints registered")
 

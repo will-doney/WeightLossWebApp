@@ -1,9 +1,9 @@
-<link rel="stylesheet" href="welcomenewuser.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/welcomenewuser.css') }}">
 
 <div class="welcome-container">
 
     <!-- INITIAL AVATAR + FIRST TITLE -->
-    <img src="avatar_logo.png" class="avatar" id="avatar">
+    <img src="{{ url_for('static', filename='images/avatar_logo.png') }}" class="avatar" id="avatar">
     <h1 class="main-title" id="mainTitle">WeightGame</h1>
 
     <!-- PAGE 2 CONTENT -->
@@ -27,4 +27,24 @@
 
 </div>
 
-<script src="script.js"></script>
+<script>
+  // After 2 seconds, transition to second scene
+  setTimeout(() => {
+      // Hide avatar + main title
+      document.getElementById("avatar").style.display = "none";
+      document.getElementById("mainTitle").style.display = "none";
+
+      // Show top title
+      const topTitle = document.getElementById("topTitle");
+      topTitle.style.opacity = "1";
+
+      // Show welcome text + subtitle
+      document.getElementById("welcomeText").style.opacity = "1";
+      document.getElementById("subtitle").style.opacity = "1";
+
+      // Show buttons only now
+      const buttons = document.getElementById('page2Buttons');
+      buttons.classList.add('show');
+
+  }, 2000);
+</script>
