@@ -7,6 +7,11 @@ Route C: Implementation
 
 ---
 
+### Admin Account Details
+
+User name: admin@admin.admin
+Password: adminadmin
+
 ## ✨ Features
 
 - **Firebase Authentication**: Secure user login and signup with Google Sign-In support
@@ -118,11 +123,6 @@ git commit -m "Clear description of changes"
 # Push to GitHub
 git push -u origin feature/your-feature-name
 ```
-
-### Admin Account Details
-
-User name: admin@admin.admin
-Password: adminadmin
 
 
 ## 📊 Database Collections
