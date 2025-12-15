@@ -2,6 +2,9 @@
 
 A gamified weight loss tracking web application built with Flask and Firebase, featuring daily tasks, progress visualization, and avatar customization.
 
+Challenge 9: Global Health
+Route C: Implementation 
+
 ---
 
 ## ✨ Features
