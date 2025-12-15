@@ -96,31 +96,8 @@ WeightLossWebApp/
 - **Database**: Google Cloud Firestore (NoSQL)
 - **Authentication**: Firebase Authentication
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Templating**: Jinja2
 
 ---
-
-## 📚 Main Components
-
-### Routes Modules
-
-- **auth.py**: Handles Firebase authentication, session management, and user creation
-- **dashboard.py**: Displays progress dashboard, manages weight entries and workout logs
-- **tasks.py**: CRUD operations for daily tasks, completion tracking, and points system
-- **other.py**: Settings page and avatar points API endpoints
-- **task_library.py**: Contains 50+ pre-defined tasks and personalized suggestion algorithm
-
-### Key Features
-
-1. **Smart Task Suggestions**: Algorithm considers user's BMI, age, activity level, and weekly goals
-2. **Points System**: Earn +10 points for completing tasks, -10 for uncompleting
-3. **BMI Calculator**: Automatic BMI calculation on profile updates
-4. **Activity Feed**: Real-time feed of weight entries and workout logs
-5. **Firebase Integration**: Secure authentication and real-time data sync
-
----
-
-## 💻 Development Workflow
 
 ### Git Best Practices
 
@@ -139,31 +116,11 @@ git commit -m "Clear description of changes"
 git push -u origin feature/your-feature-name
 ```
 
-### Running in Debug Mode
+### Admin Account Details
 
-The application runs in debug mode by default for development:
-- Auto-reloads on file changes
-- Detailed error pages
-- Flask debugger enabled
+User name: admin@admin.admin
+Password: adminadmin
 
-For production, set `debug=False` in `app.py`
-
----
-
-## 🔐 Security Notes
-
-⚠️ **Never commit these files:**
-- `firebase-key.json` - Contains Firebase credentials
-- `.env` files - Environment variables
-- Any files with API keys or passwords
-
-✅ **Already in .gitignore:**
-- `firebase-key.json`
-- `.venv/`
-- `__pycache__/`
-- `.env`
-
----
 
 ## 📊 Database Collections
 
@@ -186,42 +143,3 @@ The app uses these Firestore collections:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is developed by will-doney (November 2025).
-
----
-
-## 🐛 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Firebase initialization failed" | Check that `firebase-key.json` exists and is valid |
-| "Database connection unavailable" | Ensure Firebase is properly configured and project ID is correct |
-| "Module not found" errors | Run `pip install -r requirements.txt` |
-| Port 5000 already in use | Change port in `app.py` or stop conflicting process |
-| Session not persisting | Check that SECRET_KEY is set in `app.py` |
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review Firebase Console for authentication/database errors
-3. Check browser console for JavaScript errors
-4. Create an issue on GitHub
-
----
-
-**Built with ❤️ using Flask and Firebase**
-
-# Update backend
-$env:PATH += ";$env:LOCALAPPDATA\Google\Cloud SDK\google-cloud-sdk\bin"
-gcloud run deploy weightgame --source . --region us-central1
-
-# Update frontend (if static files changed)
-firebase deploy --only hosting
