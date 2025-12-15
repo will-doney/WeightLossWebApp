@@ -42,7 +42,7 @@ Password: adminadmin
    ```powershell
    pip install -r requirements.txt
    ```
-5. **Run the application**
+4. **Run the application**
    ```powershell
    python app.py
    ```
