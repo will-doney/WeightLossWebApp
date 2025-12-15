@@ -24,14 +24,6 @@ Password: adminadmin
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Python 3.13+**: [Download here](https://www.python.org/downloads/)
-- **Firebase Project**: Create a project at [Firebase Console](https://console.firebase.google.com/)
-- **Git**: `winget install --id Git.Git -e --source winget`
-
 ### Installation
 
 1. **Clone the repository**
@@ -50,12 +42,6 @@ Password: adminadmin
    ```powershell
    pip install -r requirements.txt
    ```
-
-4. **Configure Firebase**
-   - Download your Firebase service account key as `firebase-key.json`
-   - Place it in the project root directory
-   - Update Firebase config in `templates/login.html` and `templates/signup.html`
-
 5. **Run the application**
    ```powershell
    python app.py
