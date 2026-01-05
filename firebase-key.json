@@ -1,13 +1,1 @@
-{
-  "type": "service_account",
-  "project_id": "weightgame-fitness",
-  "private_key_id": "2630fcf733bab80d55e1930d268edd6ceea65938",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC2SDG54An3K/co\nqTFsUMzeuGGFNgpkb/qh6QKD9JzImU7DMA1CBPzH+M6c7w5Ek/Zp3rjjbTI6yGhU\nqegvsaGhWpSx/p3qUGTi+XaIDgFfkem1bFXPLLmmE31mgF/0ueJbDb8ihX2lcY+T\nW5Od0Y2oj+ILFAQmSAVDDmwYJhi5l0wYmbc+dVNprNcQ3JeiuFe3CIFPzAdKC7o7\nLrQzYICvDrvwgq3sy8z/k/F6SVYwVnR58fnq8YRTCvXM2f1HQcDdmQNQQYTxmAgt\nKrNwJcwvNZebYf+bhn3whqsj0aCyV33X/UNy8yMBg7QQGtcBgQ1oFx1Limk0YSjS\n83UuoJD3AgMBAAECggEAD26wSxDVNyhxPe+JICb9GVQZ6YnIOnWijgeor1xL083q\n9aqBTNgYQKPndjDlD9hJEfCJzbNmf8SM1LIn1rXevcbp9OHeI8LXr8G4D8/DvQAg\n/bukziv2scFPqhhvR0xfhh71UipkF1g0dCDaMA/YQu+fjxmMOmN5kpJLg4XiLQAm\nGTfRG+uUh/VS0GrfcdlFX7nkh98ZYURt1aHGU6c76CrfL37sPUhC6zloTkd6SrCP\niudjSeEzYU2iX4hzujIqcaRTvcLJQiz/TL9aXgqLRjDZMbGrXWB88iSyVXeCwW7R\n1V7S9RBB2Lcyxcl2JjEUfq86t22wYluVGBhu4YfozQKBgQDeBBXsVjWz+eoUUtBB\n7HyB3uf4UvTI6jDVUmmBXdEAZwLXo+2O58hdkfehMFjLh/ifKdOZO7DvE6kwcQpo\nUET8JUX/2E85gVYVfP3eIPkCElkpR2lfDoM/3yZ/J0eVU3sIN4CwnWC2JobSXj0u\n932tYvLhcO6LyGFplbBl6lOyzQKBgQDSLxg0k6UJpVWbd6HOoYHuwlxF0hxHSQxf\nhQ9Mj0/N0mc63HvZdMi82XHLp6JPdEKCLD/F7GLr05QTsbqfekGxa32yd9pZDRgO\nJwVnCvx3xH//YsPRnfmzL0RUBvlGORH3zFWGc4R+2clAyYBGW0x/A1TwCntkWh8x\nVPPu2yj60wKBgQDSV5aZujfZEx7mMGuk+bQgqxqll5rZO6AWi6Tv7v2T3wS/X00z\nxn97v06YhaCq/GDeExeppvcEG2GBRqfwmpQxO/Ms6ThuKA5x/2DacezZPJ8Cz+iS\nKcLJ4dasQ3+7h0MaTtN7AS/eg3PanXRkKhEFE6k/U+p9vtQj37EnbbHsxQKBgQCf\nxyVDcqmXN5RoZv0eMzCu7BlxClRs7F73jhMfRCKKeFP5LvsHR/wBc9tJ0dlVRS/5\n/OFN+HEKjQCYKBeSfEHMOcaIEQxvfcC3oXo95uAdu8cBwXbStqDHUjtDFToR4/iA\nw1iQqOgj9jNDiOp2kZkJROMgxxceJlRoEAiPnxL7+QKBgQCg0mUqnasIXXPCtuBU\n5pbKIXB8b3zpdGyBfcUFdDPRGXqO19KkUu4gl4ayXNN++ruwFWmJB2+D9ClCQUkX\n3cRwQKhpxQg3t5IcD21v4phVy7dsE7tV6atWXFkz73xJ6Z0hPRw5UNPh9xP7YDqz\nE2DNgcFb6TPHVtkKjB3ask5qFg==\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@weightgame-fitness.iam.gserviceaccount.com",
-  "client_id": "108363334029568508712",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40weightgame-fitness.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
+
